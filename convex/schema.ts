@@ -80,6 +80,7 @@ export default defineSchema({
     name: v.string(),
     linkedinUrl: v.string(),
     email: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
     notes: v.optional(v.string()),
     status: v.string(),
     createdAt: v.number(),

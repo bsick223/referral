@@ -33,6 +33,7 @@ export default function CompanyDetailPage({
     name: "",
     linkedinUrl: "",
     email: "",
+    phoneNumber: "",
     notes: "",
   });
 
@@ -74,6 +75,7 @@ export default function CompanyDetailPage({
         name: referralFormData.name,
         linkedinUrl: referralFormData.linkedinUrl,
         email: referralFormData.email || undefined,
+        phoneNumber: referralFormData.phoneNumber || undefined,
         notes: referralFormData.notes || undefined,
       });
 
@@ -82,6 +84,7 @@ export default function CompanyDetailPage({
         name: "",
         linkedinUrl: "",
         email: "",
+        phoneNumber: "",
         notes: "",
       });
       setShowNewReferralForm(false);
@@ -323,6 +326,26 @@ export default function CompanyDetailPage({
 
                 <div>
                   <label
+                    htmlFor="phoneNumber"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Phone Number
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      type="tel"
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      value={referralFormData.phoneNumber}
+                      onChange={handleReferralChange}
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      placeholder="(123) 456-7890"
+                    />
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label
                     htmlFor="notes"
                     className="block text-sm font-medium text-gray-700"
                   >
@@ -394,11 +417,18 @@ export default function CompanyDetailPage({
                       <h3 className="text-lg font-semibold text-gray-900">
                         {referral.name}
                       </h3>
-                      {referral.email && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          {referral.email}
-                        </p>
-                      )}
+                      <div className="mt-1 space-y-1">
+                        {referral.email && (
+                          <p className="text-sm text-gray-500">
+                            Email: {referral.email}
+                          </p>
+                        )}
+                        {referral.phoneNumber && (
+                          <p className="text-sm text-gray-500">
+                            Phone: {referral.phoneNumber}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center space-x-3">
                       <a
