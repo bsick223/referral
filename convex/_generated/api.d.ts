@@ -16,8 +16,10 @@ import type {
 import type * as companies from "../companies.js";
 import type * as contact from "../contact.js";
 import type * as images from "../images.js";
+import type * as messages from "../messages.js";
 import type * as referrals from "../referrals.js";
 import type * as reviews from "../reviews.js";
+import type * as seedMessages from "../seedMessages.js";
 import type * as titles from "../titles.js";
 import type * as transcript from "../transcript.js";
 import type * as videos from "../videos.js";
@@ -34,8 +36,10 @@ declare const fullApi: ApiFromModules<{
   companies: typeof companies;
   contact: typeof contact;
   images: typeof images;
+  messages: typeof messages;
   referrals: typeof referrals;
   reviews: typeof reviews;
+  seedMessages: typeof seedMessages;
   titles: typeof titles;
   transcript: typeof transcript;
   videos: typeof videos;

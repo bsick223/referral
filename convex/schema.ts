@@ -90,4 +90,16 @@ export default defineSchema({
     .index("by_company_id", ["companyId"])
     .index("by_created_at", ["createdAt"])
     .index("by_company_and_user", ["companyId", "userId"]),
+
+  messages: defineTable({
+    userId: v.string(),
+    title: v.string(),
+    content: v.string(),
+    isDefault: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_created_at", ["createdAt"])
+    .index("by_default", ["isDefault"]),
 });
