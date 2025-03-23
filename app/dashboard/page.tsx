@@ -46,14 +46,14 @@ export default function DashboardPage() {
           <div className="flex space-x-3">
             <Link
               href="/dashboard/messages"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-blue-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium text-blue-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
             >
               <MessageSquare className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Messages</span>
             </Link>
             <Link
               href="/dashboard/companies/new"
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
             >
               <PlusCircle className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Add Company</span>
@@ -74,7 +74,7 @@ export default function DashboardPage() {
             <div className="mt-6">
               <Link
                 href="/dashboard/companies/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
               >
                 <PlusCircle className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Add Company</span>
@@ -87,7 +87,7 @@ export default function DashboardPage() {
               <Link
                 key={company._id}
                 href={`/dashboard/companies/${company._id}`}
-                className="block bg-white shadow rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
+                className="block bg-white shadow rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer"
               >
                 <div className="p-6">
                   <div className="flex items-center justify-between">

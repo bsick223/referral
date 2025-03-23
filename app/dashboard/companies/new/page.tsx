@@ -59,7 +59,7 @@ export default function NewCompanyPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center">
           <Link
             href="/dashboard"
-            className="inline-flex items-center mr-4 text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center mr-4 text-gray-500 hover:text-gray-700 cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
@@ -87,7 +87,7 @@ export default function NewCompanyPage() {
                     required
                     value={formData.name}
                     onChange={handleChange}
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
                     placeholder="e.g. Google"
                   />
                 </div>
@@ -107,7 +107,7 @@ export default function NewCompanyPage() {
                     name="website"
                     value={formData.website}
                     onChange={handleChange}
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
                     placeholder="e.g. https://google.com"
                   />
                 </div>
@@ -127,7 +127,7 @@ export default function NewCompanyPage() {
                     rows={3}
                     value={formData.description}
                     onChange={handleChange}
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
                     placeholder="Brief description of the company"
                   />
                 </div>
@@ -136,14 +136,14 @@ export default function NewCompanyPage() {
               <div className="flex justify-end">
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3 cursor-pointer"
                 >
                   Cancel
                 </Link>
                 <button
                   type="submit"
                   disabled={isSubmitting || !formData.name}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmitting ? "Creating..." : "Create Company"}
                 </button>

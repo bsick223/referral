@@ -282,7 +282,7 @@ export default function MessagesPage() {
               onClick={() => removeTag(tag.name)}
               className={`ml-1.5 ${
                 TAG_COLORS[tag.color].text
-              } hover:opacity-80 focus:outline-none`}
+              } hover:opacity-80 focus:outline-none cursor-pointer`}
             >
               <X className="h-3 w-3" />
             </button>
@@ -315,7 +315,7 @@ export default function MessagesPage() {
                   <button
                     key={index}
                     onClick={() => selectColor(index)}
-                    className={`${color.bg} ${color.text} px-2 py-1 rounded text-xs font-medium flex items-center justify-between`}
+                    className={`${color.bg} ${color.text} px-2 py-1 rounded text-xs font-medium flex items-center justify-between cursor-pointer`}
                   >
                     {color.name}
                     {selectedColorIndex === index && (
@@ -330,7 +330,7 @@ export default function MessagesPage() {
         <button
           type="button"
           onClick={addTag}
-          className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 shadow-sm text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 shadow-sm text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
         >
           <Plus className="h-4 w-4" />
         </button>
@@ -345,7 +345,7 @@ export default function MessagesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center">
           <Link
             href="/dashboard"
-            className="inline-flex items-center mr-4 text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center mr-4 text-gray-500 hover:text-gray-700 cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
@@ -366,7 +366,7 @@ export default function MessagesPage() {
               setShowNewMessageForm((prev) => !prev);
               if (editingMessageId) cancelEditing();
             }}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
           >
             {showNewMessageForm ? (
               "Cancel"
@@ -402,7 +402,7 @@ export default function MessagesPage() {
                       required
                       value={messageFormData.title}
                       onChange={handleMessageChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
                       placeholder="Message title"
                     />
                   </div>
@@ -423,7 +423,7 @@ export default function MessagesPage() {
                       required
                       value={messageFormData.content}
                       onChange={handleMessageChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
                       placeholder="Your message content. Use placeholders like [Name], [Company], etc."
                     />
                   </div>
@@ -453,7 +453,7 @@ export default function MessagesPage() {
                 <button
                   type="button"
                   onClick={() => setShowNewMessageForm(false)}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3 cursor-pointer"
                 >
                   <X className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Cancel</span>
@@ -461,7 +461,7 @@ export default function MessagesPage() {
                 <button
                   type="submit"
                   disabled={!messageFormData.title || !messageFormData.content}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
                 >
                   <PlusCircle className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Add Message</span>
@@ -494,7 +494,7 @@ export default function MessagesPage() {
                       required
                       value={messageFormData.title}
                       onChange={handleMessageChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
                       placeholder="Message title"
                     />
                   </div>
@@ -515,7 +515,7 @@ export default function MessagesPage() {
                       required
                       value={messageFormData.content}
                       onChange={handleMessageChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
                       placeholder="Your message content. Use placeholders like [Name], [Company], etc."
                     />
                   </div>
@@ -545,7 +545,7 @@ export default function MessagesPage() {
                 <button
                   type="button"
                   onClick={cancelEditing}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3 cursor-pointer"
                 >
                   <X className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Cancel</span>
@@ -553,7 +553,7 @@ export default function MessagesPage() {
                 <button
                   type="submit"
                   disabled={!messageFormData.title || !messageFormData.content}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
                 >
                   <Save className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Save Changes</span>
@@ -576,7 +576,7 @@ export default function MessagesPage() {
             <div className="mt-6">
               <button
                 onClick={() => setShowNewMessageForm(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
               >
                 <PlusCircle className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Add Message</span>
@@ -616,7 +616,7 @@ export default function MessagesPage() {
                         onClick={() =>
                           copyMessageToClipboard(message.content, message._id)
                         }
-                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
                         title="Copy to clipboard"
                       >
                         {copiedMessageId === message._id ? (
@@ -627,14 +627,14 @@ export default function MessagesPage() {
                       </button>
                       <button
                         onClick={() => startEditing(message)}
-                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
                         title="Edit message"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteMessage(message._id)}
-                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 cursor-pointer"
                         title="Delete message"
                       >
                         <Trash className="h-4 w-4" />

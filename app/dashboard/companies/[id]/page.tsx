@@ -182,7 +182,7 @@ export default function CompanyDetailPage({
         </h2>
         <Link
           href="/dashboard"
-          className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
@@ -199,7 +199,7 @@ export default function CompanyDetailPage({
           <div className="flex items-center">
             <Link
               href="/dashboard"
-              className="inline-flex items-center mr-4 text-gray-500 hover:text-gray-700"
+              className="inline-flex items-center mr-4 text-gray-500 hover:text-gray-700 cursor-pointer"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
@@ -207,7 +207,7 @@ export default function CompanyDetailPage({
           </div>
           <button
             onClick={handleDeleteCompany}
-            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-red-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-red-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 cursor-pointer"
           >
             <Trash className="h-4 w-4 mr-1" />
             Delete Company
@@ -246,7 +246,7 @@ export default function CompanyDetailPage({
                       href={company.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-1 text-md text-blue-600 hover:underline inline-flex items-center"
+                      className="mt-1 text-md text-blue-600 hover:underline inline-flex items-center cursor-pointer"
                     >
                       {company.website}
                       <ExternalLink className="h-3.5 w-3.5 ml-1" />
@@ -297,7 +297,7 @@ export default function CompanyDetailPage({
                   notes: "",
                 });
               }}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
             >
               <PlusCircle className="h-4 w-4 mr-2" />
               Add Referral
@@ -328,7 +328,7 @@ export default function CompanyDetailPage({
                       required
                       value={referralFormData.name}
                       onChange={handleReferralChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
                       placeholder="Contact name"
                     />
                   </div>
@@ -349,7 +349,7 @@ export default function CompanyDetailPage({
                       required
                       value={referralFormData.linkedinUrl}
                       onChange={handleReferralChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
                       placeholder="https://linkedin.com/in/username"
                     />
                   </div>
@@ -369,7 +369,7 @@ export default function CompanyDetailPage({
                       name="email"
                       value={referralFormData.email}
                       onChange={handleReferralChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
                       placeholder="contact@example.com"
                     />
                   </div>
@@ -389,7 +389,7 @@ export default function CompanyDetailPage({
                       name="phoneNumber"
                       value={referralFormData.phoneNumber}
                       onChange={handleReferralChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
                       placeholder="(123) 456-7890"
                     />
                   </div>
@@ -409,7 +409,7 @@ export default function CompanyDetailPage({
                       rows={3}
                       value={referralFormData.notes}
                       onChange={handleReferralChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
                       placeholder="Any additional information"
                     />
                   </div>
@@ -420,7 +420,7 @@ export default function CompanyDetailPage({
                 <button
                   type="button"
                   onClick={cancelEditingReferral}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -429,7 +429,7 @@ export default function CompanyDetailPage({
                   disabled={
                     !referralFormData.name || !referralFormData.linkedinUrl
                   }
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
                 >
                   {editingReferralId ? "Save Changes" : "Add Referral"}
                 </button>
@@ -451,7 +451,7 @@ export default function CompanyDetailPage({
             <div className="mt-6">
               <button
                 onClick={() => setShowReferralForm(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
               >
                 <PlusCircle className="h-4 w-4 mr-2" />
                 Add Referral
@@ -486,21 +486,21 @@ export default function CompanyDetailPage({
                         href={referral.linkedinUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
                       >
                         <ExternalLink className="h-4 w-4 mr-1" />
                         LinkedIn
                       </a>
                       <button
                         onClick={() => startEditingReferral(referral)}
-                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
                         title="Edit referral"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteReferral(referral._id)}
-                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 cursor-pointer"
                         title="Delete referral"
                       >
                         <Trash className="h-4 w-4" />
