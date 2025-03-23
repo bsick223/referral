@@ -16,6 +16,7 @@ import {
   Tag,
   Plus,
   ChevronDown,
+  Save,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -295,7 +296,7 @@ export default function MessagesPage() {
           onChange={(e) => setNewTagName(e.target.value)}
           onKeyDown={handleTagKeyPress}
           placeholder="Add a tag"
-          className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md rounded-r-none"
+          className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md rounded-r-none px-3 py-2"
         />
         <div className="relative">
           <button
@@ -371,8 +372,8 @@ export default function MessagesPage() {
               "Cancel"
             ) : (
               <>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Add Message
+                <PlusCircle className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Message</span>
               </>
             )}
           </button>
@@ -454,14 +455,16 @@ export default function MessagesPage() {
                   onClick={() => setShowNewMessageForm(false)}
                   className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3"
                 >
-                  Cancel
+                  <X className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Cancel</span>
                 </button>
                 <button
                   type="submit"
                   disabled={!messageFormData.title || !messageFormData.content}
                   className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 >
-                  Add Message
+                  <PlusCircle className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Add Message</span>
                 </button>
               </div>
             </form>
@@ -544,14 +547,16 @@ export default function MessagesPage() {
                   onClick={cancelEditing}
                   className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3"
                 >
-                  Cancel
+                  <X className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Cancel</span>
                 </button>
                 <button
                   type="submit"
                   disabled={!messageFormData.title || !messageFormData.content}
                   className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 >
-                  Save Changes
+                  <Save className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Save Changes</span>
                 </button>
               </div>
             </form>
@@ -573,8 +578,8 @@ export default function MessagesPage() {
                 onClick={() => setShowNewMessageForm(true)}
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Add Message
+                <PlusCircle className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Message</span>
               </button>
             </div>
           </div>
