@@ -16,15 +16,17 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { Id } from "@/convex/_generated/dataModel";
+import { use } from "react";
 
 export default function CompanyDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
   const { user } = useUser();
-  const companyId = params.id as Id<"companies">;
+  const resolvedParams = use(params);
+  const companyId = resolvedParams.id as Id<"companies">;
 
   const [showNewReferralForm, setShowNewReferralForm] = useState(false);
   const [referralFormData, setReferralFormData] = useState({
