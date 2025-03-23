@@ -11,6 +11,7 @@ import {
   Trash,
   RefreshCw,
   ExternalLink,
+  Pencil,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -28,7 +29,9 @@ export default function CompanyDetailPage({
   const resolvedParams = use(params);
   const companyId = resolvedParams.id as Id<"companies">;
 
-  const [showNewReferralForm, setShowNewReferralForm] = useState(false);
+  const [showReferralForm, setShowReferralForm] = useState(false);
+  const [editingReferralId, setEditingReferralId] =
+    useState<Id<"referrals"> | null>(null);
   const [referralFormData, setReferralFormData] = useState({
     name: "",
     linkedinUrl: "",
@@ -50,6 +53,7 @@ export default function CompanyDetailPage({
 
   // Mutations
   const createReferral = useMutation(api.referrals.create);
+  const updateReferral = useMutation(api.referrals.update);
   const deleteReferral = useMutation(api.referrals.remove);
   const deleteCompany = useMutation(api.companies.remove);
 
@@ -69,15 +73,28 @@ export default function CompanyDetailPage({
     if (!user) return;
 
     try {
-      await createReferral({
-        companyId,
-        userId: user.id,
-        name: referralFormData.name,
-        linkedinUrl: referralFormData.linkedinUrl,
-        email: referralFormData.email || undefined,
-        phoneNumber: referralFormData.phoneNumber || undefined,
-        notes: referralFormData.notes || undefined,
-      });
+      if (editingReferralId) {
+        // Update existing referral
+        await updateReferral({
+          id: editingReferralId,
+          name: referralFormData.name,
+          linkedinUrl: referralFormData.linkedinUrl,
+          email: referralFormData.email || undefined,
+          phoneNumber: referralFormData.phoneNumber || undefined,
+          notes: referralFormData.notes || undefined,
+        });
+      } else {
+        // Create new referral
+        await createReferral({
+          companyId,
+          userId: user.id,
+          name: referralFormData.name,
+          linkedinUrl: referralFormData.linkedinUrl,
+          email: referralFormData.email || undefined,
+          phoneNumber: referralFormData.phoneNumber || undefined,
+          notes: referralFormData.notes || undefined,
+        });
+      }
 
       // Reset form
       setReferralFormData({
@@ -87,10 +104,38 @@ export default function CompanyDetailPage({
         phoneNumber: "",
         notes: "",
       });
-      setShowNewReferralForm(false);
+      setShowReferralForm(false);
+      setEditingReferralId(null);
     } catch (error) {
-      console.error("Error creating referral:", error);
+      console.error(
+        `Error ${editingReferralId ? "updating" : "creating"} referral:`,
+        error
+      );
     }
+  };
+
+  const startEditingReferral = (referral: any) => {
+    setEditingReferralId(referral._id);
+    setReferralFormData({
+      name: referral.name,
+      linkedinUrl: referral.linkedinUrl,
+      email: referral.email || "",
+      phoneNumber: referral.phoneNumber || "",
+      notes: referral.notes || "",
+    });
+    setShowReferralForm(true);
+  };
+
+  const cancelEditingReferral = () => {
+    setEditingReferralId(null);
+    setReferralFormData({
+      name: "",
+      linkedinUrl: "",
+      email: "",
+      phoneNumber: "",
+      notes: "",
+    });
+    setShowReferralForm(false);
   };
 
   const handleDeleteReferral = async (referralId: Id<"referrals">) => {
@@ -239,26 +284,32 @@ export default function CompanyDetailPage({
         {/* Referrals section */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-700">Referrals</h2>
-          <button
-            onClick={() => setShowNewReferralForm((prev) => !prev)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            {showNewReferralForm ? (
-              "Cancel"
-            ) : (
-              <>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Add Referral
-              </>
-            )}
-          </button>
+          {!showReferralForm && (
+            <button
+              onClick={() => {
+                setShowReferralForm(true);
+                setEditingReferralId(null);
+                setReferralFormData({
+                  name: "",
+                  linkedinUrl: "",
+                  email: "",
+                  phoneNumber: "",
+                  notes: "",
+                });
+              }}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Add Referral
+            </button>
+          )}
         </div>
 
-        {/* New Referral Form */}
-        {showNewReferralForm && (
+        {/* Referral Form (New or Edit) */}
+        {showReferralForm && (
           <div className="bg-white shadow rounded-lg p-6 mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Add New Referral
+              {editingReferralId ? "Edit Referral" : "Add New Referral"}
             </h3>
             <form onSubmit={handleReferralSubmit}>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -368,7 +419,7 @@ export default function CompanyDetailPage({
               <div className="mt-6 flex justify-end">
                 <button
                   type="button"
-                  onClick={() => setShowNewReferralForm(false)}
+                  onClick={cancelEditingReferral}
                   className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3"
                 >
                   Cancel
@@ -380,7 +431,7 @@ export default function CompanyDetailPage({
                   }
                   className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 >
-                  Add Referral
+                  {editingReferralId ? "Save Changes" : "Add Referral"}
                 </button>
               </div>
             </form>
@@ -399,7 +450,7 @@ export default function CompanyDetailPage({
             </p>
             <div className="mt-6">
               <button
-                onClick={() => setShowNewReferralForm(true)}
+                onClick={() => setShowReferralForm(true)}
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <PlusCircle className="h-4 w-4 mr-2" />
@@ -441,8 +492,16 @@ export default function CompanyDetailPage({
                         LinkedIn
                       </a>
                       <button
+                        onClick={() => startEditingReferral(referral)}
+                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        title="Edit referral"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
                         onClick={() => handleDeleteReferral(referral._id)}
                         className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        title="Delete referral"
                       >
                         <Trash className="h-4 w-4" />
                       </button>
