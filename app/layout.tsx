@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vid2Sum",
-  description: "Summarize Youtube Videos for Free",
+  title: "ReferralTracker - Organize Your Job Search Referrals",
+  description: "Track and manage your job application referrals in one place",
 };
 
 export default function RootLayout({

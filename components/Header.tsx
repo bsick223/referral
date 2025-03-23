@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Button } from "./ui/button";
-import logo from "../assets/Logo(transparent).png";
-import Image from "next/image";
+import { Building } from "lucide-react";
 
 function Header() {
   return (
@@ -16,21 +15,18 @@ function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Left */}
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-4">
-              <Image
-                src={logo}
-                alt="Vid2Sum Logo"
-                width={150} // Adjust width as needed
-                height={50} // Adjust height as needed
-                priority // Ensures the logo loads quickly
-              />
+            <Link href="/" className="flex items-center gap-2">
+              <Building className="h-6 w-6 text-blue-600" />
+              <span className="text-xl font-bold text-blue-600">
+                ReferralTracker
+              </span>
             </Link>
           </div>
 
           {/* Right */}
           <div className="flex items-center gap-4">
             <SignedIn>
-              <Link href="/manage-plan">
+              <Link href="/dashboard">
                 <Button
                   variant="outline"
                   className="w-fit relative bg-white text-gray-800 hover:text-blue-600
@@ -46,7 +42,7 @@ function Header() {
                 hover:shadow-md
                 active:scale-95 active:shadow-inner hover:cursor-pointer"
                 >
-                  Manage Plan
+                  Dashboard
                 </Button>
               </Link>
 

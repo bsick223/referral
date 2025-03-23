@@ -61,4 +61,32 @@ export default defineSchema({
   })
     .index("by_created_at", ["createdAt"])
     .index("by_user_id", ["userId"]),
+
+  companies: defineTable({
+    name: v.string(),
+    userId: v.string(),
+    description: v.optional(v.string()),
+    website: v.optional(v.string()),
+    logo: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_created_at", ["createdAt"]),
+
+  referrals: defineTable({
+    companyId: v.id("companies"),
+    userId: v.string(),
+    name: v.string(),
+    linkedinUrl: v.string(),
+    email: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    status: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_company_id", ["companyId"])
+    .index("by_created_at", ["createdAt"])
+    .index("by_company_and_user", ["companyId", "userId"]),
 });
