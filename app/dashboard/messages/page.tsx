@@ -17,6 +17,7 @@ import {
   Plus,
   ChevronDown,
   Save,
+  GripVertical,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -60,6 +61,10 @@ export default function MessagesPage() {
     isDefault: false,
     tags: [] as Tag[],
   });
+  const [orderedMessages, setOrderedMessages] = useState<any[]>([]);
+  const [draggedItemId, setDraggedItemId] = useState<Id<"messages"> | null>(
+    null
+  );
 
   // Get messages for the current user
   const messages = useQuery(api.messages.listByUser, {
@@ -70,6 +75,68 @@ export default function MessagesPage() {
   const createMessage = useMutation(api.messages.create);
   const updateMessage = useMutation(api.messages.update);
   const deleteMessage = useMutation(api.messages.remove);
+
+  // Update the orderedMessages state when messages are loaded or updated
+  useEffect(() => {
+    if (messages && Array.isArray(messages)) {
+      setOrderedMessages([...messages]);
+    }
+  }, [messages]);
+
+  // Drag and drop handlers
+  const handleDragStart = (messageId: Id<"messages">) => {
+    setDraggedItemId(messageId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetId: Id<"messages">) => {
+    e.preventDefault();
+    if (!draggedItemId || draggedItemId === targetId) return;
+
+    const draggedIndex = orderedMessages.findIndex(
+      (m) => m._id === draggedItemId
+    );
+    const targetIndex = orderedMessages.findIndex((m) => m._id === targetId);
+
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      // Create a new array to avoid mutating state
+      const newOrder = [...orderedMessages];
+      // Remove the dragged item
+      const [draggedItem] = newOrder.splice(draggedIndex, 1);
+      // Insert it at the target position
+      newOrder.splice(targetIndex, 0, draggedItem);
+
+      setOrderedMessages(newOrder);
+    }
+  };
+
+  const handleDragEnd = async () => {
+    if (draggedItemId) {
+      // Save the new order to the database
+      try {
+        // Get the ordered IDs
+        const newOrderIds = orderedMessages.map((message, index) => ({
+          id: message._id,
+          order: index,
+        }));
+
+        // Update each message with its new order
+        for (const item of newOrderIds) {
+          await updateMessage({
+            id: item.id,
+            order: item.order,
+          });
+        }
+      } catch (error) {
+        console.error("Error updating message order:", error);
+        // Revert to original order on error
+        if (messages) {
+          setOrderedMessages([...messages]);
+        }
+      }
+
+      setDraggedItemId(null);
+    }
+  };
 
   const handleMessageChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -302,8 +369,7 @@ export default function MessagesPage() {
           <button
             type="button"
             onClick={() => setShowColorPicker(!showColorPicker)}
-            className={`inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 shadow-sm text-sm font-medium ${TAG_COLORS[selectedColorIndex].bg} ${TAG_COLORS[selectedColorIndex].text} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-            style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
+            className={`inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-none shadow-sm text-sm font-medium ${TAG_COLORS[selectedColorIndex].bg} ${TAG_COLORS[selectedColorIndex].text} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
           >
             <span className="w-4 h-4 rounded-full mr-1"></span>
             <ChevronDown className="h-4 w-4" />
@@ -564,7 +630,7 @@ export default function MessagesPage() {
         )}
 
         {/* Messages List */}
-        {messages.length === 0 ? (
+        {messages?.length === 0 ? (
           <div className="text-center py-16 bg-white shadow rounded-lg">
             <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-lg font-medium text-gray-900">
@@ -586,9 +652,21 @@ export default function MessagesPage() {
         ) : (
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <ul className="divide-y divide-gray-200">
-              {messages.map((message) => (
-                <li key={message._id} className="p-6">
-                  <div className="flex items-center justify-between mb-2">
+              {orderedMessages.map((message) => (
+                <li
+                  key={message._id}
+                  className={`p-6 relative ${
+                    draggedItemId === message._id ? "opacity-50 bg-gray-50" : ""
+                  }`}
+                  draggable={true}
+                  onDragStart={() => handleDragStart(message._id)}
+                  onDragOver={(e) => handleDragOver(e, message._id)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <div className="absolute top-6 left-2 cursor-move">
+                    <GripVertical className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  </div>
+                  <div className="flex items-center justify-between mb-2 pl-8">
                     <div className="flex items-center flex-wrap gap-2">
                       <h3 className="text-lg font-semibold text-gray-900">
                         {message.title}
@@ -641,12 +719,12 @@ export default function MessagesPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="mt-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
+                  <div className="mt-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-md ml-8">
                     <pre className="font-sans whitespace-pre-wrap break-words">
                       {message.content}
                     </pre>
                   </div>
-                  <div className="mt-3 text-xs text-gray-500">
+                  <div className="mt-3 text-xs text-gray-500 ml-8">
                     Added {new Date(message.createdAt).toLocaleDateString()}
                   </div>
                 </li>

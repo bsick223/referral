@@ -8,10 +8,20 @@ export const listByUser = query({
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
-      .order("desc")
       .collect();
 
-    return messages;
+    // Sort by order if available, otherwise by creation time (most recent first)
+    return messages.sort((a, b) => {
+      // If both have order, sort by order
+      if (a.order !== undefined && b.order !== undefined) {
+        return a.order - b.order;
+      }
+      // If only one has order, put the one with order first
+      if (a.order !== undefined) return -1;
+      if (b.order !== undefined) return 1;
+      // Default sort by creation time (newest first)
+      return b.createdAt - a.createdAt;
+    });
   },
 });
 
@@ -32,14 +42,25 @@ export const create = mutation({
     content: v.string(),
     isDefault: v.optional(v.boolean()),
     tags: v.optional(v.array(v.string())),
+    order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // Get highest order number
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const maxOrder =
+      messages.length > 0 ? Math.max(...messages.map((m) => m.order ?? 0)) : -1;
+
     const messageId = await ctx.db.insert("messages", {
       userId: args.userId,
       title: args.title,
       content: args.content,
       isDefault: args.isDefault || false,
       tags: args.tags || [],
+      order: args.order ?? maxOrder + 1, // Default to placing at the end
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -56,6 +77,7 @@ export const update = mutation({
     content: v.optional(v.string()),
     isDefault: v.optional(v.boolean()),
     tags: v.optional(v.array(v.string())),
+    order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
