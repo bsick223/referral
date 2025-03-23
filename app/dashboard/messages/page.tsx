@@ -13,11 +13,32 @@ import {
   Pencil,
   Check,
   X,
+  Tag,
+  Plus,
+  ChevronDown,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { Id } from "@/convex/_generated/dataModel";
+
+// Define tag color options
+const TAG_COLORS = [
+  { bg: "bg-blue-100", text: "text-blue-800", name: "Blue" },
+  { bg: "bg-green-100", text: "text-green-800", name: "Green" },
+  { bg: "bg-red-100", text: "text-red-800", name: "Red" },
+  { bg: "bg-yellow-100", text: "text-yellow-800", name: "Yellow" },
+  { bg: "bg-purple-100", text: "text-purple-800", name: "Purple" },
+  { bg: "bg-pink-100", text: "text-pink-800", name: "Pink" },
+  { bg: "bg-indigo-100", text: "text-indigo-800", name: "Indigo" },
+  { bg: "bg-gray-100", text: "text-gray-800", name: "Gray" },
+  { bg: "bg-orange-100", text: "text-orange-800", name: "Orange" },
+];
+
+interface Tag {
+  name: string;
+  color: number; // Index of the color in TAG_COLORS
+}
 
 export default function MessagesPage() {
   const router = useRouter();
@@ -29,10 +50,14 @@ export default function MessagesPage() {
   const [copiedMessageId, setCopiedMessageId] = useState<Id<"messages"> | null>(
     null
   );
+  const [newTagName, setNewTagName] = useState("");
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [messageFormData, setMessageFormData] = useState({
     title: "",
     content: "",
     isDefault: false,
+    tags: [] as Tag[],
   });
 
   // Get messages for the current user
@@ -68,11 +93,17 @@ export default function MessagesPage() {
     if (!user) return;
 
     try {
+      // Convert tags to string format for storage
+      const stringTags = messageFormData.tags.map(
+        (tag) => `${tag.name}|${tag.color}`
+      );
+
       await createMessage({
         userId: user.id,
         title: messageFormData.title,
         content: messageFormData.content,
         isDefault: messageFormData.isDefault,
+        tags: stringTags,
       });
 
       // Reset form
@@ -80,6 +111,7 @@ export default function MessagesPage() {
         title: "",
         content: "",
         isDefault: false,
+        tags: [],
       });
       setShowNewMessageForm(false);
     } catch (error) {
@@ -92,11 +124,17 @@ export default function MessagesPage() {
     if (!editingMessageId) return;
 
     try {
+      // Convert tags to string format for storage
+      const stringTags = messageFormData.tags.map(
+        (tag) => `${tag.name}|${tag.color}`
+      );
+
       await updateMessage({
         id: editingMessageId,
         title: messageFormData.title,
         content: messageFormData.content,
         isDefault: messageFormData.isDefault,
+        tags: stringTags,
       });
 
       // Reset form
@@ -105,6 +143,7 @@ export default function MessagesPage() {
         title: "",
         content: "",
         isDefault: false,
+        tags: [],
       });
     } catch (error) {
       console.error("Error updating message:", error);
@@ -113,10 +152,21 @@ export default function MessagesPage() {
 
   const startEditing = (message: any) => {
     setEditingMessageId(message._id);
+
+    // Parse tags from string format
+    const parsedTags = (message.tags || []).map((tagString: string) => {
+      const [name, colorIndex] = tagString.split("|");
+      return {
+        name,
+        color: parseInt(colorIndex) || 0,
+      };
+    });
+
     setMessageFormData({
       title: message.title,
       content: message.content,
       isDefault: message.isDefault || false,
+      tags: parsedTags,
     });
     setShowNewMessageForm(false);
   };
@@ -127,6 +177,7 @@ export default function MessagesPage() {
       title: "",
       content: "",
       isDefault: false,
+      tags: [],
     });
   };
 
@@ -149,6 +200,55 @@ export default function MessagesPage() {
     setTimeout(() => setCopiedMessageId(null), 2000);
   };
 
+  const addTag = () => {
+    if (
+      newTagName.trim() &&
+      !messageFormData.tags.some((tag) => tag.name === newTagName.trim())
+    ) {
+      setMessageFormData((prev) => ({
+        ...prev,
+        tags: [
+          ...prev.tags,
+          { name: newTagName.trim(), color: selectedColorIndex },
+        ],
+      }));
+      setNewTagName("");
+      setShowColorPicker(false);
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setMessageFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag.name !== tagToRemove),
+    }));
+  };
+
+  const handleTagKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag();
+    }
+  };
+
+  const selectColor = (index: number) => {
+    setSelectedColorIndex(index);
+    setShowColorPicker(false);
+  };
+
+  // Parse tags for display in the message list
+  const parseTagsForDisplay = (messageTags: string[] | undefined) => {
+    if (!messageTags) return [];
+
+    return messageTags.map((tagString) => {
+      const [name, colorIndex] = tagString.split("|");
+      return {
+        name,
+        color: parseInt(colorIndex) || 0,
+      };
+    });
+  };
+
   // Loading state
   if (!user || messages === undefined) {
     return (
@@ -157,6 +257,85 @@ export default function MessagesPage() {
       </div>
     );
   }
+
+  // Render form tag section
+  const renderTagsSection = () => (
+    <div>
+      <label
+        htmlFor="tags"
+        className="block text-sm font-medium text-gray-700 mb-1"
+      >
+        Tags
+      </label>
+      <div className="flex flex-wrap gap-2 mb-2">
+        {messageFormData.tags.map((tag) => (
+          <div
+            key={tag.name}
+            className={`flex items-center ${TAG_COLORS[tag.color].bg} ${
+              TAG_COLORS[tag.color].text
+            } rounded-full px-3 py-1 text-sm`}
+          >
+            <span>{tag.name}</span>
+            <button
+              type="button"
+              onClick={() => removeTag(tag.name)}
+              className={`ml-1.5 ${
+                TAG_COLORS[tag.color].text
+              } hover:opacity-80 focus:outline-none`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className="flex">
+        <input
+          type="text"
+          value={newTagName}
+          onChange={(e) => setNewTagName(e.target.value)}
+          onKeyDown={handleTagKeyPress}
+          placeholder="Add a tag"
+          className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md rounded-r-none"
+        />
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowColorPicker(!showColorPicker)}
+            className={`inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 shadow-sm text-sm font-medium ${TAG_COLORS[selectedColorIndex].bg} ${TAG_COLORS[selectedColorIndex].text} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+            style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
+          >
+            <span className="w-4 h-4 rounded-full mr-1"></span>
+            <ChevronDown className="h-4 w-4" />
+          </button>
+          {showColorPicker && (
+            <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+              <div className="p-2 grid grid-cols-3 gap-1">
+                {TAG_COLORS.map((color, index) => (
+                  <button
+                    key={index}
+                    onClick={() => selectColor(index)}
+                    className={`${color.bg} ${color.text} px-2 py-1 rounded text-xs font-medium flex items-center justify-between`}
+                  >
+                    {color.name}
+                    {selectedColorIndex === index && (
+                      <Check className="h-3 w-3" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={addTag}
+          className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 shadow-sm text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -249,6 +428,8 @@ export default function MessagesPage() {
                   </div>
                 </div>
 
+                {renderTagsSection()}
+
                 <div className="flex items-center">
                   <input
                     id="isDefault"
@@ -337,6 +518,8 @@ export default function MessagesPage() {
                   </div>
                 </div>
 
+                {renderTagsSection()}
+
                 <div className="flex items-center">
                   <input
                     id="isDefault"
@@ -401,15 +584,27 @@ export default function MessagesPage() {
               {messages.map((message) => (
                 <li key={message._id} className="p-6">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center">
+                    <div className="flex items-center flex-wrap gap-2">
                       <h3 className="text-lg font-semibold text-gray-900">
                         {message.title}
                       </h3>
                       {message.isDefault && (
-                        <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-full">
+                        <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-full">
                           Default
                         </span>
                       )}
+                      {message.tags &&
+                        message.tags.length > 0 &&
+                        parseTagsForDisplay(message.tags).map((tag) => (
+                          <span
+                            key={tag.name}
+                            className={`px-2 py-0.5 text-xs ${
+                              TAG_COLORS[tag.color].bg
+                            } ${TAG_COLORS[tag.color].text} rounded-full`}
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
                     </div>
                     <div className="flex items-center space-x-2">
                       <button

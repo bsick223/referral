@@ -96,6 +96,7 @@ export default defineSchema({
     title: v.string(),
     content: v.string(),
     isDefault: v.optional(v.boolean()),
+    tags: v.optional(v.array(v.string())),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

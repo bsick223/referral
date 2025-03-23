@@ -31,6 +31,7 @@ export const create = mutation({
     title: v.string(),
     content: v.string(),
     isDefault: v.optional(v.boolean()),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const messageId = await ctx.db.insert("messages", {
@@ -38,6 +39,7 @@ export const create = mutation({
       title: args.title,
       content: args.content,
       isDefault: args.isDefault || false,
+      tags: args.tags || [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -53,6 +55,7 @@ export const update = mutation({
     title: v.optional(v.string()),
     content: v.optional(v.string()),
     isDefault: v.optional(v.boolean()),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
