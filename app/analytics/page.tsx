@@ -262,9 +262,9 @@ function AnalyticsContent() {
                   fill="url(#colorGradient)"
                   radius={[4, 4, 0, 0]}
                   barSize={selectedPeriod === "all" ? 30 : 40}
-                  onMouseOver={(data) => {
-                    // Custom hover effect logic if needed
-                  }}
+                  // onMouseOver={(data) => {
+                  //   // Custom hover effect logic if needed
+                  // }}
                 >
                   <LabelList
                     dataKey="count"
@@ -272,7 +272,7 @@ function AnalyticsContent() {
                     fill="#e0e0e0"
                     fontSize={12}
                     fontWeight="medium"
-                    formatter={(value: any) => (value === 0 ? "" : value)}
+                    formatter={(value: number) => (value === 0 ? "" : value)}
                     style={{
                       textShadow: "0px 0px 3px rgba(0,0,0,0.75)",
                     }}

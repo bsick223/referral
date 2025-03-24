@@ -12,7 +12,6 @@ import {
   Linkedin,
   X,
   Edit,
-  Link as LinkIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
