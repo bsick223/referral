@@ -137,6 +137,8 @@ const Leaderboard = ({ limit = 5 }: LeaderboardProps) => {
                       width={40}
                       height={40}
                       className="w-full h-full object-cover"
+                      priority={index < 3}
+                      loading={index < 3 ? "eager" : "lazy"}
                     />
                   ) : (
                     <div className="flex items-center justify-center w-full h-full bg-blue-100">

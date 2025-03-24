@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
         hostname: "rugged-fox-602.convex.cloud",
         protocol: "https",
       },
+      {
+        hostname: "img.clerk.com",
+        protocol: "https",
+      },
+      {
+        hostname: "images.clerk.dev",
+        protocol: "https",
+      },
     ],
   },
 };
