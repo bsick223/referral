@@ -37,14 +37,17 @@ export default function LeaderboardPage() {
         <div className="flex items-center mb-6">
           <Link
             href="/dashboard"
-            className="flex items-center text-gray-300 hover:text-white mr-4 transition-colors"
+            className="flex items-center text-gray-300 hover:text-white mr-4 transition-colors group"
           >
-            <ArrowLeft className="h-5 w-5 mr-1 text-orange-400" />
+            <ArrowLeft className="h-5 w-5 mr-1 text-orange-400 group-hover:text-orange-300 transition-colors duration-300" />
             <span>Back to Dashboard</span>
           </Link>
-          <h1 className="text-3xl font-light text-white">
-            Referral Leaderboard
-          </h1>
+          <div className="relative">
+            <h1 className="text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300 relative z-10">
+              Referral Leaderboard
+            </h1>
+            <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-orange-500/80 via-purple-500/60 to-blue-500/40"></div>
+          </div>
         </div>
 
         <div className="flex flex-col md:flex-row gap-8">

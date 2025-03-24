@@ -62,7 +62,12 @@ export default function DashboardPage() {
       {/* Main content */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-light text-white">Dashboard</h2>
+          <div className="relative">
+            <h2 className="text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300 relative z-10">
+              Dashboard
+            </h2>
+            <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-orange-500/80 via-purple-500/60 to-blue-500/40"></div>
+          </div>
           <div className="flex space-x-3">
             <Link
               href="/leaderboard"
