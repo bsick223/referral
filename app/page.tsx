@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { UserButton, SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import {
   Building,
   Users,
@@ -158,7 +158,7 @@ export default function Home() {
                 Company Tracking
               </h3>
               <p className="text-gray-600">
-                Keep track of all the companies you're interested in and
+                Keep track of all the companies you&apos;re interested in and
                 organize your job search efficiently.
               </p>
             </div>
@@ -172,7 +172,7 @@ export default function Home() {
               </h3>
               <p className="text-gray-600">
                 Store contact information and LinkedIn profiles for everyone
-                who's offered to refer you.
+                who&apos;s offered to refer you.
               </p>
             </div>
 
@@ -184,8 +184,8 @@ export default function Home() {
                 LinkedIn Integration
               </h3>
               <p className="text-gray-600">
-                Easily access your contacts' LinkedIn profiles with just one
-                click from your dashboard.
+                Easily access your contacts&apos; LinkedIn profiles with just
+                one click from your dashboard.
               </p>
             </div>
 

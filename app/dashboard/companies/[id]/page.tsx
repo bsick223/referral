@@ -114,7 +114,14 @@ export default function CompanyDetailPage({
     }
   };
 
-  const startEditingReferral = (referral: any) => {
+  const startEditingReferral = (referral: {
+    _id: Id<"referrals">;
+    name: string;
+    linkedinUrl: string;
+    email?: string;
+    phoneNumber?: string;
+    notes?: string;
+  }) => {
     setEditingReferralId(referral._id);
     setReferralFormData({
       name: referral.name,

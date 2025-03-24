@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 import { PlusCircle, Building, RefreshCw, MessageSquare } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -10,7 +9,6 @@ import Link from "next/link";
 
 export default function DashboardPage() {
   const { user } = useUser();
-  const router = useRouter();
 
   // Fetch companies for the current user
   const companies = useQuery(api.companies.listByUser, {

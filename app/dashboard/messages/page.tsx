@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import {
   ArrowLeft,
@@ -42,8 +41,16 @@ interface Tag {
   color: number; // Index of the color in TAG_COLORS
 }
 
+interface MessageType {
+  _id: Id<"messages">;
+  title: string;
+  content: string;
+  isDefault?: boolean;
+  tags?: string[];
+  createdAt: number;
+}
+
 export default function MessagesPage() {
-  const router = useRouter();
   const { user } = useUser();
 
   const [showNewMessageForm, setShowNewMessageForm] = useState(false);
@@ -61,7 +68,9 @@ export default function MessagesPage() {
     isDefault: false,
     tags: [] as Tag[],
   });
-  const [orderedMessages, setOrderedMessages] = useState<any[]>([]);
+  const [orderedMessages, setOrderedMessages] = useState<Array<MessageType>>(
+    []
+  );
   const [draggedItemId, setDraggedItemId] = useState<Id<"messages"> | null>(
     null
   );
@@ -218,7 +227,7 @@ export default function MessagesPage() {
     }
   };
 
-  const startEditing = (message: any) => {
+  const startEditing = (message: MessageType) => {
     setEditingMessageId(message._id);
 
     // Parse tags from string format
