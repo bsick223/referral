@@ -432,15 +432,20 @@ export default function MessagesPage() {
       <div className="absolute right-1/4 bottom-0 w-1/3 h-1/3 bg-indigo-600/20 rounded-full opacity-20 blur-[80px]"></div>
 
       {/* Header */}
-      <header className="relative z-10 bg-[#0f1326]/70 shadow-md border-b border-[#20253d]/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center">
+      <header className="relative z-10 bg-[#0f1326]/80 shadow-md border-b border-[#20253d]/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center">
           <Link
             href="/dashboard"
-            className="inline-flex items-center mr-4 text-gray-400 hover:text-white transition-colors"
+            className="inline-flex items-center mr-5 text-gray-400 hover:text-white transition-colors group"
           >
-            <ArrowLeft className="h-5 w-5 text-orange-400" />
+            <ArrowLeft className="h-5 w-5 text-orange-400 group-hover:text-orange-300 transition-colors duration-300" />
           </Link>
-          <h1 className="text-2xl font-light text-white">Message Templates</h1>
+          <div className="relative">
+            <h1 className="text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300 relative z-10">
+              Message Templates
+            </h1>
+            <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-orange-500/80 via-purple-500/60 to-blue-500/40"></div>
+          </div>
         </div>
       </header>
 

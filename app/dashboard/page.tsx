@@ -62,7 +62,7 @@ export default function DashboardPage() {
       {/* Main content */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-light text-white">My Companies</h2>
+          <h2 className="text-xl font-light text-white">Dashboard</h2>
           <div className="flex space-x-3">
             <Link
               href="/leaderboard"
