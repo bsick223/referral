@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
-import { Medal, Trophy, Award, User } from "lucide-react";
+import { Medal, Trophy, Award, User, Link as LinkIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface UserInfo {
@@ -15,11 +15,20 @@ interface UserInfo {
   imageUrl: string;
 }
 
+interface UserProfile {
+  _id: string;
+  userId: string;
+  linkedinUrl?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 interface LeaderboardEntry {
   userId: string;
   name: string;
   referralCount: number;
   userInfo?: UserInfo;
+  linkedinUrl?: string;
 }
 
 interface LeaderboardProps {
@@ -34,6 +43,19 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
   const [leaderboardWithProfiles, setLeaderboardWithProfiles] = useState<
     LeaderboardEntry[]
   >([]);
+
+  // Fetch LinkedIn URLs
+  const userProfiles = useQuery(
+    api.userProfiles.getByUserIds,
+    leaderboard ? { userIds: leaderboard.map((entry) => entry.userId) } : "skip"
+  );
+
+  // Helper function to get LinkedIn URL
+  const getLinkedinUrl = (userId: string) => {
+    if (!userProfiles) return undefined;
+    const profiles = userProfiles as Record<string, UserProfile>;
+    return profiles[userId]?.linkedinUrl;
+  };
 
   useEffect(() => {
     if (leaderboard !== undefined) {
@@ -64,18 +86,26 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
           const enrichedLeaderboard = leaderboard.map((entry) => ({
             ...entry,
             userInfo: users[entry.userId],
+            linkedinUrl: getLinkedinUrl(entry.userId),
           }));
 
           setLeaderboardWithProfiles(enrichedLeaderboard);
         } catch (error) {
           console.error("Error fetching user profiles:", error);
-          setLeaderboardWithProfiles(leaderboard);
+
+          // Still include LinkedIn URLs even if other profile info fails
+          const fallbackLeaderboard = leaderboard.map((entry) => ({
+            ...entry,
+            linkedinUrl: getLinkedinUrl(entry.userId),
+          }));
+
+          setLeaderboardWithProfiles(fallbackLeaderboard);
         }
       };
 
       fetchUserProfiles();
     }
-  }, [leaderboard]);
+  }, [leaderboard, userProfiles]);
 
   // Return medal component based on position
   const getMedal = (position: number) => {
@@ -168,10 +198,29 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {getDisplayName(entry)}
-                    {user && entry.userId === user.id && " (You)"}
-                  </p>
+                  {(() => {
+                    if (entry.linkedinUrl) {
+                      return (
+                        <a
+                          href={entry.linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline truncate flex items-center"
+                        >
+                          {getDisplayName(entry)}
+                          {user && entry.userId === user.id && " (You)"}
+                          <LinkIcon className="h-3 w-3 ml-1 flex-shrink-0" />
+                        </a>
+                      );
+                    } else {
+                      return (
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {getDisplayName(entry)}
+                          {user && entry.userId === user.id && " (You)"}
+                        </p>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
               <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -198,10 +247,31 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {getDisplayName(entry)}
-                    {user && entry.userId === user.id && " (You)"}
-                  </p>
+                  {(() => {
+                    const linkedinUrl = getLinkedinUrl(entry.userId);
+
+                    if (linkedinUrl) {
+                      return (
+                        <a
+                          href={linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline truncate flex items-center"
+                        >
+                          {getDisplayName(entry)}
+                          {user && entry.userId === user.id && " (You)"}
+                          <LinkIcon className="h-3 w-3 ml-1 flex-shrink-0" />
+                        </a>
+                      );
+                    } else {
+                      return (
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {getDisplayName(entry)}
+                          {user && entry.userId === user.id && " (You)"}
+                        </p>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
               <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">

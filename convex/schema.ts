@@ -104,4 +104,11 @@ export default defineSchema({
     .index("by_user_id", ["userId"])
     .index("by_created_at", ["createdAt"])
     .index("by_default", ["isDefault"]),
+
+  userProfiles: defineTable({
+    userId: v.string(),
+    linkedinUrl: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user_id", ["userId"]),
 });

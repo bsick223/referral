@@ -1,9 +1,19 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import Image from "next/image";
-import { Medal, Trophy, Award, User, LineChart } from "lucide-react";
+import {
+  Medal,
+  Trophy,
+  Award,
+  User,
+  LineChart,
+  Linkedin,
+  X,
+  Edit,
+  Link as LinkIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -12,11 +22,21 @@ interface UserRankCardProps {
 }
 
 const UserRankCard = ({ userId }: UserRankCardProps) => {
-  const allLeaderboardEntries = useQuery(api.referrals.getLeaderboard);
+  const allLeaderboardEntries = useQuery(api.referrals.getLeaderboard, {});
+  const userProfile = useQuery(
+    api.userProfiles.getByUserId,
+    userId ? { userId } : "skip"
+  );
+  const upsertProfile = useMutation(api.userProfiles.upsertProfile);
+  const removeLinkedinUrl = useMutation(api.userProfiles.removeLinkedinUrl);
+
   const [userPosition, setUserPosition] = useState<number | null>(null);
   const [userEntry, setUserEntry] = useState<any | null>(null);
   const [userInfo, setUserInfo] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditingLinkedin, setIsEditingLinkedin] = useState(false);
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [showLinkedinInput, setShowLinkedinInput] = useState(false);
 
   useEffect(() => {
     if (allLeaderboardEntries && userId) {
@@ -64,6 +84,39 @@ const UserRankCard = ({ userId }: UserRankCardProps) => {
       setIsLoading(false);
     }
   }, [allLeaderboardEntries, userId]);
+
+  // Set LinkedIn URL from user profile
+  useEffect(() => {
+    if (userProfile && userProfile.linkedinUrl) {
+      setLinkedinUrl(userProfile.linkedinUrl);
+    } else {
+      setLinkedinUrl("");
+    }
+  }, [userProfile]);
+
+  // Handle saving LinkedIn URL
+  const handleSaveLinkedin = async () => {
+    if (!userId) return;
+
+    // Validate URL
+    let url = linkedinUrl.trim();
+    if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+
+    await upsertProfile({ userId, linkedinUrl: url });
+    setIsEditingLinkedin(false);
+    setShowLinkedinInput(false);
+  };
+
+  // Handle removing LinkedIn URL
+  const handleRemoveLinkedin = async () => {
+    if (!userId) return;
+    await removeLinkedinUrl({ userId });
+    setLinkedinUrl("");
+    setIsEditingLinkedin(false);
+    setShowLinkedinInput(false);
+  };
 
   // Get medal icon based on position
   const getMedal = (position: number) => {
@@ -139,6 +192,90 @@ const UserRankCard = ({ userId }: UserRankCardProps) => {
           <p className="text-sm text-gray-500 mb-4">
             Start adding referrals to earn your place!
           </p>
+
+          {/* LinkedIn URL Section */}
+          <div className="mt-6 border-t border-gray-200 pt-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium text-gray-900">
+                Your LinkedIn Profile
+              </h4>
+              {!showLinkedinInput && (
+                <button
+                  onClick={() => setShowLinkedinInput(true)}
+                  className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                >
+                  <Edit className="h-3 w-3 mr-1" />
+                  Add
+                </button>
+              )}
+            </div>
+
+            {showLinkedinInput ? (
+              <div className="mt-2">
+                <div className="flex">
+                  <input
+                    type="text"
+                    value={linkedinUrl}
+                    onChange={(e) => setLinkedinUrl(e.target.value)}
+                    placeholder="https://linkedin.com/in/yourprofile"
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                  />
+                </div>
+                <div className="mt-2 flex justify-end space-x-2">
+                  <button
+                    onClick={() => {
+                      setShowLinkedinInput(false);
+                      setLinkedinUrl(userProfile?.linkedinUrl || "");
+                    }}
+                    className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveLinkedin}
+                    className="px-2 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            ) : userProfile?.linkedinUrl ? (
+              <div className="mt-2 flex items-center justify-between">
+                <a
+                  href={userProfile.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 hover:underline text-sm flex items-center truncate max-w-[180px]"
+                >
+                  <Linkedin className="h-4 w-4 mr-1" />
+                  <span className="truncate">{userProfile.linkedinUrl}</span>
+                </a>
+                <div className="flex space-x-1">
+                  <button
+                    onClick={() => {
+                      setLinkedinUrl(userProfile.linkedinUrl || "");
+                      setShowLinkedinInput(true);
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                    title="Edit"
+                  >
+                    <Edit className="h-3 w-3" />
+                  </button>
+                  <button
+                    onClick={handleRemoveLinkedin}
+                    className="text-gray-500 hover:text-red-500"
+                    title="Remove"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm mt-1">
+                No LinkedIn profile added
+              </p>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -177,9 +314,21 @@ const UserRankCard = ({ userId }: UserRankCardProps) => {
           </div>
 
           <div>
-            <div className="font-medium text-lg text-gray-900">
-              {getDisplayName()}
-            </div>
+            {userProfile?.linkedinUrl ? (
+              <a
+                href={userProfile.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-lg text-gray-900 hover:text-blue-600 hover:underline flex items-center"
+              >
+                {getDisplayName()}
+                <LinkIcon className="h-3 w-3 ml-1" />
+              </a>
+            ) : (
+              <div className="font-medium text-lg text-gray-900">
+                {getDisplayName()}
+              </div>
+            )}
             <div className="text-sm text-gray-500">You</div>
           </div>
         </div>
@@ -200,6 +349,99 @@ const UserRankCard = ({ userId }: UserRankCardProps) => {
             </div>
           </div>
         </Link>
+
+        {/* LinkedIn URL Section */}
+        <div className="mt-6 border-t border-gray-200 pt-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-gray-900">
+              Your LinkedIn Profile
+            </h4>
+            {!showLinkedinInput && (
+              <button
+                onClick={() => setShowLinkedinInput(true)}
+                className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+              >
+                {userProfile?.linkedinUrl ? (
+                  <>
+                    <Edit className="h-3 w-3 mr-1" />
+                    Edit
+                  </>
+                ) : (
+                  <>
+                    <Edit className="h-3 w-3 mr-1" />
+                    Add
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+
+          {showLinkedinInput ? (
+            <div className="mt-2">
+              <div className="flex">
+                <input
+                  type="text"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  placeholder="https://linkedin.com/in/yourprofile"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                />
+              </div>
+              <div className="mt-2 flex justify-end space-x-2">
+                <button
+                  onClick={() => {
+                    setShowLinkedinInput(false);
+                    setLinkedinUrl(userProfile?.linkedinUrl || "");
+                  }}
+                  className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveLinkedin}
+                  className="px-2 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : userProfile?.linkedinUrl ? (
+            <div className="mt-2 flex items-center justify-between">
+              <a
+                href={userProfile.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 hover:underline text-sm flex items-center truncate max-w-[180px]"
+              >
+                <Linkedin className="h-4 w-4 mr-1" />
+                <span className="truncate">{userProfile.linkedinUrl}</span>
+              </a>
+              <div className="flex space-x-1">
+                <button
+                  onClick={() => {
+                    setLinkedinUrl(userProfile.linkedinUrl || "");
+                    setShowLinkedinInput(true);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                  title="Edit"
+                >
+                  <Edit className="h-3 w-3" />
+                </button>
+                <button
+                  onClick={handleRemoveLinkedin}
+                  className="text-gray-500 hover:text-red-500"
+                  title="Remove"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm mt-1">
+              No LinkedIn profile added
+            </p>
+          )}
+        </div>
 
         {userPosition && userPosition > 1 && (
           <div className="mt-4 text-sm text-gray-500 text-center">
