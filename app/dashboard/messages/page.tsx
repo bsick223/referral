@@ -560,7 +560,7 @@ export default function MessagesPage() {
                 <button
                   type="submit"
                   disabled={!messageFormData.title || !messageFormData.content}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-400 hover:to-purple-500 focus:outline-none disabled:opacity-50 cursor-pointer backdrop-blur-sm"
+                  className="inline-flex items-center px-4 py-2 border-0 border-transparent rounded-md text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-400 hover:to-purple-500 focus:outline-none disabled:opacity-90 cursor-pointer backdrop-blur-sm shadow-[0_0_15px_rgba(249,115,22,0.5)]"
                 >
                   <PlusCircle className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Add Message</span>

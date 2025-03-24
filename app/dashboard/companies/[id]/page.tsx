@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import {
@@ -163,12 +163,23 @@ export default function CompanyDetailPage({
     ) {
       try {
         await deleteCompany({ id: companyId });
-        router.push("/dashboard");
+        // Don't call router.push here, just return to render loading state
+        return true;
       } catch (error) {
         console.error("Error deleting company:", error);
+        return false;
       }
     }
+    return false;
   };
+
+  // Use effect to navigate after company is deleted
+  useEffect(() => {
+    // If company was loaded before but now is undefined, it was deleted
+    if (company === null) {
+      router.push("/dashboard");
+    }
+  }, [company, router]);
 
   // Loading state
   if (!user || company === undefined || referrals === undefined) {
