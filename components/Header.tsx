@@ -29,17 +29,18 @@ function Header() {
               <Link href="/dashboard">
                 <Button
                   variant="outline"
-                  className="w-fit relative bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 text-white hover:from-orange-500 hover:via-purple-500 hover:to-blue-600
+                  className="w-fit relative bg-transparent text-white hover:text-gray-200
                 font-semibold px-4 py-2 rounded-lg
                 transition-all duration-100 ease-in-out
-                border-none
+                border border-white/20
+                backdrop-filter backdrop-blur-sm
                 overflow-hidden
                 before:absolute before:inset-0
                 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent
                 before:translate-x-[-200%] hover:before:translate-x-[200%]
                 before:transition-transform before:duration-1000
                 before:pointer-events-none
-                hover:shadow-md
+                hover:bg-white/10 hover:shadow-md
                 active:scale-95 active:shadow-inner hover:cursor-pointer"
                 >
                   Dashboard
