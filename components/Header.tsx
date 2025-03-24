@@ -8,16 +8,16 @@ import { Building } from "lucide-react";
 function Header() {
   return (
     <header
-      className="sticky top-0 left-0 right-0 px-4 md:px-0 bg-white/80
-    backdrop-blur-sm border-b border-gray-200 z-50"
+      className="sticky top-0 left-0 right-0 px-4 md:px-0 bg-[#090d1b]/90
+    backdrop-blur-sm border-b border-[#20253d]/50 z-50"
     >
       <div className="container mx-auto">
         <div className="flex items-center justify-between h-16">
           {/* Left */}
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
-              <Building className="h-6 w-6 text-blue-600" />
-              <span className="text-xl font-bold text-blue-600">
+              <Building className="h-6 w-6 text-orange-500" />
+              <span className="text-xl font-bold bg-gradient-to-r from-orange-500 via-purple-500 to-blue-500 text-transparent bg-clip-text">
                 ReferralTracker
               </span>
             </Link>
@@ -29,13 +29,13 @@ function Header() {
               <Link href="/dashboard">
                 <Button
                   variant="outline"
-                  className="w-fit relative bg-white text-gray-800 hover:text-blue-600
+                  className="w-fit relative bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 text-white hover:from-orange-500 hover:via-purple-500 hover:to-blue-600
                 font-semibold px-4 py-2 rounded-lg
                 transition-all duration-100 ease-in-out
-                border border-blue-200 hover:border-blue-300
+                border-none
                 overflow-hidden
                 before:absolute before:inset-0
-                before:bg-gradient-to-r before:from-transparent before:via-amber-400/30 before:to-transparent
+                before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent
                 before:translate-x-[-200%] hover:before:translate-x-[200%]
                 before:transition-transform before:duration-1000
                 before:pointer-events-none
