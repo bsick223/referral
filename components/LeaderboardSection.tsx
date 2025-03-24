@@ -9,22 +9,24 @@ const Leaderboard = dynamic(() => import("./Leaderboard"), {
 
 export default function LeaderboardSection() {
   return (
-    <section className="py-12 md:py-20 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <h2 className="text-3xl font-bold text-gray-900">
-            Our Community Leaders
+    <div className="relative">
+      {/* Semi-transparent background with gradient fade effect */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0e1326]/70 via-[#121a36]/60 to-transparent rounded-2xl backdrop-blur-sm"></div>
+
+      <div className="relative z-10 px-4 py-6 md:py-8">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl md:text-3xl font-light text-white">
+            Community Leaders
           </h2>
-          <p className="mt-4 text-lg text-gray-600">
-            Check out our top users who are actively managing their referrals
-            and building their networks.
+          <p className="mt-2 text-gray-400 text-sm md:text-base">
+            Top users actively building their referral networks
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto">
-          <Leaderboard limit={3} />
+        <div className="max-w-2xl mx-auto">
+          <Leaderboard limit={3} hideHeader={true} />
         </div>
       </div>
-    </section>
+    </div>
   );
 }

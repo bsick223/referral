@@ -118,13 +118,13 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
   const getMedal = (position: number) => {
     switch (position) {
       case 0:
-        return <Trophy className="h-6 w-6 text-yellow-500" />;
+        return <Trophy className="h-5 w-5 text-orange-500" />;
       case 1:
-        return <Medal className="h-6 w-6 text-gray-400" />;
+        return <Medal className="h-5 w-5 text-gray-300" />;
       case 2:
-        return <Medal className="h-6 w-6 text-amber-700" />;
+        return <Medal className="h-5 w-5 text-amber-600" />;
       default:
-        return <Award className="h-6 w-6 text-blue-500" />;
+        return <Award className="h-5 w-5 text-blue-400" />;
     }
   };
 
@@ -158,47 +158,49 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+    <div className="overflow-hidden rounded-xl bg-[#0a0e1c]/30 backdrop-blur-sm border border-[#20253d]/50">
       {!hideHeader && (
-        <div className="px-6 py-4 bg-blue-600">
-          <h3 className="text-xl font-bold text-white">Referral Leaderboard</h3>
-          <p className="text-blue-100 text-sm">
+        <div className="px-6 py-4 bg-[#0f1326]/50 border-b border-[#20253d]/50">
+          <h3 className="text-xl font-light text-white">
+            Referral Leaderboard
+          </h3>
+          <p className="text-gray-400 text-sm">
             Top users with the most referrals
           </p>
         </div>
       )}
 
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-[#20253d]/30">
         {!isLoaded ? (
           <div className="p-6 text-center">
-            <div className="animate-pulse h-12 bg-gray-200 rounded"></div>
-            <div className="animate-pulse h-12 bg-gray-200 rounded mt-2"></div>
-            <div className="animate-pulse h-12 bg-gray-200 rounded mt-2"></div>
+            <div className="animate-pulse h-12 bg-[#1d2442]/20 rounded"></div>
+            <div className="animate-pulse h-12 bg-[#1d2442]/20 rounded mt-2"></div>
+            <div className="animate-pulse h-12 bg-[#1d2442]/20 rounded mt-2"></div>
           </div>
         ) : leaderboardWithProfiles.length > 0 ? (
           leaderboardWithProfiles.map((entry, index) => (
             <div
               key={entry.userId}
               className={`p-4 flex items-center justify-between ${
-                user && entry.userId === user.id ? "bg-blue-50" : ""
+                user && entry.userId === user.id ? "bg-[#1d2442]/20" : ""
               }`}
             >
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0">{getMedal(index)}</div>
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1d2442]/40 flex-shrink-0 border border-[#20253d]/50">
                   {entry.userInfo?.imageUrl ? (
                     <Image
                       src={entry.userInfo.imageUrl}
                       alt={getDisplayName(entry)}
-                      width={40}
-                      height={40}
+                      width={32}
+                      height={32}
                       className="w-full h-full object-cover"
                       priority={index < 3}
                       loading={index < 3 ? "eager" : "lazy"}
                     />
                   ) : (
-                    <div className="flex items-center justify-center w-full h-full bg-blue-100">
-                      <span className="text-blue-600 font-medium text-sm">
+                    <div className="flex items-center justify-center w-full h-full bg-[#1d2442]">
+                      <span className="text-gray-300 font-medium text-xs">
                         {getInitials(entry)}
                       </span>
                     </div>
@@ -218,16 +220,16 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
                           href={entry.linkedinUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline truncate flex items-center"
+                          className="text-xs font-medium text-white hover:text-orange-400 hover:underline truncate flex items-center"
                         >
                           {getDisplayName(entry)}
                           {user && entry.userId === user.id && " (You)"}
-                          <LinkIcon className="h-3 w-3 ml-1 flex-shrink-0" />
+                          <LinkIcon className="h-2.5 w-2.5 ml-1 flex-shrink-0" />
                         </a>
                       );
                     } else {
                       return (
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-xs font-medium text-white truncate">
                           {getDisplayName(entry)}
                           {user && entry.userId === user.id && " (You)"}
                         </p>
@@ -236,7 +238,7 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
                   })()}
                 </div>
               </div>
-              <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <div className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-900/20 text-orange-300 border border-orange-700/30">
                 {entry.referralCount}{" "}
                 {entry.referralCount === 1 ? "referral" : "referrals"}
               </div>
@@ -247,14 +249,14 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
             <div
               key={entry.userId}
               className={`p-4 flex items-center justify-between ${
-                user && entry.userId === user.id ? "bg-blue-50" : ""
+                user && entry.userId === user.id ? "bg-[#1d2442]/20" : ""
               }`}
             >
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0">{getMedal(index)}</div>
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                  <div className="flex items-center justify-center w-full h-full bg-blue-100">
-                    <span className="text-blue-600 font-medium text-sm">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1d2442]/40 flex-shrink-0">
+                  <div className="flex items-center justify-center w-full h-full bg-[#1d2442]">
+                    <span className="text-gray-300 font-medium text-xs">
                       {getInitials(entry)}
                     </span>
                   </div>
@@ -274,16 +276,16 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
                           href={linkedinUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline truncate flex items-center"
+                          className="text-xs font-medium text-white hover:text-orange-400 hover:underline truncate flex items-center"
                         >
                           {getDisplayName(entry)}
                           {user && entry.userId === user.id && " (You)"}
-                          <LinkIcon className="h-3 w-3 ml-1 flex-shrink-0" />
+                          <LinkIcon className="h-2.5 w-2.5 ml-1 flex-shrink-0" />
                         </a>
                       );
                     } else {
                       return (
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-xs font-medium text-white truncate">
                           {getDisplayName(entry)}
                           {user && entry.userId === user.id && " (You)"}
                         </p>
@@ -292,7 +294,7 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
                   })()}
                 </div>
               </div>
-              <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <div className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-900/20 text-orange-300 border border-orange-700/30">
                 {entry.referralCount}{" "}
                 {entry.referralCount === 1 ? "referral" : "referrals"}
               </div>
