@@ -354,7 +354,7 @@ const UserRankCard = ({ userId }: UserRankCardProps) => {
         <div className="mt-6 border-t border-gray-200 pt-4">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-medium text-gray-900">
-              Your LinkedIn Profile
+              Show Your LinkedIn Profile
             </h4>
             {!showLinkedinInput && (
               <button
