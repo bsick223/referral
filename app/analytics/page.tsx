@@ -15,6 +15,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  LabelList,
 } from "recharts";
 import {
   Card,
@@ -229,7 +230,12 @@ function AnalyticsContent() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={getCurrentChartData()}
-                margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
+                margin={{
+                  top: selectedPeriod === "weekly" ? 25 : 10,
+                  right: 30,
+                  left: 0,
+                  bottom: 10,
+                }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#444444" />
                 <XAxis
@@ -259,7 +265,19 @@ function AnalyticsContent() {
                   onMouseOver={(data) => {
                     // Custom hover effect logic if needed
                   }}
-                />
+                >
+                  <LabelList
+                    dataKey="count"
+                    position="top"
+                    fill="#e0e0e0"
+                    fontSize={12}
+                    fontWeight="medium"
+                    formatter={(value: any) => (value === 0 ? "" : value)}
+                    style={{
+                      textShadow: "0px 0px 3px rgba(0,0,0,0.75)",
+                    }}
+                  />
+                </Bar>
                 <defs>
                   <linearGradient
                     id="colorGradient"
@@ -296,7 +314,7 @@ function AnalyticsContent() {
                     ? "bg-gray-900 text-blue-400 shadow-sm"
                     : "text-gray-300 hover:text-blue-400"
                 } 
-                  transition-all py-2`}
+                  transition-all py-2 cursor-pointer`}
                 onClick={() => setSelectedPeriod("weekly")}
               >
                 Weekly
@@ -308,7 +326,7 @@ function AnalyticsContent() {
                     ? "bg-gray-900 text-blue-400 shadow-sm"
                     : "text-gray-300 hover:text-blue-400"
                 } 
-                  transition-all py-2`}
+                  transition-all py-2 cursor-pointer`}
                 onClick={() => setSelectedPeriod("monthly")}
               >
                 Monthly
@@ -320,7 +338,7 @@ function AnalyticsContent() {
                     ? "bg-gray-900 text-blue-400 shadow-sm"
                     : "text-gray-300 hover:text-blue-400"
                 } 
-                  transition-all py-2`}
+                  transition-all py-2 cursor-pointer`}
                 onClick={() => setSelectedPeriod("all")}
               >
                 All Time
