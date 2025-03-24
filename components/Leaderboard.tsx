@@ -103,6 +103,22 @@ const Leaderboard = ({ limit = 5 }: LeaderboardProps) => {
     return entry.name;
   };
 
+  // Add a function to get the user's initials for the avatar
+  const getInitials = (entry: LeaderboardEntry) => {
+    if (entry.userInfo) {
+      if (entry.userInfo.firstName && entry.userInfo.lastName) {
+        return `${entry.userInfo.firstName.charAt(
+          0
+        )}${entry.userInfo.lastName.charAt(0)}`;
+      } else if (entry.userInfo.firstName) {
+        return entry.userInfo.firstName.charAt(0);
+      } else if (entry.userInfo.username) {
+        return entry.userInfo.username.charAt(0);
+      }
+    }
+    return entry.name.charAt(0);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden">
       <div className="px-6 py-4 bg-blue-600">
@@ -142,7 +158,9 @@ const Leaderboard = ({ limit = 5 }: LeaderboardProps) => {
                     />
                   ) : (
                     <div className="flex items-center justify-center w-full h-full bg-blue-100">
-                      <User className="w-5 h-5 text-blue-600" />
+                      <span className="text-blue-600 font-medium text-sm">
+                        {getInitials(entry)}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -171,12 +189,14 @@ const Leaderboard = ({ limit = 5 }: LeaderboardProps) => {
                 <div className="flex-shrink-0">{getMedal(index)}</div>
                 <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                   <div className="flex items-center justify-center w-full h-full bg-blue-100">
-                    <User className="w-5 h-5 text-blue-600" />
+                    <span className="text-blue-600 font-medium text-sm">
+                      {getInitials(entry)}
+                    </span>
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    {entry.name}
+                    {getDisplayName(entry)}
                     {user && entry.userId === user.id && " (You)"}
                   </p>
                 </div>
