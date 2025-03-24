@@ -8,7 +8,7 @@ import { Building } from "lucide-react";
 function Header() {
   return (
     <header
-      className="sticky top-0 left-0 right-0 px-4 md:px-0 bg-[#090d1b]/90
+      className="sticky top-0 left-0 right-0 px-4 md:px-6 lg:px-8 bg-[#090d1b]/90
     backdrop-blur-sm border-b border-[#20253d]/50 z-50"
     >
       <div className="container mx-auto">
@@ -17,7 +17,7 @@ function Header() {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
               <Building className="h-6 w-6 text-orange-500" />
-              <span className="text-xl font-bold bg-gradient-to-r from-orange-500 via-purple-500 to-blue-500 text-transparent bg-clip-text">
+              <span className="text-xl font-bold bg-gradient-to-r text-white text-transparent bg-clip-text">
                 ReferralTracker
               </span>
             </Link>
