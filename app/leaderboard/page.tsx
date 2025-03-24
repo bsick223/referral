@@ -68,7 +68,7 @@ export default function LeaderboardPage() {
                 </p>
               </div>
               <div className="max-h-[800px] overflow-y-auto">
-                <Leaderboard limit={50} hideHeader={true} />
+                <Leaderboard hideHeader={true} />
               </div>
             </div>
           </div>

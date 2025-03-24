@@ -124,8 +124,6 @@ export const remove = mutation({
 export const getLeaderboard = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const limit = args.limit || 10; // Default to top 10
-
     // Get all referrals
     const referrals = await ctx.db.query("referrals").collect();
 
@@ -146,15 +144,214 @@ export const getLeaderboard = query({
     }
 
     // Convert to array and sort by count
-    const leaderboardEntries = Array.from(userReferralCounts.entries())
+    let leaderboardEntries = Array.from(userReferralCounts.entries())
       .map(([userId, count]) => ({
         userId,
         name: userNames.get(userId) || "Anonymous",
         referralCount: count,
       }))
-      .sort((a, b) => b.referralCount - a.referralCount)
-      .slice(0, limit);
+      .sort((a, b) => b.referralCount - a.referralCount);
+
+    // Apply limit if provided
+    if (args.limit) {
+      leaderboardEntries = leaderboardEntries.slice(0, args.limit);
+    }
 
     return leaderboardEntries;
+  },
+});
+
+// Get referral analytics data for a user
+export const getUserReferralAnalytics = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    // Get all referrals for the user
+    const referrals = await ctx.db
+      .query("referrals")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    if (referrals.length === 0) {
+      return {
+        totalReferrals: 0,
+        dailyData: [],
+        weeklyData: [],
+        monthlyData: [],
+        yearlyData: [],
+        statusBreakdown: {},
+      };
+    }
+
+    // Calculate the start times for different periods
+    const now = Date.now();
+    const oneDayAgo = now - 24 * 60 * 60 * 1000;
+    const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
+    const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000;
+    const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000;
+
+    // Group referrals by day (for the last 7 days)
+    const dailyData = new Array(7)
+      .fill(0)
+      .map((_, i) => {
+        const date = new Date(now - i * 24 * 60 * 60 * 1000);
+        const dateStr = date.toISOString().split("T")[0];
+        const startOfDay = new Date(dateStr).getTime();
+        const endOfDay = startOfDay + 24 * 60 * 60 * 1000 - 1;
+
+        const count = referrals.filter(
+          (ref) => ref.createdAt >= startOfDay && ref.createdAt <= endOfDay
+        ).length;
+
+        return {
+          date: dateStr,
+          count,
+        };
+      })
+      .reverse();
+
+    // Group referrals by week (for the last 12 weeks)
+    const weeklyData = new Array(12)
+      .fill(0)
+      .map((_, i) => {
+        const weekStart = now - (i + 1) * 7 * 24 * 60 * 60 * 1000;
+        const weekEnd = now - i * 7 * 24 * 60 * 60 * 1000 - 1;
+
+        const count = referrals.filter(
+          (ref) => ref.createdAt >= weekStart && ref.createdAt <= weekEnd
+        ).length;
+
+        const weekStartDate = new Date(weekStart);
+        const label = `Week ${
+          weekStartDate.getMonth() + 1
+        }/${weekStartDate.getDate()}`;
+
+        return {
+          label,
+          count,
+        };
+      })
+      .reverse();
+
+    // Group referrals by month (for the last 12 months)
+    const monthlyData = new Array(12)
+      .fill(0)
+      .map((_, i) => {
+        const date = new Date(now);
+        date.setMonth(date.getMonth() - i);
+        date.setDate(1);
+        date.setHours(0, 0, 0, 0);
+        const monthStart = date.getTime();
+
+        date.setMonth(date.getMonth() + 1);
+        const monthEnd = date.getTime() - 1;
+
+        const count = referrals.filter(
+          (ref) => ref.createdAt >= monthStart && ref.createdAt <= monthEnd
+        ).length;
+
+        const monthName = new Date(monthStart).toLocaleString("default", {
+          month: "short",
+        });
+        const year = new Date(monthStart).getFullYear();
+
+        return {
+          label: `${monthName} ${year}`,
+          count,
+        };
+      })
+      .reverse();
+
+    // Group referrals by status
+    const statusBreakdown = referrals.reduce<Record<string, number>>(
+      (acc, ref) => {
+        const status = ref.status || "unknown";
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    // Recent activity (last 10 referrals)
+    const recentActivity = referrals
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 10)
+      .map((ref) => ({
+        id: ref._id,
+        name: ref.name,
+        status: ref.status,
+        date: new Date(ref.createdAt).toISOString(),
+      }));
+
+    return {
+      totalReferrals: referrals.length,
+      dailyData,
+      weeklyData,
+      monthlyData,
+      statusBreakdown,
+      recentActivity,
+    };
+  },
+});
+
+// Get referrals grouped by company for a user
+export const getUserReferralsByCompany = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    // Get all referrals for the user
+    const referrals = await ctx.db
+      .query("referrals")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    if (referrals.length === 0) {
+      return {
+        totalReferrals: 0,
+        companiesData: [],
+      };
+    }
+
+    // Group referrals by company
+    const companiesMap = new Map<
+      string,
+      { count: number; companyName: string }
+    >();
+
+    // Fetch company details for each referral
+    for (const referral of referrals) {
+      const companyId = referral.companyId;
+
+      // Get or initialize company data
+      let companyData = companiesMap.get(companyId.toString());
+
+      if (!companyData) {
+        // Fetch company details if we haven't seen this company yet
+        const company = await ctx.db.get(companyId);
+
+        companyData = {
+          count: 0,
+          companyName: company ? company.name : "Unknown Company",
+        };
+
+        companiesMap.set(companyId.toString(), companyData);
+      }
+
+      // Increment the count
+      companyData.count += 1;
+    }
+
+    // Convert to array and sort by count
+    const companiesData = Array.from(companiesMap.entries())
+      .map(([companyId, data]) => ({
+        companyId,
+        companyName: data.companyName,
+        referralCount: data.count,
+        percentage: (data.count / referrals.length) * 100,
+      }))
+      .sort((a, b) => b.referralCount - a.referralCount);
+
+    return {
+      totalReferrals: referrals.length,
+      companiesData,
+    };
   },
 });

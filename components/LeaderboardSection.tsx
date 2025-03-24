@@ -22,7 +22,7 @@ export default function LeaderboardSection() {
         </div>
 
         <div className="max-w-3xl mx-auto">
-          <Leaderboard limit={5} />
+          <Leaderboard limit={3} />
         </div>
       </div>
     </section>

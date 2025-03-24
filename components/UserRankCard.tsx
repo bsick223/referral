@@ -5,6 +5,7 @@ import { api } from "../convex/_generated/api";
 import Image from "next/image";
 import { Medal, Trophy, Award, User, LineChart } from "lucide-react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 interface UserRankCardProps {
   userId?: string;
@@ -183,17 +184,22 @@ const UserRankCard = ({ userId }: UserRankCardProps) => {
           </div>
         </div>
 
-        <div className="bg-blue-50 p-4 rounded-lg flex items-center">
-          <LineChart className="w-5 h-5 text-blue-600 mr-2" />
-          <div>
-            <div className="text-xl font-bold text-blue-700">
-              {userEntry.referralCount}
+        <Link href={`/analytics?userId=${userId}`} className="block w-full">
+          <div className="bg-blue-50 p-4 rounded-lg flex items-center transition-colors hover:bg-blue-100 cursor-pointer">
+            <LineChart className="w-5 h-5 text-blue-600 mr-2" />
+            <div>
+              <div className="text-xl font-bold text-blue-700">
+                {userEntry.referralCount}
+              </div>
+              <div className="text-sm text-blue-600">
+                {userEntry.referralCount === 1 ? "referral" : "referrals"}
+              </div>
             </div>
-            <div className="text-sm text-blue-600">
-              {userEntry.referralCount === 1 ? "referral" : "referrals"}
+            <div className="ml-auto text-blue-600">
+              <span className="text-sm">View Analytics</span>
             </div>
           </div>
-        </div>
+        </Link>
 
         {userPosition && userPosition > 1 && (
           <div className="mt-4 text-sm text-gray-500 text-center">
