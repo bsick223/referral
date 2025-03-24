@@ -79,9 +79,14 @@ export default function NewCompanyPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-2xl font-light text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300">
-            Add New Company
-          </h1>
+          <div className="relative">
+            <Link href="/dashboard" className="relative">
+              <h1 className="text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300 relative z-10">
+                Add New Company
+              </h1>
+              <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-orange-500/80 via-purple-500/60 to-blue-500/40"></div>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -167,7 +172,7 @@ export default function NewCompanyPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || !formData.name}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white 
+                  className="inline-flex items-center px-4 py-2 border-0 border-transparent rounded-md text-sm font-medium text-white 
                   bg-gradient-to-r from-orange-500 via-purple-500 to-blue-600 hover:from-orange-400 hover:via-purple-400 hover:to-blue-500
                   shadow-[0_0_15px_rgba(249,115,22,0.5)] 
                   focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-90 cursor-pointer
