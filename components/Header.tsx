@@ -48,8 +48,8 @@ function Header() {
               </Link>
 
               <div
-                className="p-2 w-10 h-10 flex items-center justify-center
-                rounded-full border bg-blue-100 border-blue-200"
+                className="p-1.5 w-10 h-10 flex items-center justify-center
+                rounded-full border border-[#20253d]/60 bg-[#121a36]/70 backdrop-blur-sm overflow-hidden shadow-[0_0_15px_rgba(249,115,22,0.5)]"
               >
                 <UserButton />
               </div>
@@ -77,19 +77,20 @@ function Header() {
                 }}
               >
                 <Button
-                  variant="ghost"
-                  className="relative bg-white text-blue-600
+                  variant="outline"
+                  className="w-fit relative bg-transparent text-white hover:text-gray-200
                 font-semibold px-6 py-2 rounded-lg
-                transition-all duration-200 ease-in-out
-                border border-blue-200 hover:border-blue-300
+                transition-all duration-100 ease-in-out
+                border border-white/20
+                backdrop-filter backdrop-blur-sm
                 overflow-hidden
                 before:absolute before:inset-0
-                before:bg-gradient-to-r before:from-transparent before:via-amber-400/30 before:to-transparent
+                before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent
                 before:translate-x-[-200%] hover:before:translate-x-[200%]
                 before:transition-transform before:duration-1000
                 before:pointer-events-none
-                hover:shadow-md
-                hover:cursor-pointer"
+                hover:bg-white/10 hover:shadow-md
+                active:scale-95 active:shadow-inner hover:cursor-pointer"
                 >
                   Sign In
                 </Button>
