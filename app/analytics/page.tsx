@@ -270,7 +270,7 @@ function AnalyticsContent() {
           </div>
         </CardContent>
         <CardFooter className="border-t border-gray-700 bg-gray-800 rounded-b-lg py-4">
-          <Tabs defaultValue={selectedPeriod} className="w-full">
+          <Tabs defaultValue={selectedPeriod} className="">
             <TabsList className="w-full max-w-md mx-auto grid grid-cols-3 bg-gray-700">
               <TabsTrigger
                 value="weekly"
