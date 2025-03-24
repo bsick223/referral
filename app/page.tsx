@@ -123,8 +123,8 @@ export default function Home() {
           <div className="mb-24">
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="px-8 py-3 text-base font-medium rounded-full bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 text-white hover:from-orange-500 hover:via-purple-500 hover:to-blue-600 transition-colors shadow-lg hover:shadow-xl backdrop-blur-sm">
-                  How it works <ArrowRight className="ml-2 inline h-4 w-4" />
+                <button className="px-8 py-3 text-base font-medium rounded-full bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 text-white hover:from-orange-500 hover:via-purple-500 hover:to-blue-600 transition-colors hover:shadow-xl backdrop-blur-sm shadow-[0_0_15px_rgba(249,115,22,0.5)] cursor-pointer">
+                  Get Started <ArrowRight className="ml-2 inline h-4 w-4" />
                 </button>
               </SignInButton>
             </SignedOut>

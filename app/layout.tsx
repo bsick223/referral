@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientWrapper from "@/components/ClientWrapper";
 import Header from "@/components/Header";
+import ScrollToTop from "@/components/ScrollToTop";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -35,6 +36,7 @@ export default function RootLayout({
         <Analytics />
         <SpeedInsights />
         <ClientWrapper>
+          <ScrollToTop />
           <Header />
           <main>{children}</main>
           <Toaster position="bottom-center" />
