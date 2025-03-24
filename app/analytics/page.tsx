@@ -4,7 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import {
@@ -26,7 +26,6 @@ import {
 } from "../../components/ui/card";
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";

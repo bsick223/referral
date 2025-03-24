@@ -1,8 +1,6 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import Leaderboard from "@/components/Leaderboard";
 import UserRankCard from "@/components/UserRankCard";
 import { redirect } from "next/navigation";

@@ -21,6 +21,20 @@ interface UserRankCardProps {
   userId?: string;
 }
 
+// Add these interfaces for proper typing
+interface LeaderboardEntry {
+  userId: string;
+  name: string;
+  referralCount: number;
+}
+
+interface UserInfo {
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  imageUrl?: string;
+}
+
 const UserRankCard = ({ userId }: UserRankCardProps) => {
   const allLeaderboardEntries = useQuery(api.referrals.getLeaderboard, {});
   const userProfile = useQuery(
@@ -31,10 +45,11 @@ const UserRankCard = ({ userId }: UserRankCardProps) => {
   const removeLinkedinUrl = useMutation(api.userProfiles.removeLinkedinUrl);
 
   const [userPosition, setUserPosition] = useState<number | null>(null);
-  const [userEntry, setUserEntry] = useState<any | null>(null);
-  const [userInfo, setUserInfo] = useState<any | null>(null);
+  const [userEntry, setUserEntry] = useState<LeaderboardEntry | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditingLinkedin, setIsEditingLinkedin] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_isEditingLinkedin, setIsEditingLinkedin] = useState(false);
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [showLinkedinInput, setShowLinkedinInput] = useState(false);
 
@@ -187,7 +202,7 @@ const UserRankCard = ({ userId }: UserRankCardProps) => {
             <User className="h-10 w-10 text-blue-600" />
           </div>
           <p className="font-medium text-gray-900 mb-2">
-            You're not on the leaderboard yet
+            You&apos;re not on the leaderboard yet
           </p>
           <p className="text-sm text-gray-500 mb-4">
             Start adding referrals to earn your place!

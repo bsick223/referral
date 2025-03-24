@@ -4,8 +4,8 @@ import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
-import { Medal, Trophy, Award, User, Link as LinkIcon } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Medal, Trophy, Award, Link as LinkIcon } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 
 interface UserInfo {
   id: string;
@@ -15,13 +15,13 @@ interface UserInfo {
   imageUrl: string;
 }
 
-interface UserProfile {
-  _id: string;
-  userId: string;
-  linkedinUrl?: string;
-  createdAt: number;
-  updatedAt: number;
-}
+// interface UserProfile {
+//   _id: string;
+//   userId: string;
+//   linkedinUrl?: string;
+//   createdAt: number;
+//   updatedAt: number;
+// }
 
 interface LeaderboardEntry {
   userId: string;
@@ -51,11 +51,13 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
   );
 
   // Helper function to get LinkedIn URL
-  const getLinkedinUrl = (userId: string) => {
-    if (!userProfiles) return undefined;
-    const profiles = userProfiles as Record<string, UserProfile>;
-    return profiles[userId]?.linkedinUrl;
-  };
+  const getLinkedinUrl = useCallback(
+    (userId: string) => {
+      if (!userProfiles) return undefined;
+      return userProfiles[userId]?.linkedinUrl;
+    },
+    [userProfiles]
+  );
 
   useEffect(() => {
     if (leaderboard !== undefined) {
@@ -105,7 +107,7 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
 
       fetchUserProfiles();
     }
-  }, [leaderboard, userProfiles]);
+  }, [leaderboard, userProfiles, getLinkedinUrl]);
 
   // Also let's add a console.log to help debug
   useEffect(() => {
