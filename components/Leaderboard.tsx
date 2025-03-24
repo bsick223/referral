@@ -24,9 +24,10 @@ interface LeaderboardEntry {
 
 interface LeaderboardProps {
   limit?: number;
+  hideHeader?: boolean;
 }
 
-const Leaderboard = ({ limit = 5 }: LeaderboardProps) => {
+const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
   const leaderboard = useQuery(api.referrals.getLeaderboard, { limit });
   const { user } = useUser();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -121,12 +122,14 @@ const Leaderboard = ({ limit = 5 }: LeaderboardProps) => {
 
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden">
-      <div className="px-6 py-4 bg-blue-600">
-        <h3 className="text-xl font-bold text-white">Referral Leaderboard</h3>
-        <p className="text-blue-100 text-sm">
-          Top users with the most referrals
-        </p>
-      </div>
+      {!hideHeader && (
+        <div className="px-6 py-4 bg-blue-600">
+          <h3 className="text-xl font-bold text-white">Referral Leaderboard</h3>
+          <p className="text-blue-100 text-sm">
+            Top users with the most referrals
+          </p>
+        </div>
+      )}
 
       <div className="divide-y divide-gray-200">
         {!isLoaded ? (

@@ -2,7 +2,13 @@
 
 import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { PlusCircle, Building, RefreshCw, MessageSquare } from "lucide-react";
+import {
+  PlusCircle,
+  Building,
+  RefreshCw,
+  MessageSquare,
+  Trophy,
+} from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
@@ -42,6 +48,13 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-700">My Companies</h2>
           <div className="flex space-x-3">
+            <Link
+              href="/leaderboard"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium text-blue-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <Trophy className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Leaderboard</span>
+            </Link>
             <Link
               href="/dashboard/messages"
               className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium text-blue-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
