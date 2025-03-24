@@ -192,11 +192,12 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
                     <Image
                       src={entry.userInfo.imageUrl}
                       alt={getDisplayName(entry)}
-                      width={32}
-                      height={32}
+                      width={64}
+                      height={64}
                       className="w-full h-full object-cover"
                       priority={index < 3}
                       loading={index < 3 ? "eager" : "lazy"}
+                      quality={90}
                     />
                   ) : (
                     <div className="flex items-center justify-center w-full h-full bg-[#1d2442]">

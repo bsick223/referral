@@ -317,9 +317,10 @@ const UserRankCard = ({ userId }: UserRankCardProps) => {
                   <Image
                     src={userInfo.imageUrl}
                     alt={getDisplayName()}
-                    width={48}
-                    height={48}
+                    width={96}
+                    height={96}
                     className="w-full h-full object-cover"
+                    quality={90}
                   />
                 ) : (
                   <div className="flex items-center justify-center w-full h-full bg-[#1d2442]">
