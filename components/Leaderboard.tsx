@@ -107,6 +107,11 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
     }
   }, [leaderboard, userProfiles]);
 
+  // Also let's add a console.log to help debug
+  useEffect(() => {
+    console.log("LinkedIn URLs:", userProfiles);
+  }, [userProfiles]);
+
   // Return medal component based on position
   const getMedal = (position: number) => {
     switch (position) {
@@ -199,6 +204,12 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
                 </div>
                 <div className="flex-1 min-w-0">
                   {(() => {
+                    // Add console.log to debug linkedinUrl
+                    console.log(
+                      `Entry ${entry.userId} LinkedIn:`,
+                      entry.linkedinUrl
+                    );
+
                     if (entry.linkedinUrl) {
                       return (
                         <a
@@ -249,6 +260,11 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
                 <div className="flex-1 min-w-0">
                   {(() => {
                     const linkedinUrl = getLinkedinUrl(entry.userId);
+                    // Add console.log to debug linkedinUrl
+                    console.log(
+                      `Fallback entry ${entry.userId} LinkedIn:`,
+                      linkedinUrl
+                    );
 
                     if (linkedinUrl) {
                       return (
