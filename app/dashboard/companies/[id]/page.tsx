@@ -226,9 +226,11 @@ export default function CompanyDetailPage({
             </Link>
             <div className="flex items-center">
               <Building className="h-6 w-6 text-orange-400 mr-2" />
-              <h1 className="text-2xl font-light text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300">
-                {company.name}
-              </h1>
+              <Link href="/dashboard">
+                <h1 className="text-2xl font-light text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300 hover:opacity-80 cursor-pointer">
+                  {company.name}
+                </h1>
+              </Link>
             </div>
           </div>
 
@@ -295,7 +297,6 @@ export default function CompanyDetailPage({
                 <PlusCircle className="h-4 w-4 mr-2 text-orange-400" />
                 {/* Add Referral for company page */}
                 Add Referral
-                
               </button>
             )}
           </div>

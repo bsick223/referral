@@ -17,7 +17,7 @@ function Header() {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
               <Building className="h-6 w-6 text-orange-500" />
-              <span className="text-xl font-bold bg-gradient-to-r text-white text-transparent bg-clip-text">
+              <span className="text-xl font-bold bg-gradient-to-r text-white bg-clip-text">
                 ReferralTracker
               </span>
             </Link>

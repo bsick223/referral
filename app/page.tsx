@@ -131,7 +131,7 @@ export default function Home() {
             <SignedIn>
               <Link
                 href="/dashboard"
-                className="px-8 py-3 text-base font-medium rounded-full bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 text-white hover:from-orange-500 hover:via-purple-500 hover:to-blue-600 transition-colors shadow-lg hover:shadow-xl backdrop-blur-sm inline-flex items-center"
+                className="px-8 py-3 text-base font-medium rounded-full bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 text-white hover:from-orange-500 hover:via-purple-500 hover:to-blue-600 transition-colors hover:shadow-xl backdrop-blur-sm inline-flex items-center shadow-[0_0_15px_rgba(249,115,22,0.5)]"
               >
                 Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
