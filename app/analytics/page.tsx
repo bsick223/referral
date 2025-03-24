@@ -129,13 +129,16 @@ function AnalyticsContent() {
           <ArrowLeft className="h-5 w-5" />
           <span className="font-medium">Back to Leaderboard</span>
         </Link>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-          Referral Analytics
-        </h1>
+        <div className="relative">
+          <h1 className="text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-200 to-gray-300 relative z-10">
+            Referral Analytics
+          </h1>
+          <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-blue-500/80 via-purple-500/60 to-blue-400/40"></div>
+        </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {/* Summary Cards - hidden on mobile, visible on md screens and up */}
+      <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card
           className={`${
             selectedPeriod === "weekly"
