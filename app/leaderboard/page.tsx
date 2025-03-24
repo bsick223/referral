@@ -16,17 +16,33 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-[#090d1b] relative">
+      {/* Noise Overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.03] mix-blend-soft-light pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          width: "200%",
+          height: "200%",
+          transform: "translate(-50%, -50%)",
+        }}
+      ></div>
+
+      {/* Blurry background elements */}
+      <div className="absolute left-0 top-0 w-1/2 h-1/2 bg-gradient-to-r from-orange-600/20 to-orange-600/5 rounded-full opacity-20 blur-[120px]"></div>
+      <div className="absolute right-0 top-0 w-1/3 h-1/2 bg-blue-600/20 rounded-full opacity-20 blur-[100px]"></div>
+      <div className="absolute right-1/4 bottom-0 w-1/3 h-1/3 bg-indigo-600/20 rounded-full opacity-20 blur-[80px]"></div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center mb-6">
           <Link
             href="/dashboard"
-            className="flex items-center text-blue-600 hover:text-blue-800 mr-4"
+            className="flex items-center text-gray-300 hover:text-white mr-4 transition-colors"
           >
-            <ArrowLeft className="h-5 w-5 mr-1" />
+            <ArrowLeft className="h-5 w-5 mr-1 text-orange-400" />
             <span>Back to Dashboard</span>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-light text-white">
             Referral Leaderboard
           </h1>
         </div>
@@ -36,18 +52,18 @@ export default function LeaderboardPage() {
           <div className="w-full md:w-1/3 lg:w-1/4">
             <UserRankCard userId={user?.id} />
 
-            <div className="mt-6 bg-white rounded-xl shadow-md overflow-hidden p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="mt-6 bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden p-6 border border-[#20253d]/50">
+              <h3 className="text-lg font-light text-white mb-4">
                 How It Works
               </h3>
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-gray-400 mb-3">
                 Our leaderboard showcases the top referrers in our community.
               </p>
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-gray-400 mb-3">
                 Every referral you make increases your position on the
                 leaderboard.
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-400">
                 Top performers may be eligible for special rewards and
                 recognition!
               </p>
@@ -56,12 +72,12 @@ export default function LeaderboardPage() {
 
           {/* Main leaderboard */}
           <div className="w-full md:w-2/3 lg:w-3/4">
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="px-6 py-4 bg-blue-600">
-                <h3 className="text-xl font-bold text-white">
+            <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50">
+              <div className="px-6 py-4 bg-[#0f1326]/70 border-b border-[#20253d]/50">
+                <h3 className="text-xl font-light text-white">
                   Full Leaderboard
                 </h3>
-                <p className="text-blue-100 text-sm">
+                <p className="text-gray-400 text-sm">
                   Our top community members
                 </p>
               </div>

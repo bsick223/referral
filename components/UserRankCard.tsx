@@ -177,47 +177,47 @@ const UserRankCard = ({ userId }: UserRankCardProps) => {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl shadow-md overflow-hidden animate-pulse">
-        <div className="h-40 bg-gray-200"></div>
+      <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden animate-pulse border border-[#20253d]/50">
+        <div className="h-40 bg-[#1d2442]/20"></div>
       </div>
     );
   }
 
   if (!userId) {
     return (
-      <div className="bg-white rounded-xl shadow-md overflow-hidden p-6 text-center">
-        <p className="text-gray-500">Please sign in to see your ranking</p>
+      <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden p-6 text-center border border-[#20253d]/50">
+        <p className="text-gray-400">Please sign in to see your ranking</p>
       </div>
     );
   }
 
   if (!userEntry) {
     return (
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="px-6 py-4 bg-blue-600">
-          <h3 className="text-xl font-bold text-white">Your Ranking</h3>
+      <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50">
+        <div className="px-6 py-4 bg-[#0f1326]/70 border-b border-[#20253d]/50">
+          <h3 className="text-xl font-light text-white">Your Ranking</h3>
         </div>
         <div className="p-6 text-center">
-          <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
-            <User className="h-10 w-10 text-blue-600" />
+          <div className="w-20 h-20 rounded-full bg-[#1d2442]/40 flex items-center justify-center mx-auto mb-4">
+            <User className="h-10 w-10 text-orange-400" />
           </div>
-          <p className="font-medium text-gray-900 mb-2">
+          <p className="font-light text-white mb-2">
             You&apos;re not on the leaderboard yet
           </p>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-400 mb-4">
             Start adding referrals to earn your place!
           </p>
 
           {/* LinkedIn URL Section */}
-          <div className="mt-6 border-t border-gray-200 pt-4">
+          <div className="mt-6 border-t border-[#20253d]/50 pt-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-gray-900">
+              <h4 className="text-sm font-light text-white">
                 Your LinkedIn Profile
               </h4>
               {!showLinkedinInput && (
                 <button
                   onClick={() => setShowLinkedinInput(true)}
-                  className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                  className="text-orange-400 hover:text-orange-300 text-sm flex items-center"
                 >
                   <Edit className="h-3 w-3 mr-1" />
                   Add
@@ -297,78 +297,94 @@ const UserRankCard = ({ userId }: UserRankCardProps) => {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden">
-      <div className="px-6 py-4 bg-blue-600">
-        <h3 className="text-xl font-bold text-white">Your Ranking</h3>
+    <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50">
+      <div className="px-6 py-4 bg-[#0f1326]/70 border-b border-[#20253d]/50">
+        <h3 className="text-xl font-light text-white">Your Ranking</h3>
       </div>
       <div className="p-6">
-        <div className="flex items-center mb-6">
-          <div className="mr-4">{getMedal(userPosition || 0)}</div>
-          <div className="text-3xl font-bold text-gray-900">
-            #{userPosition}
-          </div>
-        </div>
-
-        <div className="flex items-center mb-6">
-          <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 mr-4">
-            {userInfo?.imageUrl ? (
-              <Image
-                src={userInfo.imageUrl}
-                alt={getDisplayName()}
-                width={64}
-                height={64}
-                className="w-full h-full object-cover"
-              />
+        <div className="flex items-center">
+          <div className="mr-4 flex-shrink-0">
+            {userPosition ? (
+              getMedal(userPosition)
             ) : (
-              <div className="flex items-center justify-center w-full h-full bg-blue-100">
-                <span className="text-blue-600 font-bold text-xl">
-                  {getInitials()}
-                </span>
-              </div>
+              <User className="h-10 w-10 text-orange-400" />
             )}
           </div>
-
-          <div>
-            {userProfile?.linkedinUrl ? (
-              <a
-                href={userProfile.linkedinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-lg text-gray-900 hover:text-blue-600 hover:underline flex items-center"
-              >
-                {getDisplayName()}
-                <LinkIcon className="h-3 w-3 ml-1" />
-              </a>
-            ) : (
-              <div className="font-medium text-lg text-gray-900">
-                {getDisplayName()}
+          <div className="flex-1">
+            <div className="flex items-center mb-1">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-[#1d2442]/40 mr-3 flex-shrink-0 border border-[#20253d]/70">
+                {userInfo?.imageUrl ? (
+                  <Image
+                    src={userInfo.imageUrl}
+                    alt={getDisplayName()}
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full bg-[#1d2442]">
+                    <span className="text-gray-300 font-medium">
+                      {getInitials()}
+                    </span>
+                  </div>
+                )}
               </div>
-            )}
-            <div className="text-sm text-gray-500">You</div>
+              <div>
+                <h4 className="text-lg font-light text-white">
+                  {getDisplayName()}
+                </h4>
+                <p className="text-sm text-gray-400">
+                  {userPosition
+                    ? `Rank #${userPosition} · ${
+                        userEntry?.referralCount || 0
+                      } ${
+                        (userEntry?.referralCount || 0) === 1
+                          ? "referral"
+                          : "referrals"
+                      }`
+                    : "No referrals yet"}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
         <Link href={`/analytics?userId=${userId}`} className="block w-full">
-          <div className="bg-blue-50 p-4 rounded-lg flex items-center transition-colors hover:bg-blue-100 cursor-pointer">
-            <LineChart className="w-5 h-5 text-blue-600 mr-2" />
+          <div className="bg-[#121a36]/60 border border-[#20253d]/50 p-4 rounded-lg flex items-center transition-colors hover:bg-[#1d2442]/50 cursor-pointer backdrop-blur-sm mt-4 group">
+            <LineChart className="w-5 h-5 text-orange-400 group-hover:text-orange-300 mr-2 transition-colors" />
             <div>
-              <div className="text-xl font-bold text-blue-700">
+              <div className="text-xl font-light text-white group-hover:text-orange-300 transition-colors">
                 {userEntry.referralCount}
               </div>
-              <div className="text-sm text-blue-600">
+              <div className="text-sm text-gray-400">
                 {userEntry.referralCount === 1 ? "referral" : "referrals"}
               </div>
             </div>
-            <div className="ml-auto text-blue-600">
-              <span className="text-sm">View Analytics</span>
+            <div className="ml-auto">
+              <span className="text-sm text-gray-300 group-hover:text-orange-300 transition-colors flex items-center">
+                View Analytics
+                <svg
+                  className="w-3 h-3 ml-1 transform group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </span>
             </div>
           </div>
         </Link>
 
         {/* LinkedIn URL Section */}
-        <div className="mt-6 border-t border-gray-200 pt-4">
+        <div className="mt-6 border-t border-[#20253d]/50 pt-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-medium text-gray-900">
+            <h4 className="text-sm font-light text-white">
               Show Your LinkedIn Profile
             </h4>
             {!showLinkedinInput && (
