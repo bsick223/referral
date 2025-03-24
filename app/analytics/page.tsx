@@ -4,7 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import {
@@ -24,16 +24,13 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
 
 // Time period types for the chart
 type TimePeriod = "weekly" | "monthly" | "all";
 
-export default function AnalyticsPage() {
+// Create a separate client component that uses useSearchParams
+function AnalyticsContent() {
   const { user } = useUser();
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId") || user?.id;
@@ -249,5 +246,14 @@ export default function AnalyticsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Main page component that wraps the content in a Suspense boundary
+export default function AnalyticsPage() {
+  return (
+    <Suspense fallback={<div className="p-4">Loading analytics...</div>}>
+      <AnalyticsContent />
+    </Suspense>
   );
 }
