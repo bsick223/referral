@@ -10,6 +10,7 @@ import {
   Clock,
   ExternalLink,
 } from "lucide-react";
+import LeaderboardSection from "@/components/LeaderboardSection";
 
 export default function Home() {
   return (
@@ -230,6 +231,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Leaderboard Section */}
+      <LeaderboardSection />
 
       {/* CTA Section */}
       <section className="py-12 md:py-20 bg-blue-600">

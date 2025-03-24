@@ -119,3 +119,42 @@ export const remove = mutation({
     return args.id;
   },
 });
+
+// Get the leaderboard of users with most referrals
+export const getLeaderboard = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 10; // Default to top 10
+
+    // Get all referrals
+    const referrals = await ctx.db.query("referrals").collect();
+
+    // Count referrals per user
+    const userReferralCounts = new Map<string, number>();
+    const userNames = new Map<string, string>();
+
+    // Process all referrals to count per user
+    for (const referral of referrals) {
+      const userId = referral.userId;
+      userReferralCounts.set(userId, (userReferralCounts.get(userId) || 0) + 1);
+
+      // Store the user's first referral name to be used as a fallback
+      // This assumes we don't have a separate users table with names
+      if (!userNames.has(userId)) {
+        userNames.set(userId, referral.name.split(" ")[0] || "Anonymous");
+      }
+    }
+
+    // Convert to array and sort by count
+    const leaderboardEntries = Array.from(userReferralCounts.entries())
+      .map(([userId, count]) => ({
+        userId,
+        name: userNames.get(userId) || "Anonymous",
+        referralCount: count,
+      }))
+      .sort((a, b) => b.referralCount - a.referralCount)
+      .slice(0, limit);
+
+    return leaderboardEntries;
+  },
+});
