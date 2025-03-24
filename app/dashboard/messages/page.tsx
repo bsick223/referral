@@ -23,17 +23,17 @@ import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { Id } from "@/convex/_generated/dataModel";
 
-// Define tag color options
+// Define tag color options for dark theme
 const TAG_COLORS = [
-  { bg: "bg-blue-100", text: "text-blue-800", name: "Blue" },
-  { bg: "bg-green-100", text: "text-green-800", name: "Green" },
-  { bg: "bg-red-100", text: "text-red-800", name: "Red" },
-  { bg: "bg-yellow-100", text: "text-yellow-800", name: "Yellow" },
-  { bg: "bg-purple-100", text: "text-purple-800", name: "Purple" },
-  { bg: "bg-pink-100", text: "text-pink-800", name: "Pink" },
-  { bg: "bg-indigo-100", text: "text-indigo-800", name: "Indigo" },
-  { bg: "bg-gray-100", text: "text-gray-800", name: "Gray" },
-  { bg: "bg-orange-100", text: "text-orange-800", name: "Orange" },
+  { bg: "bg-blue-900/50", text: "text-blue-300", name: "Blue" },
+  { bg: "bg-green-900/50", text: "text-green-300", name: "Green" },
+  { bg: "bg-red-900/50", text: "text-red-300", name: "Red" },
+  { bg: "bg-yellow-900/50", text: "text-yellow-300", name: "Yellow" },
+  { bg: "bg-purple-900/50", text: "text-purple-300", name: "Purple" },
+  { bg: "bg-pink-900/50", text: "text-pink-300", name: "Pink" },
+  { bg: "bg-indigo-900/50", text: "text-indigo-300", name: "Indigo" },
+  { bg: "bg-gray-800/50", text: "text-gray-300", name: "Gray" },
+  { bg: "bg-orange-900/50", text: "text-orange-300", name: "Orange" },
 ];
 
 interface Tag {
@@ -329,8 +329,8 @@ export default function MessagesPage() {
   // Loading state
   if (!user || messages === undefined) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <RefreshCw className="h-10 w-10 text-blue-500 animate-spin" />
+      <div className="min-h-screen bg-[#090d1b] flex items-center justify-center">
+        <RefreshCw className="h-10 w-10 text-orange-500 animate-spin" />
       </div>
     );
   }
@@ -340,7 +340,7 @@ export default function MessagesPage() {
     <div>
       <label
         htmlFor="tags"
-        className="block text-sm font-medium text-gray-700 mb-1"
+        className="block text-sm font-medium text-gray-300 mb-1"
       >
         Tags
       </label>
@@ -350,7 +350,7 @@ export default function MessagesPage() {
             key={tag.name}
             className={`flex items-center ${TAG_COLORS[tag.color].bg} ${
               TAG_COLORS[tag.color].text
-            } rounded-full px-3 py-1 text-sm`}
+            } rounded-full px-3 py-1 text-sm border border-[#20253d]/50`}
           >
             <span>{tag.name}</span>
             <button
@@ -372,25 +372,25 @@ export default function MessagesPage() {
           onChange={(e) => setNewTagName(e.target.value)}
           onKeyDown={handleTagKeyPress}
           placeholder="Add a tag"
-          className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md rounded-r-none px-3 py-2"
+          className="bg-[#121a36]/50 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-[#20253d]/50 rounded-md rounded-r-none px-3 py-2 text-white"
         />
         <div className="relative">
           <button
             type="button"
             onClick={() => setShowColorPicker(!showColorPicker)}
-            className={`inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-none shadow-sm text-sm font-medium ${TAG_COLORS[selectedColorIndex].bg} ${TAG_COLORS[selectedColorIndex].text} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+            className={`inline-flex items-center px-3 py-2 border-y border-r border-[#20253d]/50 rounded-none shadow-sm text-sm font-medium ${TAG_COLORS[selectedColorIndex].bg} ${TAG_COLORS[selectedColorIndex].text} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
           >
             <span className="w-4 h-4 rounded-full mr-1"></span>
             <ChevronDown className="h-4 w-4" />
           </button>
           {showColorPicker && (
-            <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+            <div className="absolute right-0 mt-1 w-48 bg-[#121a36] rounded-md shadow-lg z-10 border border-[#20253d]/50">
               <div className="p-2 grid grid-cols-3 gap-1">
                 {TAG_COLORS.map((color, index) => (
                   <button
                     key={index}
                     onClick={() => selectColor(index)}
-                    className={`${color.bg} ${color.text} px-2 py-1 rounded text-xs font-medium flex items-center justify-between cursor-pointer`}
+                    className={`${color.bg} ${color.text} px-2 py-1 rounded text-xs font-medium flex items-center justify-between cursor-pointer border border-[#20253d]/50`}
                   >
                     {color.name}
                     {selectedColorIndex === index && (
@@ -405,7 +405,7 @@ export default function MessagesPage() {
         <button
           type="button"
           onClick={addTag}
-          className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 shadow-sm text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+          className="inline-flex items-center px-3 py-2 border-y border-r border-[#20253d]/50 rounded-r-md shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/70 hover:bg-[#1d2442]/50 focus:outline-none cursor-pointer"
         >
           <Plus className="h-4 w-4" />
         </button>
@@ -414,26 +414,40 @@ export default function MessagesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#090d1b] relative">
+      {/* Noise Overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.03] mix-blend-soft-light pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          width: "200%",
+          height: "200%",
+          transform: "translate(-50%, -50%)",
+        }}
+      ></div>
+
+      {/* Blurry background elements */}
+      <div className="absolute left-0 top-0 w-1/2 h-1/2 bg-gradient-to-r from-orange-600/20 to-orange-600/5 rounded-full opacity-20 blur-[120px]"></div>
+      <div className="absolute right-0 top-0 w-1/3 h-1/2 bg-blue-600/20 rounded-full opacity-20 blur-[100px]"></div>
+      <div className="absolute right-1/4 bottom-0 w-1/3 h-1/3 bg-indigo-600/20 rounded-full opacity-20 blur-[80px]"></div>
+
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="relative z-10 bg-[#0f1326]/70 shadow-md border-b border-[#20253d]/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center">
           <Link
             href="/dashboard"
-            className="inline-flex items-center mr-4 text-gray-500 hover:text-gray-700 cursor-pointer"
+            className="inline-flex items-center mr-4 text-gray-400 hover:text-white transition-colors"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5 text-orange-400" />
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Message Templates
-          </h1>
+          <h1 className="text-2xl font-light text-white">Message Templates</h1>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
-          <p className="text-gray-500">
+          <p className="text-gray-400">
             Create and manage message templates for quick copying
           </p>
           <button
@@ -441,23 +455,28 @@ export default function MessagesPage() {
               setShowNewMessageForm((prev) => !prev);
               if (editingMessageId) cancelEditing();
             }}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+            className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 rounded-md shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/60 focus:outline-none backdrop-blur-sm cursor-pointer relative group overflow-hidden transition-all duration-300"
           >
+            {/* Gradient border hover effect */}
+            <span className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 bg-gradient-to-r from-orange-500/20 via-purple-500/20 to-blue-500/20 transition-opacity duration-300"></span>
+
             {showNewMessageForm ? (
-              "Cancel"
+              <span className="relative z-10">Cancel</span>
             ) : (
-              <>
-                <PlusCircle className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Add Message</span>
-              </>
+              <span className="relative z-10 flex items-center">
+                <PlusCircle className="h-4 w-4 sm:mr-2 text-orange-400 group-hover:text-orange-300 transition-colors duration-300" />
+                <span className="hidden sm:inline group-hover:text-white transition-colors duration-300">
+                  Add Message
+                </span>
+              </span>
             )}
           </button>
         </div>
 
         {/* New Message Form */}
         {showNewMessageForm && (
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="bg-[#121a36]/50 backdrop-blur-sm shadow-md rounded-lg p-6 mb-6 border border-[#20253d]/50">
+            <h3 className="text-lg font-light text-white mb-4">
               Add New Message Template
             </h3>
             <form onSubmit={handleNewMessageSubmit}>
@@ -465,7 +484,7 @@ export default function MessagesPage() {
                 <div>
                   <label
                     htmlFor="title"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-300"
                   >
                     Title *
                   </label>
@@ -477,7 +496,7 @@ export default function MessagesPage() {
                       required
                       value={messageFormData.title}
                       onChange={handleMessageChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
+                      className="bg-[#121a36]/70 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-[#20253d]/50 rounded-md px-3 py-2 text-white"
                       placeholder="Message title"
                     />
                   </div>
@@ -486,7 +505,7 @@ export default function MessagesPage() {
                 <div>
                   <label
                     htmlFor="content"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-300"
                   >
                     Message Content *
                   </label>
@@ -498,7 +517,7 @@ export default function MessagesPage() {
                       required
                       value={messageFormData.content}
                       onChange={handleMessageChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
+                      className="bg-[#121a36]/70 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-[#20253d]/50 rounded-md px-3 py-2 text-white"
                       placeholder="Your message content. Use placeholders like [Name], [Company], etc."
                     />
                   </div>
@@ -513,11 +532,11 @@ export default function MessagesPage() {
                     type="checkbox"
                     checked={messageFormData.isDefault}
                     onChange={handleCheckboxChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-[#20253d]/50 rounded bg-[#121a36]/70"
                   />
                   <label
                     htmlFor="isDefault"
-                    className="ml-2 block text-sm text-gray-700"
+                    className="ml-2 block text-sm text-gray-300"
                   >
                     Set as default message
                   </label>
@@ -528,15 +547,15 @@ export default function MessagesPage() {
                 <button
                   type="button"
                   onClick={() => setShowNewMessageForm(false)}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3 cursor-pointer"
+                  className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none mr-3 cursor-pointer backdrop-blur-sm"
                 >
-                  <X className="h-4 w-4 sm:mr-2" />
+                  <X className="h-4 w-4 sm:mr-2 text-gray-400" />
                   <span className="hidden sm:inline">Cancel</span>
                 </button>
                 <button
                   type="submit"
                   disabled={!messageFormData.title || !messageFormData.content}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-400 hover:to-purple-500 focus:outline-none disabled:opacity-50 cursor-pointer backdrop-blur-sm"
                 >
                   <PlusCircle className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Add Message</span>
@@ -548,8 +567,8 @@ export default function MessagesPage() {
 
         {/* Edit Message Form */}
         {editingMessageId && (
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="bg-[#121a36]/50 backdrop-blur-sm shadow-md rounded-lg p-6 mb-6 border border-[#20253d]/50">
+            <h3 className="text-lg font-light text-white mb-4">
               Edit Message Template
             </h3>
             <form onSubmit={handleEditMessageSubmit}>
@@ -557,7 +576,7 @@ export default function MessagesPage() {
                 <div>
                   <label
                     htmlFor="title"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-300"
                   >
                     Title *
                   </label>
@@ -569,7 +588,7 @@ export default function MessagesPage() {
                       required
                       value={messageFormData.title}
                       onChange={handleMessageChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
+                      className="bg-[#121a36]/70 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-[#20253d]/50 rounded-md px-3 py-2 text-white"
                       placeholder="Message title"
                     />
                   </div>
@@ -578,7 +597,7 @@ export default function MessagesPage() {
                 <div>
                   <label
                     htmlFor="content"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-300"
                   >
                     Message Content *
                   </label>
@@ -590,7 +609,7 @@ export default function MessagesPage() {
                       required
                       value={messageFormData.content}
                       onChange={handleMessageChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
+                      className="bg-[#121a36]/70 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-[#20253d]/50 rounded-md px-3 py-2 text-white"
                       placeholder="Your message content. Use placeholders like [Name], [Company], etc."
                     />
                   </div>
@@ -605,11 +624,11 @@ export default function MessagesPage() {
                     type="checkbox"
                     checked={messageFormData.isDefault}
                     onChange={handleCheckboxChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-[#20253d]/50 rounded bg-[#121a36]/70"
                   />
                   <label
                     htmlFor="isDefault"
-                    className="ml-2 block text-sm text-gray-700"
+                    className="ml-2 block text-sm text-gray-300"
                   >
                     Set as default message
                   </label>
@@ -620,15 +639,15 @@ export default function MessagesPage() {
                 <button
                   type="button"
                   onClick={cancelEditing}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3 cursor-pointer"
+                  className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none mr-3 cursor-pointer backdrop-blur-sm"
                 >
-                  <X className="h-4 w-4 sm:mr-2" />
+                  <X className="h-4 w-4 sm:mr-2 text-gray-400" />
                   <span className="hidden sm:inline">Cancel</span>
                 </button>
                 <button
                   type="submit"
                   disabled={!messageFormData.title || !messageFormData.content}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-400 hover:to-purple-500 focus:outline-none disabled:opacity-50 cursor-pointer backdrop-blur-sm"
                 >
                   <Save className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Save Changes</span>
@@ -640,18 +659,18 @@ export default function MessagesPage() {
 
         {/* Messages List */}
         {messages?.length === 0 ? (
-          <div className="text-center py-16 bg-white shadow rounded-lg">
+          <div className="text-center py-16 bg-[#121a36]/50 backdrop-blur-sm shadow-md rounded-lg border border-[#20253d]/50">
             <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-lg font-medium text-gray-900">
+            <h3 className="mt-2 text-lg font-light text-white">
               No message templates yet
             </h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-gray-400">
               Get started by creating your first message template.
             </p>
             <div className="mt-6">
               <button
                 onClick={() => setShowNewMessageForm(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 hover:from-orange-500 hover:via-purple-500 hover:to-blue-600 focus:outline-none cursor-pointer backdrop-blur-sm"
               >
                 <PlusCircle className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Add Message</span>
@@ -659,13 +678,15 @@ export default function MessagesPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <ul className="divide-y divide-gray-200">
+          <div className="bg-[#121a36]/50 backdrop-blur-sm shadow-md rounded-lg overflow-hidden border border-[#20253d]/50">
+            <ul className="divide-y divide-[#20253d]/50">
               {orderedMessages.map((message) => (
                 <li
                   key={message._id}
                   className={`p-6 relative ${
-                    draggedItemId === message._id ? "opacity-50 bg-gray-50" : ""
+                    draggedItemId === message._id
+                      ? "opacity-50 bg-[#1d2442]/30"
+                      : ""
                   }`}
                   draggable={true}
                   onDragStart={() => handleDragStart(message._id)}
@@ -673,15 +694,15 @@ export default function MessagesPage() {
                   onDragEnd={handleDragEnd}
                 >
                   <div className="absolute top-6 left-2 cursor-move">
-                    <GripVertical className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <GripVertical className="h-5 w-5 text-gray-500 hover:text-gray-300" />
                   </div>
                   <div className="flex items-center justify-between mb-2 pl-8">
                     <div className="flex items-center flex-wrap gap-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-light text-white">
                         {message.title}
                       </h3>
                       {message.isDefault && (
-                        <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-full">
+                        <span className="px-2 py-0.5 text-xs bg-blue-900/50 text-blue-300 rounded-full border border-blue-700/30">
                           Default
                         </span>
                       )}
@@ -692,7 +713,9 @@ export default function MessagesPage() {
                             key={tag.name}
                             className={`px-2 py-0.5 text-xs ${
                               TAG_COLORS[tag.color].bg
-                            } ${TAG_COLORS[tag.color].text} rounded-full`}
+                            } ${
+                              TAG_COLORS[tag.color].text
+                            } rounded-full border border-[#20253d]/70`}
                           >
                             {tag.name}
                           </span>
@@ -703,7 +726,7 @@ export default function MessagesPage() {
                         onClick={() =>
                           copyMessageToClipboard(message.content, message._id)
                         }
-                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+                        className="inline-flex items-center p-1.5 border border-[#20253d]/50 rounded-md text-gray-400 hover:text-orange-400 focus:outline-none cursor-pointer transition-colors"
                         title="Copy to clipboard"
                       >
                         {copiedMessageId === message._id ? (
@@ -714,21 +737,21 @@ export default function MessagesPage() {
                       </button>
                       <button
                         onClick={() => startEditing(message)}
-                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+                        className="inline-flex items-center p-1.5 border border-[#20253d]/50 rounded-md text-gray-400 hover:text-orange-400 focus:outline-none cursor-pointer transition-colors"
                         title="Edit message"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteMessage(message._id)}
-                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 cursor-pointer"
+                        className="inline-flex items-center p-1.5 border border-[#20253d]/50 rounded-md text-gray-400 hover:text-red-400 focus:outline-none cursor-pointer transition-colors"
                         title="Delete message"
                       >
                         <Trash className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
-                  <div className="mt-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-md ml-8">
+                  <div className="mt-2 text-sm text-gray-300 bg-[#1d2442]/30 p-3 rounded-md ml-8 border border-[#20253d]/50">
                     <pre className="font-sans whitespace-pre-wrap break-words">
                       {message.content}
                     </pre>
