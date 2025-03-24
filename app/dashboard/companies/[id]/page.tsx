@@ -173,361 +173,355 @@ export default function CompanyDetailPage({
   // Loading state
   if (!user || company === undefined || referrals === undefined) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <RefreshCw className="h-10 w-10 text-blue-500 animate-spin" />
+      <div className="min-h-screen bg-[#090d1b] flex items-center justify-center">
+        <RefreshCw className="h-10 w-10 text-orange-500 animate-spin" />
       </div>
     );
   }
 
-  // Company not found
+  // If company doesn't exist or doesn't belong to user
   if (!company) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-        <Building className="h-16 w-16 text-gray-400 mb-4" />
-        <h2 className="text-2xl font-semibold text-gray-700">
-          Company not found
-        </h2>
-        <Link
-          href="/dashboard"
-          className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Link>
-      </div>
-    );
+    router.push("/dashboard");
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#090d1b] relative">
+      {/* Noise Overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.03] mix-blend-soft-light pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          width: "200%",
+          height: "200%",
+          transform: "translate(-50%, -50%)",
+        }}
+      ></div>
+
+      {/* Blurry background elements */}
+      <div className="absolute left-0 top-0 w-1/2 h-1/2 bg-gradient-to-r from-orange-600/20 to-orange-600/5 rounded-full opacity-20 blur-[120px]"></div>
+      <div className="absolute right-0 top-0 w-1/3 h-1/2 bg-blue-600/20 rounded-full opacity-20 blur-[100px]"></div>
+      <div className="absolute right-1/4 bottom-0 w-1/3 h-1/3 bg-indigo-600/20 rounded-full opacity-20 blur-[80px]"></div>
+
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-[#121a36]/50 backdrop-blur-sm shadow border-b border-[#20253d]/50 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center">
             <Link
               href="/dashboard"
-              className="inline-flex items-center mr-4 text-gray-500 hover:text-gray-700 cursor-pointer"
+              className="inline-flex items-center mr-4 text-gray-300 hover:text-white cursor-pointer"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <h1 className="text-2xl font-bold text-gray-900">{company.name}</h1>
+            <div className="flex items-center">
+              <Building className="h-6 w-6 text-orange-400 mr-2" />
+              <h1 className="text-2xl font-light text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300">
+                {company.name}
+              </h1>
+            </div>
           </div>
-          <button
-            onClick={handleDeleteCompany}
-            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-red-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 cursor-pointer"
-          >
-            <Trash className="h-4 w-4 mr-1" />
-            Delete Company
-          </button>
+
+          <div className="flex space-x-2">
+            <button
+              onClick={handleDeleteCompany}
+              className="inline-flex items-center px-3 py-1.5 border border-red-700/50 shadow-sm text-sm font-medium text-red-400 bg-[#2b0a0a]/50 hover:bg-[#2b0a0a]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 cursor-pointer rounded-md"
+            >
+              <Trash className="h-4 w-4 mr-2" />
+              <span>Delete</span>
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Company info */}
-        <div className="bg-white shadow rounded-lg p-6 mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+        <div className="bg-[#121a36]/50 backdrop-blur-sm shadow border border-[#20253d]/50 rounded-lg p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="col-span-2">
+              <h2 className="text-lg font-medium text-gray-200 mb-2">
                 Company Information
               </h2>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Name</p>
-                  <p className="mt-1 text-md text-gray-800">{company.name}</p>
-                </div>
-                {company.description && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">
-                      Description
-                    </p>
-                    <p className="mt-1 text-md text-gray-800">
-                      {company.description}
-                    </p>
-                  </div>
-                )}
-                {company.website && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Website</p>
-                    <a
-                      href={company.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1 text-md text-blue-600 hover:underline inline-flex items-center cursor-pointer"
-                    >
-                      {company.website}
-                      <ExternalLink className="h-3.5 w-3.5 ml-1" />
-                    </a>
-                  </div>
-                )}
-              </div>
+              {company.description && (
+                <p className="text-gray-300 mb-4">{company.description}</p>
+              )}
+              {company.website && (
+                <a
+                  href={company.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-blue-400 hover:text-blue-300"
+                >
+                  <ExternalLink className="h-4 w-4 mr-1" />
+                  <span>Visit Website</span>
+                </a>
+              )}
             </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Details
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Date Added
-                  </p>
-                  <p className="mt-1 text-md text-gray-800">
-                    {new Date(company.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Total Referrals
-                  </p>
-                  <p className="mt-1 text-md text-gray-800">
-                    {referrals.length}
-                  </p>
-                </div>
+            <div className="col-span-1">
+              <div className="bg-[#0c1029] p-4 rounded-md border border-[#20253d]/50">
+                <p className="text-sm text-gray-400">
+                  Added on: {new Date(company.createdAt).toLocaleDateString()}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Referrals section */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-700">Referrals</h2>
-          {!showReferralForm && (
-            <button
-              onClick={() => {
-                setShowReferralForm(true);
-                setEditingReferralId(null);
-                setReferralFormData({
-                  name: "",
-                  linkedinUrl: "",
-                  email: "",
-                  phoneNumber: "",
-                  notes: "",
-                });
-              }}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add Referral
-            </button>
-          )}
-        </div>
-
-        {/* Referral Form (New or Edit) */}
-        {showReferralForm && (
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              {editingReferralId ? "Edit Referral" : "Add New Referral"}
-            </h3>
-            <form onSubmit={handleReferralSubmit}>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Name *
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      required
-                      value={referralFormData.name}
-                      onChange={handleReferralChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
-                      placeholder="Contact name"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="linkedinUrl"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    LinkedIn URL *
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      type="url"
-                      id="linkedinUrl"
-                      name="linkedinUrl"
-                      required
-                      value={referralFormData.linkedinUrl}
-                      onChange={handleReferralChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
-                      placeholder="https://linkedin.com/in/username"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Email
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={referralFormData.email}
-                      onChange={handleReferralChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
-                      placeholder="contact@example.com"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="phoneNumber"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Phone Number
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      type="tel"
-                      id="phoneNumber"
-                      name="phoneNumber"
-                      value={referralFormData.phoneNumber}
-                      onChange={handleReferralChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
-                      placeholder="(123) 456-7890"
-                    />
-                  </div>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label
-                    htmlFor="notes"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Notes
-                  </label>
-                  <div className="mt-1">
-                    <textarea
-                      id="notes"
-                      name="notes"
-                      rows={3}
-                      value={referralFormData.notes}
-                      onChange={handleReferralChange}
-                      className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
-                      placeholder="Any additional information"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end">
-                <button
-                  type="button"
-                  onClick={cancelEditingReferral}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={
-                    !referralFormData.name || !referralFormData.linkedinUrl
-                  }
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
-                >
-                  {editingReferralId ? "Save Changes" : "Add Referral"}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Referrals List */}
-        {referrals.length === 0 ? (
-          <div className="text-center py-16 bg-white shadow rounded-lg">
-            <User className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-lg font-medium text-gray-900">
-              No referrals yet
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Get started by adding people who can refer you to {company.name}.
-            </p>
-            <div className="mt-6">
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <div className="relative">
+              <h2 className="text-xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300 relative z-10">
+                Referrals
+              </h2>
+              <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-orange-500/80 via-purple-500/60 to-blue-500/40"></div>
+            </div>
+            {!showReferralForm && !editingReferralId && (
               <button
                 onClick={() => setShowReferralForm(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+                className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
               >
-                <PlusCircle className="h-4 w-4 mr-2" />
+                <PlusCircle className="h-4 w-4 mr-2 text-orange-400" />
                 Add Referral
               </button>
-            </div>
+            )}
           </div>
-        ) : (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <ul className="divide-y divide-gray-200">
+
+          {/* Referral form */}
+          {(showReferralForm || editingReferralId) && (
+            <div className="bg-[#121a36]/50 backdrop-blur-sm shadow border border-[#20253d]/50 rounded-lg p-6 mb-6">
+              <h3 className="text-lg font-light text-gray-200 mb-4">
+                {editingReferralId ? "Edit Referral" : "Add Referral"}
+              </h3>
+              <form onSubmit={handleReferralSubmit}>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-300"
+                    >
+                      Name *
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        required
+                        value={referralFormData.name}
+                        onChange={handleReferralChange}
+                        className="block w-full sm:text-sm rounded-md px-3 py-2 
+                        bg-[#0c1029] border-[#20253d] text-gray-300
+                        focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Contact name"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="linkedinUrl"
+                      className="block text-sm font-medium text-gray-300"
+                    >
+                      LinkedIn URL *
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        type="url"
+                        id="linkedinUrl"
+                        name="linkedinUrl"
+                        required
+                        value={referralFormData.linkedinUrl}
+                        onChange={handleReferralChange}
+                        className="block w-full sm:text-sm rounded-md px-3 py-2 
+                        bg-[#0c1029] border-[#20253d] text-gray-300
+                        focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="https://linkedin.com/in/username"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-300"
+                    >
+                      Email
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={referralFormData.email}
+                        onChange={handleReferralChange}
+                        className="block w-full sm:text-sm rounded-md px-3 py-2 
+                        bg-[#0c1029] border-[#20253d] text-gray-300
+                        focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="contact@example.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="phoneNumber"
+                      className="block text-sm font-medium text-gray-300"
+                    >
+                      Phone Number
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        type="tel"
+                        id="phoneNumber"
+                        name="phoneNumber"
+                        value={referralFormData.phoneNumber}
+                        onChange={handleReferralChange}
+                        className="block w-full sm:text-sm rounded-md px-3 py-2 
+                        bg-[#0c1029] border-[#20253d] text-gray-300
+                        focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="(123) 456-7890"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label
+                      htmlFor="notes"
+                      className="block text-sm font-medium text-gray-300"
+                    >
+                      Notes
+                    </label>
+                    <div className="mt-1">
+                      <textarea
+                        id="notes"
+                        name="notes"
+                        rows={3}
+                        value={referralFormData.notes}
+                        onChange={handleReferralChange}
+                        className="block w-full sm:text-sm rounded-md px-3 py-2 
+                        bg-[#0c1029] border-[#20253d] text-gray-300
+                        focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Any additional information about this contact"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={
+                      editingReferralId
+                        ? cancelEditingReferral
+                        : () => setShowReferralForm(false)
+                    }
+                    className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 hover:from-orange-500 hover:via-purple-500 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+                  >
+                    {editingReferralId ? "Update" : "Add"} Referral
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Referrals list */}
+          {referrals.length === 0 ? (
+            <div className="text-center py-16 bg-[#121a36]/50 backdrop-blur-sm shadow rounded-lg border border-[#20253d]/50">
+              <User className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-lg font-light text-white">
+                No referrals yet
+              </h3>
+              <p className="mt-1 text-sm text-gray-400">
+                Add your first referral contact.
+              </p>
+              {!showReferralForm && (
+                <div className="mt-6">
+                  <button
+                    onClick={() => setShowReferralForm(true)}
+                    className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2 text-orange-400" />
+                    Add Referral
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
               {referrals.map((referral) => (
-                <li key={referral._id} className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {referral.name}
-                      </h3>
-                      <div className="mt-1 space-y-1">
-                        {referral.email && (
-                          <p className="text-sm text-gray-500">
-                            Email: {referral.email}
-                          </p>
-                        )}
-                        {referral.phoneNumber && (
-                          <p className="text-sm text-gray-500">
-                            Phone: {referral.phoneNumber}
-                          </p>
-                        )}
+                <div
+                  key={referral._id}
+                  className="bg-[#121a36]/50 backdrop-blur-sm shadow border border-[#20253d]/50 rounded-lg p-6 hover:border-[#20253d] transition-all duration-300"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start">
+                      <User className="h-10 w-10 text-gray-400 mr-4 bg-[#0c1029] p-2 rounded-full border border-[#20253d]/50" />
+                      <div>
+                        <h4 className="text-lg font-medium text-gray-200">
+                          {referral.name}
+                        </h4>
+                        <a
+                          href={referral.linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 text-sm text-blue-400 hover:text-blue-300 inline-flex items-center cursor-pointer"
+                        >
+                          LinkedIn Profile
+                          <ExternalLink className="h-3 w-3 ml-1" />
+                        </a>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <a
-                        href={referral.linkedinUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        LinkedIn
-                      </a>
+                    <div className="flex">
                       <button
                         onClick={() => startEditingReferral(referral)}
-                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
-                        title="Edit referral"
+                        className="text-gray-400 hover:text-gray-300 mr-2 p-1"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteReferral(referral._id)}
-                        className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-500 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 cursor-pointer"
-                        title="Delete referral"
+                        className="text-red-400 hover:text-red-300 p-1"
                       >
                         <Trash className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
-                  {referral.notes && (
-                    <div className="mt-3 text-sm text-gray-600">
-                      <p className="font-medium text-gray-500 mb-1">Notes:</p>
-                      <p>{referral.notes}</p>
+                  {(referral.email || referral.phoneNumber) && (
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {referral.email && (
+                        <div className="flex items-center text-sm text-gray-400">
+                          <span className="font-medium mr-2">Email:</span>
+                          <span>{referral.email}</span>
+                        </div>
+                      )}
+                      {referral.phoneNumber && (
+                        <div className="flex items-center text-sm text-gray-400">
+                          <span className="font-medium mr-2">Phone:</span>
+                          <span>{referral.phoneNumber}</span>
+                        </div>
+                      )}
                     </div>
                   )}
-                  <div className="mt-3 text-xs text-gray-500">
-                    Added {new Date(referral.createdAt).toLocaleDateString()}
-                  </div>
-                </li>
+                  {referral.notes && (
+                    <div className="mt-4 pt-4 border-t border-[#20253d]/50">
+                      <h5 className="text-sm font-medium text-gray-300 mb-1">
+                        Notes:
+                      </h5>
+                      <p className="text-sm text-gray-400">{referral.notes}</p>
+                    </div>
+                  )}
+                </div>
               ))}
-            </ul>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

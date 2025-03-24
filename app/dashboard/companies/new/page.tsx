@@ -53,29 +53,47 @@ export default function NewCompanyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#090d1b] relative">
+      {/* Noise Overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.03] mix-blend-soft-light pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          width: "200%",
+          height: "200%",
+          transform: "translate(-50%, -50%)",
+        }}
+      ></div>
+
+      {/* Blurry background elements */}
+      <div className="absolute left-0 top-0 w-1/2 h-1/2 bg-gradient-to-r from-orange-600/20 to-orange-600/5 rounded-full opacity-20 blur-[120px]"></div>
+      <div className="absolute right-0 top-0 w-1/3 h-1/2 bg-blue-600/20 rounded-full opacity-20 blur-[100px]"></div>
+      <div className="absolute right-1/4 bottom-0 w-1/3 h-1/3 bg-indigo-600/20 rounded-full opacity-20 blur-[80px]"></div>
+
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-[#121a36]/50 backdrop-blur-sm shadow border-b border-[#20253d]/50 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center">
           <Link
             href="/dashboard"
-            className="inline-flex items-center mr-4 text-gray-500 hover:text-gray-700 cursor-pointer"
+            className="inline-flex items-center mr-4 text-gray-300 hover:text-white cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Add New Company</h1>
+          <h1 className="text-2xl font-light text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300">
+            Add New Company
+          </h1>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white shadow rounded-lg p-6">
+      <main className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-[#121a36]/50 backdrop-blur-sm shadow border border-[#20253d]/50 rounded-lg p-6">
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
               <div>
                 <label
                   htmlFor="name"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-300"
                 >
                   Company Name *
                 </label>
@@ -87,7 +105,9 @@ export default function NewCompanyPage() {
                     required
                     value={formData.name}
                     onChange={handleChange}
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
+                    className="block w-full sm:text-sm rounded-md px-3 py-2 
+                    bg-[#0c1029] border-[#20253d] text-gray-300
+                    focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g. Google"
                   />
                 </div>
@@ -96,7 +116,7 @@ export default function NewCompanyPage() {
               <div>
                 <label
                   htmlFor="website"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-300"
                 >
                   Website
                 </label>
@@ -107,7 +127,9 @@ export default function NewCompanyPage() {
                     name="website"
                     value={formData.website}
                     onChange={handleChange}
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
+                    className="block w-full sm:text-sm rounded-md px-3 py-2 
+                    bg-[#0c1029] border-[#20253d] text-gray-300
+                    focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g. https://google.com"
                   />
                 </div>
@@ -116,7 +138,7 @@ export default function NewCompanyPage() {
               <div>
                 <label
                   htmlFor="description"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-300"
                 >
                   Description
                 </label>
@@ -127,7 +149,9 @@ export default function NewCompanyPage() {
                     rows={3}
                     value={formData.description}
                     onChange={handleChange}
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md px-3 py-2"
+                    className="block w-full sm:text-sm rounded-md px-3 py-2 
+                    bg-[#0c1029] border-[#20253d] text-gray-300
+                    focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Brief description of the company"
                   />
                 </div>
@@ -136,14 +160,14 @@ export default function NewCompanyPage() {
               <div className="flex justify-end">
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3 cursor-pointer"
+                  className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3 cursor-pointer"
                 >
                   Cancel
                 </Link>
                 <button
                   type="submit"
                   disabled={isSubmitting || !formData.name}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 hover:from-orange-500 hover:via-purple-500 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmitting ? "Creating..." : "Create Company"}
                 </button>
