@@ -249,12 +249,16 @@ function AnalyticsContent() {
                     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3)",
                     color: "#e0e0e0",
                   }}
+                  cursor={false}
                 />
                 <Bar
                   dataKey="count"
                   fill="url(#colorGradient)"
                   radius={[4, 4, 0, 0]}
                   barSize={selectedPeriod === "all" ? 30 : 40}
+                  onMouseOver={(data) => {
+                    // Custom hover effect logic if needed
+                  }}
                 />
                 <defs>
                   <linearGradient
@@ -266,6 +270,16 @@ function AnalyticsContent() {
                   >
                     <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
                     <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.6} />
+                  </linearGradient>
+                  <linearGradient
+                    id="colorGradientHover"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="#2563eb" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.8} />
                   </linearGradient>
                 </defs>
               </BarChart>
