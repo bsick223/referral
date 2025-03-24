@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, TrendingUp, Calendar, History } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -120,71 +120,100 @@ function AnalyticsContent() {
   };
 
   return (
-    <div className="p-4 max-w-6xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/leaderboard" className="text-gray-600 hover:text-gray-900">
-          <ArrowLeft className="h-6 w-6" />
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center gap-4 mb-8">
+        <Link
+          href="/leaderboard"
+          className="text-gray-300 hover:text-blue-400 transition-colors flex items-center gap-2"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="font-medium">Back to Leaderboard</span>
         </Link>
-        <h1 className="text-2xl font-bold">Referral Analytics</h1>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+          Referral Analytics
+        </h1>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card
           className={`${
-            selectedPeriod === "weekly" ? "border-blue-500 border-2" : ""
-          } cursor-pointer hover:shadow-md transition-shadow`}
+            selectedPeriod === "weekly"
+              ? "border-blue-500 border-2 bg-gray-800 shadow-md shadow-blue-900/20"
+              : "border border-gray-700 bg-gray-800 hover:border-blue-500"
+          } cursor-pointer transition-all duration-200 group`}
           onClick={() => setSelectedPeriod("weekly")}
         >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">This Week</CardTitle>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-blue-400 transition-colors">
+              This Week
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-blue-400 opacity-70 group-hover:opacity-100 transition-opacity" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totals.weekly}</div>
+            <div className="text-3xl font-bold text-gray-100 group-hover:text-blue-400 transition-colors">
+              {totals.weekly}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Referrals this week</p>
           </CardContent>
         </Card>
 
         <Card
           className={`${
-            selectedPeriod === "monthly" ? "border-blue-500 border-2" : ""
-          } cursor-pointer hover:shadow-md transition-shadow`}
+            selectedPeriod === "monthly"
+              ? "border-blue-500 border-2 bg-gray-800 shadow-md shadow-blue-900/20"
+              : "border border-gray-700 bg-gray-800 hover:border-blue-500"
+          } cursor-pointer transition-all duration-200 group`}
           onClick={() => setSelectedPeriod("monthly")}
         >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">This Month</CardTitle>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-blue-400 transition-colors">
+              This Month
+            </CardTitle>
+            <Calendar className="h-4 w-4 text-blue-400 opacity-70 group-hover:opacity-100 transition-opacity" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totals.monthly}</div>
+            <div className="text-3xl font-bold text-gray-100 group-hover:text-blue-400 transition-colors">
+              {totals.monthly}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Referrals this month</p>
           </CardContent>
         </Card>
 
         <Card
           className={`${
-            selectedPeriod === "all" ? "border-blue-500 border-2" : ""
-          } cursor-pointer hover:shadow-md transition-shadow`}
+            selectedPeriod === "all"
+              ? "border-blue-500 border-2 bg-gray-800 shadow-md shadow-blue-900/20"
+              : "border border-gray-700 bg-gray-800 hover:border-blue-500"
+          } cursor-pointer transition-all duration-200 group`}
           onClick={() => setSelectedPeriod("all")}
         >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">All Time</CardTitle>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium text-gray-300 group-hover:text-blue-400 transition-colors">
+              All Time
+            </CardTitle>
+            <History className="h-4 w-4 text-blue-400 opacity-70 group-hover:opacity-100 transition-opacity" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totals.all}</div>
+            <div className="text-3xl font-bold text-gray-100 group-hover:text-blue-400 transition-colors">
+              {totals.all}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Total referrals</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Chart */}
-      <Card className="p-4">
-        <CardHeader>
-          <CardTitle>
-            Referrals -{" "}
+      <Card className="border border-gray-700 bg-gray-800 shadow-md">
+        <CardHeader className="border-b border-gray-700 bg-gray-800 rounded-t-lg">
+          <CardTitle className="text-xl text-gray-100">
             {selectedPeriod === "weekly"
-              ? "This Week"
+              ? "Weekly Referral Activity"
               : selectedPeriod === "monthly"
-              ? "This Month"
-              : "All Time"}
+              ? "Monthly Referral Activity"
+              : "All Time Referral Activity"}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm text-gray-400">
             {selectedPeriod === "weekly" &&
               "Daily referrals for the current week"}
             {selectedPeriod === "monthly" &&
@@ -192,67 +221,117 @@ function AnalyticsContent() {
             {selectedPeriod === "all" && "Monthly referrals for all time"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-64">
+        <CardContent className="pt-6">
+          <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={getCurrentChartData()}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey={getXAxisDataKey()} />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#444444" />
+                <XAxis
+                  dataKey={getXAxisDataKey()}
+                  tick={{ fill: "#cccccc", fontSize: 12 }}
+                  stroke="#666666"
+                />
+                <YAxis
+                  tick={{ fill: "#cccccc", fontSize: 12 }}
+                  stroke="#666666"
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#333333",
+                    border: "1px solid #555555",
+                    borderRadius: "6px",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3)",
+                    color: "#e0e0e0",
+                  }}
+                />
+                <Bar
+                  dataKey="count"
+                  fill="url(#colorGradient)"
+                  radius={[4, 4, 0, 0]}
+                  barSize={selectedPeriod === "all" ? 30 : 40}
+                />
+                <defs>
+                  <linearGradient
+                    id="colorGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.6} />
+                  </linearGradient>
+                </defs>
               </BarChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
-        <CardFooter>
-          <div className="flex gap-2">
-            <Tabs defaultValue={selectedPeriod}>
-              <TabsList>
-                <TabsTrigger
-                  value="weekly"
-                  className={selectedPeriod === "weekly" ? "bg-blue-100" : ""}
-                  onClick={() => setSelectedPeriod("weekly")}
-                >
-                  Weekly
-                </TabsTrigger>
-                <TabsTrigger
-                  value="monthly"
-                  className={selectedPeriod === "monthly" ? "bg-blue-100" : ""}
-                  onClick={() => setSelectedPeriod("monthly")}
-                >
-                  Monthly
-                </TabsTrigger>
-                <TabsTrigger
-                  value="all"
-                  className={selectedPeriod === "all" ? "bg-blue-100" : ""}
-                  onClick={() => setSelectedPeriod("all")}
-                >
-                  All Time
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
+        <CardFooter className="border-t border-gray-700 bg-gray-800 rounded-b-lg py-4">
+          <Tabs defaultValue={selectedPeriod} className="w-full">
+            <TabsList className="w-full max-w-md mx-auto grid grid-cols-3 bg-gray-700">
+              <TabsTrigger
+                value="weekly"
+                className={`${
+                  selectedPeriod === "weekly"
+                    ? "bg-gray-900 text-blue-400 shadow-sm"
+                    : "text-gray-300 hover:text-blue-400"
+                } 
+                  transition-all py-2`}
+                onClick={() => setSelectedPeriod("weekly")}
+              >
+                Weekly
+              </TabsTrigger>
+              <TabsTrigger
+                value="monthly"
+                className={`${
+                  selectedPeriod === "monthly"
+                    ? "bg-gray-900 text-blue-400 shadow-sm"
+                    : "text-gray-300 hover:text-blue-400"
+                } 
+                  transition-all py-2`}
+                onClick={() => setSelectedPeriod("monthly")}
+              >
+                Monthly
+              </TabsTrigger>
+              <TabsTrigger
+                value="all"
+                className={`${
+                  selectedPeriod === "all"
+                    ? "bg-gray-900 text-blue-400 shadow-sm"
+                    : "text-gray-300 hover:text-blue-400"
+                } 
+                  transition-all py-2`}
+                onClick={() => setSelectedPeriod("all")}
+              >
+                All Time
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardFooter>
       </Card>
 
       {/* Loading state */}
       {!analytics && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70">
-          <div className="text-lg">Loading analytics data...</div>
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-80 z-10">
+          <div className="bg-gray-800 shadow-xl border border-gray-700 rounded-lg p-6 flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+            <div className="text-lg font-semibold text-gray-200">
+              Loading analytics data...
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-// Main page component that wraps the content in a Suspense boundary
+// Main page component
 export default function AnalyticsPage() {
   return (
-    <Suspense fallback={<div className="p-4">Loading analytics...</div>}>
+    <Suspense fallback={<div className="p-4 text-gray-200">Loading...</div>}>
       <AnalyticsContent />
     </Suspense>
   );
