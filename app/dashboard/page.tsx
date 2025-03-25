@@ -14,6 +14,7 @@ import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import useOnboardingTour from "../hooks/useOnboardingTour";
 import OnboardingButton from "../components/OnboardingButton";
+import Image from "next/image";
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -166,7 +167,7 @@ export default function DashboardPage() {
                       {/* Company Logo */}
                       <div className="w-12 h-12 mb-3 bg-gray-800/50 rounded-md flex items-center justify-center overflow-hidden">
                         {company.website && company.website.length > 0 ? (
-                          <img
+                          <Image
                             src={`https://logo.clearbit.com/${
                               company.website
                                 .replace(/^https?:\/\//, "")
@@ -174,6 +175,8 @@ export default function DashboardPage() {
                                 .split("/")[0]
                             }`}
                             alt={`${company.name} logo`}
+                            width={40}
+                            height={40}
                             className="max-w-full max-h-full object-contain p-1"
                             onError={(e) => {
                               // Show fallback icon if logo can't be loaded

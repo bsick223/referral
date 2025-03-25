@@ -12,13 +12,13 @@ import {
   RefreshCw,
   ExternalLink,
   Pencil,
-  Edit,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { Id } from "@/convex/_generated/dataModel";
 import { use } from "react";
+import Image from "next/image";
 
 export default function CompanyDetailPage({
   params,
@@ -126,7 +126,7 @@ export default function CompanyDetailPage({
   const startEditingReferral = (referral: {
     _id: Id<"referrals">;
     name: string;
-    linkedinUrl: string;
+    linkedinUrl?: string;
     email?: string;
     phoneNumber?: string;
     notes?: string;
@@ -134,7 +134,7 @@ export default function CompanyDetailPage({
     setEditingReferralId(referral._id);
     setReferralFormData({
       name: referral.name,
-      linkedinUrl: referral.linkedinUrl,
+      linkedinUrl: referral.linkedinUrl || "",
       email: referral.email || "",
       phoneNumber: referral.phoneNumber || "",
       notes: referral.notes || "",
@@ -400,7 +400,7 @@ export default function CompanyDetailPage({
                   {/* Company Logo */}
                   <div className="w-20 h-20 mr-4 bg-gray-800/50 rounded-md flex items-center justify-center overflow-hidden">
                     {company.website && company.website.length > 0 ? (
-                      <img
+                      <Image
                         src={`https://logo.clearbit.com/${
                           company.website
                             .replace(/^https?:\/\//, "")
@@ -408,6 +408,8 @@ export default function CompanyDetailPage({
                             .split("/")[0]
                         }`}
                         alt={`${company.name} logo`}
+                        width={80}
+                        height={80}
                         className="max-w-full max-h-full object-contain p-2"
                         onError={(e) => {
                           // Show fallback icon if logo can't be loaded

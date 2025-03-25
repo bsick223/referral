@@ -639,10 +639,14 @@ const DataVisualizationBackground = () => {
       // Animation
       // =================================
 
-      let time = 0;
+      // Animation loop
+      let animationId: number;
+
       function animate() {
-        const animationId = requestAnimationFrame(animate);
-        time += 0.01;
+        animationId = requestAnimationFrame(animate);
+
+        // Animation updates
+        const time = Date.now() * 0.001;
 
         // Update node positions (gently animating)
         if (nodes.geometry.attributes.position) {
@@ -675,7 +679,7 @@ const DataVisualizationBackground = () => {
         renderer.render(scene, camera);
       }
 
-      // Start animation
+      // Call animation for the first time
       animate();
 
       // Handle window resize
@@ -688,6 +692,7 @@ const DataVisualizationBackground = () => {
         renderer.setSize(width, height);
       };
 
+      // Resize handler
       window.addEventListener("resize", handleResize);
 
       // Cleanup
@@ -695,6 +700,7 @@ const DataVisualizationBackground = () => {
         console.log("Cleaning up DataVisualizationBackground");
 
         window.removeEventListener("resize", handleResize);
+        cancelAnimationFrame(animationId);
 
         // Dispose geometries and materials
         grid.mesh.geometry.dispose();
