@@ -35,7 +35,7 @@ export default function useOnboardingTour({
           },
           classes:
             "shepherd-theme-custom shadow-xl bg-[#090d1b] border border-[#20253d] text-white rounded-lg",
-          scrollTo: true,
+          scrollTo: false,
         },
         useModalOverlay: true,
       });
@@ -46,13 +46,13 @@ export default function useOnboardingTour({
         .shepherd-theme-custom {
           max-width: 400px;
           color: white !important;
-          background-color: #090d1b !important;
+          background-color: #0c1333 !important; /* Slightly lighter background */
         }
         .shepherd-theme-custom .shepherd-header {
-          background: linear-gradient(to right, rgba(249,115,22,0.2), rgba(168,85,247,0.2), rgba(59,130,246,0.2));
+          background: linear-gradient(to right, rgba(249,115,22,0.3), rgba(168,85,247,0.3), rgba(59,130,246,0.3));
           border-radius: 8px 8px 0 0;
           padding: 1rem;
-          background-color: #121a36 !important;
+          background-color: #152047 !important; /* Lighter header */
         }
         .shepherd-theme-custom .shepherd-title {
           font-size: 1.25rem;
@@ -62,62 +62,128 @@ export default function useOnboardingTour({
           -webkit-background-clip: text;
           background-clip: text;
           -webkit-text-fill-color: transparent;
+          filter: brightness(1.2); /* Brighter text */
         }
         .shepherd-theme-custom .shepherd-text {
           padding: 1rem;
-          color: #e5e7eb !important;
-          background-color: #090d1b !important;
+          color: #ffffff !important; /* Pure white text for better visibility */
+          background-color: #0c1333 !important;
+          font-size: 1.05rem; /* Slightly larger text */
         }
         .shepherd-theme-custom .shepherd-footer {
           padding: 0.75rem 1rem;
-          border-top: 1px solid rgba(32, 37, 61, 0.7);
-          background-color: #090d1b !important;
+          border-top: 1px solid rgba(64, 78, 128, 0.7); /* Lighter border */
+          background-color: #0c1333 !important;
         }
         .shepherd-theme-custom .shepherd-cancel-icon {
-          color: rgba(156, 163, 175, 0.7);
+          color: rgba(220, 220, 220, 0.8); /* Brighter cancel icon */
         }
         .shepherd-theme-custom .shepherd-cancel-icon:hover {
-          color: rgba(156, 163, 175, 1);
+          color: rgba(255, 255, 255, 1);
         }
         .shepherd-theme-custom .shepherd-button-primary {
-          background: linear-gradient(to right, #f97316, #a855f7, #3b82f6);
+          background: linear-gradient(to right, #ff8534, #b662ff, #4d94ff); /* Brighter gradient */
           color: white;
           border-radius: 4px;
           padding: 0.5rem 1rem;
           font-size: 0.875rem;
-          box-shadow: 0 0 15px rgba(249,115,22,0.3);
+          box-shadow: 0 0 15px rgba(249,115,22,0.5); /* More glow */
         }
         .shepherd-theme-custom .shepherd-button-primary:hover {
-          background: linear-gradient(to right, #f97316, #a855f7, #3b82f6);
-          opacity: 0.9;
+          background: linear-gradient(to right, #ff9d5c, #c77dff, #6ba5ff); /* Even brighter on hover */
+          opacity: 1;
         }
         .shepherd-theme-custom .shepherd-button-secondary {
-          background: rgba(12, 16, 41, 0.9);
-          color: rgba(209, 213, 219, 0.9);
-          border: 1px solid rgba(32, 37, 61, 0.5);
+          background: rgba(20, 26, 58, 0.95);
+          color: rgba(230, 230, 230, 0.95); /* Brighter text */
+          border: 1px solid rgba(64, 78, 128, 0.7); /* Lighter border */
           border-radius: 4px;
           padding: 0.5rem 1rem;
           font-size: 0.875rem;
           margin-right: 0.5rem;
         }
         .shepherd-theme-custom .shepherd-button-secondary:hover {
-          background: rgba(12, 16, 41, 1);
-          color: rgba(209, 213, 219, 1);
+          background: rgba(25, 32, 65, 1);
+          color: rgba(255, 255, 255, 1);
         }
         /* Fix additional elements that might be white */
         .shepherd-element, .shepherd-content, .shepherd-text p {
-          background-color: #090d1b !important;
-          color: #e5e7eb !important;
+          background-color: #0c1333 !important;
+          color: #ffffff !important;
         }
         /* Ensure the text we define is bright and clear */
-        .shepherd-text p.text-gray-300 {
-          color: #e5e7eb !important;
+        .shepherd-text p.text-white {
+          color: #ffffff !important;
+          font-weight: 400 !important;
+          line-height: 1.5 !important;
+        }
+        /* Add a subtle highlight to the current element being pointed to */
+        .shepherd-highlighted {
+          box-shadow: 0 0 10px 3px rgba(249,115,22,0.5) !important;
+          z-index: 10000 !important;
         }
       `;
       document.head.appendChild(styleEl);
 
-      // Define tour steps
-      newTour.addStep({
+      // Helper function for better scrolling that accounts for the header
+      const scrollToElement = (element: HTMLElement | null) => {
+        if (!element) return;
+
+        const header = document.querySelector("header");
+        const headerHeight = header ? header.offsetHeight + 16 : 80;
+
+        const elementRect = element.getBoundingClientRect();
+        const absoluteElementTop = elementRect.top + window.pageYOffset;
+        const middle =
+          absoluteElementTop - window.innerHeight / 2 + elementRect.height / 2;
+        const scrollPosition = middle - headerHeight;
+
+        window.scrollTo({
+          top: Math.max(0, scrollPosition),
+          behavior: "smooth",
+        });
+      };
+
+      // Helper function to handle common step setup
+      const setupStep = (step: any) => {
+        step.on("show", () => {
+          // Wait for DOM to update
+          setTimeout(() => {
+            // Scroll to better position the step
+            const stepElement = document.querySelector(".shepherd-element");
+            scrollToElement(stepElement as HTMLElement);
+
+            // Add highlight to the target element
+            if (step.options.attachTo) {
+              const targetElement = document.querySelector(
+                step.options.attachTo.element
+              );
+              if (targetElement) {
+                // Add custom highlight effect
+                targetElement.classList.add("shepherd-highlighted");
+
+                // Also scroll to make the target element visible
+                scrollToElement(targetElement as HTMLElement);
+              }
+            }
+          }, 100); // Slightly longer delay to ensure DOM is ready
+        });
+
+        step.on("hide", () => {
+          // Remove highlight from the target element when step is hidden
+          if (step.options.attachTo) {
+            const targetElement = document.querySelector(
+              step.options.attachTo.element
+            );
+            if (targetElement) {
+              targetElement.classList.remove("shepherd-highlighted");
+            }
+          }
+        });
+      };
+
+      // Define tour steps with custom positioning
+      const welcomeStep = newTour.addStep({
         id: "welcome",
         title: "Welcome to your Dashboard!",
         text: `<p class="text-white mb-2">We'll guide you through the main features of our platform to help you get started.</p>`,
@@ -133,15 +199,28 @@ export default function useOnboardingTour({
             text: "Next",
           },
         ],
+        when: {
+          show: () => {
+            // For welcome step, scroll to top of the page with slight offset for header
+            setTimeout(() => {
+              const header = document.querySelector("header");
+              const headerHeight = header ? header.offsetHeight : 0;
+              window.scrollTo({
+                top: headerHeight + 10,
+                behavior: "smooth",
+              });
+            }, 100);
+          },
+        },
       });
 
-      newTour.addStep({
+      const addCompanyStep = newTour.addStep({
         id: "add-company",
         title: "Add Your First Company",
         text: '<p class="text-white mb-2">Start by adding a company. Click on the "Add Company" button to create your first company profile.</p>',
         attachTo: {
           element: '[data-tour="add-company"]',
-          on: "bottom",
+          on: "bottom-start",
         },
         buttons: [
           {
@@ -157,13 +236,15 @@ export default function useOnboardingTour({
         ],
       });
 
-      newTour.addStep({
+      setupStep(addCompanyStep);
+
+      const messagesStep = newTour.addStep({
         id: "messages",
         title: "Manage Your Messages",
         text: '<p class="text-white mb-2">Create and customize message templates for different scenarios.</p>',
         attachTo: {
           element: '[data-tour="messages"]',
-          on: "bottom",
+          on: "bottom-start",
         },
         buttons: [
           {
@@ -179,13 +260,15 @@ export default function useOnboardingTour({
         ],
       });
 
-      newTour.addStep({
+      setupStep(messagesStep);
+
+      const leaderboardStep = newTour.addStep({
         id: "leaderboard",
         title: "Check the Leaderboard",
         text: '<p class="text-white mb-2">See how you compare to others on our leaderboard.</p>',
         attachTo: {
           element: '[data-tour="leaderboard"]',
-          on: "bottom",
+          on: "bottom-start",
         },
         buttons: [
           {
@@ -204,6 +287,8 @@ export default function useOnboardingTour({
           },
         ],
       });
+
+      setupStep(leaderboardStep);
 
       setTour(newTour);
 
@@ -230,7 +315,7 @@ export default function useOnboardingTour({
     if (isNewUser && !hasCompletedTour && tour) {
       console.log("Hook detected new user, preparing to auto-start tour...");
 
-      // Small delay to ensure elements are rendered
+      // Longer delay to ensure elements are fully rendered and styled
       const timer = setTimeout(() => {
         try {
           // Check if DOM elements exist first
@@ -251,8 +336,14 @@ export default function useOnboardingTour({
           });
 
           if (addCompanyElement && messagesElement && leaderboardElement) {
-            tour.start();
-            console.log("Auto-started tour for new user");
+            // Reset scroll position before starting tour
+            window.scrollTo(0, 0);
+
+            // Small additional delay to ensure scroll is complete
+            setTimeout(() => {
+              tour.start();
+              console.log("Auto-started tour for new user");
+            }, 200);
           } else {
             console.warn(
               "Could not start tour - some elements were not found in DOM"
@@ -261,7 +352,7 @@ export default function useOnboardingTour({
         } catch (error) {
           console.error("Error starting tour:", error);
         }
-      }, 2000); // Increase delay to ensure DOM elements are ready
+      }, 2500); // Increased delay to ensure everything is fully loaded
 
       return () => clearTimeout(timer);
     }
