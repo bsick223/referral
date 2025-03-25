@@ -125,7 +125,7 @@ export default function NewCompanyPage() {
                 >
                   Website{" "}
                   <span className="text-xs text-gray-400">
-                    (helps with automatic logo display)
+                    (logo display)
                   </span>
                 </label>
                 <div className="mt-1">
@@ -140,10 +140,10 @@ export default function NewCompanyPage() {
                     focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g. https://google.com"
                   />
-                  <p className="mt-1 text-xs text-gray-400">
+                  {/* <p className="mt-1 text-xs text-gray-400">
                     Adding a website URL helps us automatically display the
                     company logo.
-                  </p>
+                  </p> */}
                 </div>
               </div>
 

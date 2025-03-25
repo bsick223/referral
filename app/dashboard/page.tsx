@@ -131,53 +131,79 @@ export default function DashboardPage() {
                       <div className="w-12 h-12 mb-3 bg-gray-800/50 rounded-md flex items-center justify-center overflow-hidden">
                         {company.website && company.website.length > 0 ? (
                           <img
-                            src={`https://cdn.brandfetch.io/company/${
+                            src={`https://logo.clearbit.com/${
                               company.website
                                 .replace(/^https?:\/\//, "")
                                 .replace(/\/$/, "")
                                 .split("/")[0]
-                            }?c=vid2sum`}
+                            }`}
                             alt={`${company.name} logo`}
                             className="max-w-full max-h-full object-contain p-1"
                             onError={(e) => {
-                              // Fallback to Clearbit logo API if Brandfetch fails
-                              (
-                                e.target as HTMLImageElement
-                              ).src = `https://logo.clearbit.com/${
-                                company
-                                  .website!.replace(/^https?:\/\//, "")
-                                  .replace(/\/$/, "")
-                                  .split("/")[0]
-                              }`;
-                              // Add second fallback
-                              (e.target as HTMLImageElement).onerror = () => {
-                                // Show a fallback icon if logo can't be loaded
-                                (e.target as HTMLImageElement).style.display =
-                                  "none";
-                                (
-                                  e.target as HTMLImageElement
-                                ).parentElement!.innerHTML =
-                                  '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>';
-                              };
+                              // Show fallback icon if logo can't be loaded
+                              const target = e.target as HTMLImageElement;
+                              const parent = target.parentElement;
+                              if (parent) {
+                                // Hide the image
+                                target.style.display = "none";
+                                // Create and append the SVG
+                                const svgElement = document.createElementNS(
+                                  "http://www.w3.org/2000/svg",
+                                  "svg"
+                                );
+                                svgElement.setAttribute(
+                                  "xmlns",
+                                  "http://www.w3.org/2000/svg"
+                                );
+                                svgElement.setAttribute(
+                                  "class",
+                                  "h-6 w-6 text-orange-400"
+                                );
+                                svgElement.setAttribute("fill", "none");
+                                svgElement.setAttribute("viewBox", "0 0 24 24");
+                                svgElement.setAttribute(
+                                  "stroke",
+                                  "currentColor"
+                                );
+
+                                const pathElement = document.createElementNS(
+                                  "http://www.w3.org/2000/svg",
+                                  "path"
+                                );
+                                pathElement.setAttribute(
+                                  "stroke-linecap",
+                                  "round"
+                                );
+                                pathElement.setAttribute(
+                                  "stroke-linejoin",
+                                  "round"
+                                );
+                                pathElement.setAttribute("stroke-width", "2");
+                                pathElement.setAttribute(
+                                  "d",
+                                  "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                );
+
+                                svgElement.appendChild(pathElement);
+                                parent.appendChild(svgElement);
+                              }
                             }}
                           />
                         ) : (
-                          <div className="h-6 w-6 text-orange-400">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-6 w-6"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                              />
-                            </svg>
-                          </div>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6 text-orange-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                            />
+                          </svg>
                         )}
                       </div>
                       <h3 className="text-lg font-light text-white group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:via-purple-500 group-hover:to-blue-500 group-hover:text-transparent group-hover:bg-clip-text transition-all duration-300">
