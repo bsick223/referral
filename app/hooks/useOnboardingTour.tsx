@@ -216,14 +216,43 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         when: {
           show: () => {
             // For welcome step, scroll to top of the page with slight offset for header
-            setTimeout(() => {
-              const header = document.querySelector("header");
-              const headerHeight = header ? header.offsetHeight : 0;
-              window.scrollTo({
-                top: headerHeight + 10,
-                behavior: "smooth",
-              });
-            }, 100);
+            // Detect if we're on a mobile device
+            const isMobile = window.innerWidth <= 768;
+
+            setTimeout(
+              () => {
+                const header = document.querySelector("header");
+                const headerHeight = header ? header.offsetHeight : 0;
+
+                // Use a different scroll approach for mobile
+                if (isMobile) {
+                  // On mobile, we want to make sure we're at the very top
+                  window.scrollTo({
+                    top: 0,
+                    behavior: "smooth",
+                  });
+
+                  // Then after a brief delay, adjust if needed to account for any mobile UI elements
+                  setTimeout(() => {
+                    const tourElement =
+                      document.querySelector(".shepherd-element");
+                    if (tourElement) {
+                      tourElement.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      });
+                    }
+                  }, 300);
+                } else {
+                  // Original desktop behavior
+                  window.scrollTo({
+                    top: headerHeight + 10,
+                    behavior: "smooth",
+                  });
+                }
+              },
+              isMobile ? 500 : 100
+            ); // Longer timeout for mobile
           },
         },
       });

@@ -13,12 +13,10 @@ interface OnboardingButtonProps {
 export default function OnboardingButton({ startTour }: OnboardingButtonProps) {
   const { user } = useUser();
   const [isMounted, setIsMounted] = useState(false);
-  const onboardingCompleted = useQuery(
-    api.userProfiles.hasCompletedOnboarding,
-    {
+  const onboardingCompleted =
+    useQuery(api.userProfiles.hasCompletedOnboarding, {
       userId: user?.id || "",
-    }
-  ) || false;
+    }) || false;
   const [showAnimation, setShowAnimation] = useState(!onboardingCompleted);
 
   // Prevent hydration errors by only rendering once the component is mounted
@@ -51,13 +49,19 @@ export default function OnboardingButton({ startTour }: OnboardingButtonProps) {
       </div>
       <button
         onClick={handleStartTour}
-        className={`p-3 rounded-full bg-gradient-to-r from-orange-500 via-purple-500 to-blue-600 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)] hover:from-orange-400 hover:via-purple-400 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-          showAnimation ? "animate-bounce" : ""
-        }`}
+        className={`${
+          onboardingCompleted
+            ? "p-2 bg-gray-600 hover:bg-gray-500"
+            : `p-3 bg-gradient-to-r from-orange-500 via-purple-500 to-blue-600 hover:from-orange-400 hover:via-purple-400 hover:to-blue-500 shadow-[0_0_15px_rgba(249,115,22,0.5)] ${
+                showAnimation ? "animate-bounce" : ""
+              }`
+        } rounded-full text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
         aria-label="Show Onboarding Tour"
         title="Help & Tour"
       >
-        <HelpCircle className="h-6 w-6" />
+        <HelpCircle
+          className={`${onboardingCompleted ? "h-5 w-5" : "h-6 w-6"}`}
+        />
       </button>
     </div>
   );
