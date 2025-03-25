@@ -405,6 +405,34 @@ export default function CompanyDetailPage({
     }
   }, [company, router]);
 
+  // Function to organize referrals by tags
+  const organizeReferralsByTags = (referrals: any[]) => {
+    const taggedReferrals: Record<string, any[]> = {};
+    const untaggedReferrals: any[] = [];
+
+    // First pass: organize by tags
+    referrals.forEach((referral) => {
+      if (!referral.tags || referral.tags.length === 0) {
+        untaggedReferrals.push(referral);
+        return;
+      }
+
+      // Parse tags
+      const parsedTags = parseTagsForDisplay(referral.tags);
+
+      // For each tag, add the referral to that tag's list
+      parsedTags.forEach((tag) => {
+        const tagKey = `${tag.name}|${tag.color}`;
+        if (!taggedReferrals[tagKey]) {
+          taggedReferrals[tagKey] = [];
+        }
+        taggedReferrals[tagKey].push(referral);
+      });
+    });
+
+    return { taggedReferrals, untaggedReferrals };
+  };
+
   // Loading state
   if (!user || company === undefined || referrals === undefined) {
     return (
@@ -879,89 +907,229 @@ export default function CompanyDetailPage({
               )}
             </div>
           ) : (
-            <div className="space-y-4">
-              {referrals.map((referral) => (
-                <div
-                  key={referral._id}
-                  className="bg-[#121a36]/50 backdrop-blur-sm shadow border border-[#20253d]/50 rounded-lg p-6 hover:border-[#20253d] transition-all duration-300"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start">
-                      <User className="h-10 w-10 text-gray-400 mr-4 bg-[#0c1029] p-2 rounded-full border border-[#20253d]/50" />
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h4 className="text-lg font-medium text-gray-200">
-                            {referral.name}
-                          </h4>
-                          {referral.tags &&
-                            referral.tags.length > 0 &&
-                            parseTagsForDisplay(referral.tags).map((tag) => (
-                              <span
-                                key={tag.name}
-                                className={`px-2 py-0.5 text-xs ${
-                                  TAG_COLORS[tag.color].bg
-                                } ${
-                                  TAG_COLORS[tag.color].text
-                                } rounded-full border border-[#20253d]/70`}
+            <div>
+              {/* Organize referrals by tags */}
+              {(() => {
+                const { taggedReferrals, untaggedReferrals } =
+                  organizeReferralsByTags(referrals);
+                const tagKeys = Object.keys(taggedReferrals);
+
+                return (
+                  <>
+                    {/* Tagged referrals */}
+                    {tagKeys.map((tagKey) => {
+                      const [name, colorIndex] = tagKey.split("|");
+                      const color = parseInt(colorIndex);
+                      const referralsForTag = taggedReferrals[tagKey];
+
+                      return (
+                        <div key={tagKey} className="mb-6">
+                          <div className="flex items-center mb-3">
+                            <span
+                              className={`px-3 py-1 text-sm ${TAG_COLORS[color].bg} ${TAG_COLORS[color].text} rounded-full border border-[#20253d]/70`}
+                            >
+                              {name}
+                            </span>
+                            <span className="ml-2 text-gray-400 text-sm">
+                              {referralsForTag.length} referral
+                              {referralsForTag.length !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                          <div className="space-y-4">
+                            {referralsForTag.map((referral) => (
+                              <div
+                                key={referral._id}
+                                className="bg-[#121a36]/50 backdrop-blur-sm shadow border border-[#20253d]/50 rounded-lg p-6 hover:border-[#20253d] transition-all duration-300"
                               >
-                                {tag.name}
-                              </span>
+                                <div className="flex items-start justify-between">
+                                  <div className="flex items-start">
+                                    <User className="h-10 w-10 text-gray-400 mr-4 bg-[#0c1029] p-2 rounded-full border border-[#20253d]/50" />
+                                    <div>
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <h4 className="text-lg font-medium text-gray-200">
+                                          {referral.name}
+                                        </h4>
+                                        {referral.tags &&
+                                          referral.tags.length > 0 &&
+                                          parseTagsForDisplay(
+                                            referral.tags
+                                          ).map((tag) => (
+                                            <span
+                                              key={tag.name}
+                                              className={`px-2 py-0.5 text-xs ${
+                                                TAG_COLORS[tag.color].bg
+                                              } ${
+                                                TAG_COLORS[tag.color].text
+                                              } rounded-full border border-[#20253d]/70`}
+                                            >
+                                              {tag.name}
+                                            </span>
+                                          ))}
+                                      </div>
+                                      {referral.linkedinUrl && (
+                                        <a
+                                          href={referral.linkedinUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="mt-1 text-sm text-blue-400 hover:text-blue-300 inline-flex items-center cursor-pointer"
+                                        >
+                                          LinkedIn Profile
+                                          <ExternalLink className="h-3 w-3 ml-1" />
+                                        </a>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex">
+                                    <button
+                                      onClick={() =>
+                                        startEditingReferral(referral)
+                                      }
+                                      className="text-gray-400 hover:text-gray-300 mr-2 p-1"
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteReferral(referral._id)
+                                      }
+                                      className="text-red-400 hover:text-red-300 p-1"
+                                    >
+                                      <Trash className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                                {(referral.email || referral.phoneNumber) && (
+                                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {referral.email && (
+                                      <div className="flex items-center text-sm text-gray-400">
+                                        <span className="font-medium mr-2">
+                                          Email:
+                                        </span>
+                                        <span>{referral.email}</span>
+                                      </div>
+                                    )}
+                                    {referral.phoneNumber && (
+                                      <div className="flex items-center text-sm text-gray-400">
+                                        <span className="font-medium mr-2">
+                                          Phone:
+                                        </span>
+                                        <span>{referral.phoneNumber}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {referral.notes && (
+                                  <div className="mt-4 pt-4 border-t border-[#20253d]/50">
+                                    <h5 className="text-sm font-medium text-gray-300 mb-1">
+                                      Notes:
+                                    </h5>
+                                    <p className="text-sm text-gray-400">
+                                      {referral.notes}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
                             ))}
+                          </div>
                         </div>
-                        {referral.linkedinUrl && (
-                          <a
-                            href={referral.linkedinUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-1 text-sm text-blue-400 hover:text-blue-300 inline-flex items-center cursor-pointer"
-                          >
-                            LinkedIn Profile
-                            <ExternalLink className="h-3 w-3 ml-1" />
-                          </a>
-                        )}
+                      );
+                    })}
+
+                    {/* Untagged referrals */}
+                    {untaggedReferrals.length > 0 && (
+                      <div className="mb-6">
+                        <div className="flex items-center mb-3">
+                          <span className="px-3 py-1 text-sm bg-gray-800/50 text-gray-300 rounded-full border border-[#20253d]/70">
+                            Untagged
+                          </span>
+                          <span className="ml-2 text-gray-400 text-sm">
+                            {untaggedReferrals.length} referral
+                            {untaggedReferrals.length !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                        <div className="space-y-4">
+                          {untaggedReferrals.map((referral) => (
+                            <div
+                              key={referral._id}
+                              className="bg-[#121a36]/50 backdrop-blur-sm shadow border border-[#20253d]/50 rounded-lg p-6 hover:border-[#20253d] transition-all duration-300"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-start">
+                                  <User className="h-10 w-10 text-gray-400 mr-4 bg-[#0c1029] p-2 rounded-full border border-[#20253d]/50" />
+                                  <div>
+                                    <h4 className="text-lg font-medium text-gray-200">
+                                      {referral.name}
+                                    </h4>
+                                    {referral.linkedinUrl && (
+                                      <a
+                                        href={referral.linkedinUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-1 text-sm text-blue-400 hover:text-blue-300 inline-flex items-center cursor-pointer"
+                                      >
+                                        LinkedIn Profile
+                                        <ExternalLink className="h-3 w-3 ml-1" />
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex">
+                                  <button
+                                    onClick={() =>
+                                      startEditingReferral(referral)
+                                    }
+                                    className="text-gray-400 hover:text-gray-300 mr-2 p-1"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteReferral(referral._id)
+                                    }
+                                    className="text-red-400 hover:text-red-300 p-1"
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                              {(referral.email || referral.phoneNumber) && (
+                                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {referral.email && (
+                                    <div className="flex items-center text-sm text-gray-400">
+                                      <span className="font-medium mr-2">
+                                        Email:
+                                      </span>
+                                      <span>{referral.email}</span>
+                                    </div>
+                                  )}
+                                  {referral.phoneNumber && (
+                                    <div className="flex items-center text-sm text-gray-400">
+                                      <span className="font-medium mr-2">
+                                        Phone:
+                                      </span>
+                                      <span>{referral.phoneNumber}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {referral.notes && (
+                                <div className="mt-4 pt-4 border-t border-[#20253d]/50">
+                                  <h5 className="text-sm font-medium text-gray-300 mb-1">
+                                    Notes:
+                                  </h5>
+                                  <p className="text-sm text-gray-400">
+                                    {referral.notes}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex">
-                      <button
-                        onClick={() => startEditingReferral(referral)}
-                        className="text-gray-400 hover:text-gray-300 mr-2 p-1"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteReferral(referral._id)}
-                        className="text-red-400 hover:text-red-300 p-1"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                  {(referral.email || referral.phoneNumber) && (
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {referral.email && (
-                        <div className="flex items-center text-sm text-gray-400">
-                          <span className="font-medium mr-2">Email:</span>
-                          <span>{referral.email}</span>
-                        </div>
-                      )}
-                      {referral.phoneNumber && (
-                        <div className="flex items-center text-sm text-gray-400">
-                          <span className="font-medium mr-2">Phone:</span>
-                          <span>{referral.phoneNumber}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {referral.notes && (
-                    <div className="mt-4 pt-4 border-t border-[#20253d]/50">
-                      <h5 className="text-sm font-medium text-gray-300 mb-1">
-                        Notes:
-                      </h5>
-                      <p className="text-sm text-gray-400">{referral.notes}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
         </div>
