@@ -252,23 +252,79 @@ export default function CompanyDetailPage({
         <div className="bg-[#121a36]/50 backdrop-blur-sm shadow border border-[#20253d]/50 rounded-lg p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="col-span-2">
-              <h2 className="text-lg font-medium text-gray-200 mb-2">
-                Company Information
-              </h2>
-              {company.description && (
-                <p className="text-gray-300 mb-4">{company.description}</p>
-              )}
-              {company.website && (
-                <a
-                  href={company.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center text-blue-400 hover:text-blue-300"
-                >
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  <span>Visit Website</span>
-                </a>
-              )}
+              <div className="flex items-start mb-4">
+                {/* Company Logo */}
+                <div className="w-20 h-20 mr-4 bg-gray-800/50 rounded-md flex items-center justify-center overflow-hidden">
+                  {company.website && company.website.length > 0 ? (
+                    <img
+                      src={`https://cdn.brandfetch.io/company/${
+                        company.website
+                          .replace(/^https?:\/\//, "")
+                          .replace(/\/$/, "")
+                          .split("/")[0]
+                      }?c=vid2sum`}
+                      alt={`${company.name} logo`}
+                      className="max-w-full max-h-full object-contain p-2"
+                      onError={(e) => {
+                        // Fallback to Clearbit logo API if Brandfetch fails
+                        (
+                          e.target as HTMLImageElement
+                        ).src = `https://logo.clearbit.com/${
+                          company
+                            .website!.replace(/^https?:\/\//, "")
+                            .replace(/\/$/, "")
+                            .split("/")[0]
+                        }`;
+                        // Add second fallback
+                        (e.target as HTMLImageElement).onerror = () => {
+                          // Show a fallback icon if logo can't be loaded
+                          (e.target as HTMLImageElement).style.display = "none";
+                          (
+                            e.target as HTMLImageElement
+                          ).parentElement!.innerHTML =
+                            '<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>';
+                        };
+                      }}
+                    />
+                  ) : (
+                    <div className="h-8 w-8 text-orange-400">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-lg font-medium text-gray-200 mb-2">
+                    Company Information
+                  </h2>
+                  {company.description && (
+                    <p className="text-gray-300 mb-4">{company.description}</p>
+                  )}
+                  {company.website && (
+                    <a
+                      href={company.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-blue-400 hover:text-blue-300"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      <span>Visit Website</span>
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="col-span-1">
               <div className="bg-[#0c1029] p-4 rounded-md border border-[#20253d]/50">

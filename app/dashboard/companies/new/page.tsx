@@ -123,7 +123,10 @@ export default function NewCompanyPage() {
                   htmlFor="website"
                   className="block text-sm font-medium text-gray-300"
                 >
-                  Website
+                  Website{" "}
+                  <span className="text-xs text-gray-400">
+                    (helps with automatic logo display)
+                  </span>
                 </label>
                 <div className="mt-1">
                   <input
@@ -137,6 +140,10 @@ export default function NewCompanyPage() {
                     focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g. https://google.com"
                   />
+                  <p className="mt-1 text-xs text-gray-400">
+                    Adding a website URL helps us automatically display the
+                    company logo.
+                  </p>
                 </div>
               </div>
 
