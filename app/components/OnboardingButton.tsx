@@ -2,14 +2,24 @@
 
 import { HelpCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useUser } from "@clerk/nextjs";
 
 interface OnboardingButtonProps {
   startTour: () => void;
 }
 
 export default function OnboardingButton({ startTour }: OnboardingButtonProps) {
+  const { user } = useUser();
   const [isMounted, setIsMounted] = useState(false);
-  const [showAnimation, setShowAnimation] = useState(true);
+  const onboardingCompleted = useQuery(
+    api.userProfiles.hasCompletedOnboarding,
+    {
+      userId: user?.id || "",
+    }
+  ) || false;
+  const [showAnimation, setShowAnimation] = useState(!onboardingCompleted);
 
   // Prevent hydration errors by only rendering once the component is mounted
   useEffect(() => {
@@ -21,7 +31,7 @@ export default function OnboardingButton({ startTour }: OnboardingButtonProps) {
     }, 10000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [onboardingCompleted]);
 
   if (!isMounted) return null;
 
