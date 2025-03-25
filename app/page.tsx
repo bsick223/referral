@@ -31,9 +31,9 @@ export default function Home() {
         <div className="w-full max-w-4xl mx-auto text-center">
           {/* Main Heading */}
           <h1 className="text-4xl md:text-6xl font-light text-white mb-6 leading-tight italic">
-            <span className="text-[#e2e2e2]">a new-era of</span>
+            {/* <span className="text-[#e2e2e2]">a new-era of</span> */}
             <br />
-            <span className="text-white font-normal">referrals arriving.</span>
+            <span className="text-white font-normal">Get Prepared.</span>
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto mb-16 leading-relaxed">
@@ -65,16 +65,27 @@ export default function Home() {
           </div>
 
           {/* Footer info */}
-          <div className="mt-16 grid grid-cols-2 gap-8 text-left text-sm text-gray-400">
+          <div className="mt-16 md:grid md:grid-cols-2 gap-8 text-left text-sm text-gray-400 space-y-6 md:space-y-0">
             <div>
-              <p className="mb-2 text-white">Transactions in Milliseconds</p>
-              <p>Effortless connection with referrers.</p>
-              <p>We do the introduction work for you.</p>
+              <p className="mb-2 text-white font-medium">Statistics</p>
+              <ul className="space-y-2">
+                <li>
+                  • Referred candidates: 28.5% hire rate vs 2.7% for
+                  non-referred.
+                </li>
+                <li>• 4x more likely to get an interview.</li>
+                <li>• 40% higher probability of being recruited.</li>
+              </ul>
+              <p className="mt-2 italic opacity-45">JobStick, Apollo Technical</p>
             </div>
             <div>
-              <p className="mb-2 text-white">Precision! One hundred %</p>
-              <p>No human errors.</p>
-              <p>No complex application forms.</p>
+              <p className="mb-2 text-white font-medium">
+                Early Bird, Gets the Job
+              </p>
+              <ul className="space-y-2">
+                <li>• Be the first to apply.</li>
+                <li>• Have many referrals ready.</li>
+              </ul>
             </div>
           </div>
         </div>
