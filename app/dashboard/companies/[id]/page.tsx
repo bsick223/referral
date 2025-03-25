@@ -12,6 +12,11 @@ import {
   RefreshCw,
   ExternalLink,
   Pencil,
+  Check,
+  X,
+  Tag,
+  Plus,
+  ChevronDown,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -19,6 +24,24 @@ import Link from "next/link";
 import { Id } from "@/convex/_generated/dataModel";
 import { use } from "react";
 import Image from "next/image";
+
+// Define tag color options for dark theme - same as in messages page
+const TAG_COLORS = [
+  { bg: "bg-blue-900/50", text: "text-blue-300", name: "Blue" },
+  { bg: "bg-green-900/50", text: "text-green-300", name: "Green" },
+  { bg: "bg-red-900/50", text: "text-red-300", name: "Red" },
+  { bg: "bg-yellow-900/50", text: "text-yellow-300", name: "Yellow" },
+  { bg: "bg-purple-900/50", text: "text-purple-300", name: "Purple" },
+  { bg: "bg-pink-900/50", text: "text-pink-300", name: "Pink" },
+  { bg: "bg-indigo-900/50", text: "text-indigo-300", name: "Indigo" },
+  { bg: "bg-gray-800/50", text: "text-gray-300", name: "Gray" },
+  { bg: "bg-orange-900/50", text: "text-orange-300", name: "Orange" },
+];
+
+interface Tag {
+  name: string;
+  color: number; // Index of the color in TAG_COLORS
+}
 
 export default function CompanyDetailPage({
   params,
@@ -33,12 +56,16 @@ export default function CompanyDetailPage({
   const [showReferralForm, setShowReferralForm] = useState(false);
   const [editingReferralId, setEditingReferralId] =
     useState<Id<"referrals"> | null>(null);
+  const [newTagName, setNewTagName] = useState("");
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [referralFormData, setReferralFormData] = useState({
     name: "",
     linkedinUrl: "",
     email: "",
     phoneNumber: "",
     notes: "",
+    tags: [] as Tag[],
   });
 
   const [showEditCompanyForm, setShowEditCompanyForm] = useState(false);
@@ -82,6 +109,11 @@ export default function CompanyDetailPage({
     if (!user) return;
 
     try {
+      // Convert tags to string format for storage
+      const stringTags = referralFormData.tags.map(
+        (tag) => `${tag.name}|${tag.color}`
+      );
+
       if (editingReferralId) {
         // Update existing referral
         await updateReferral({
@@ -91,6 +123,7 @@ export default function CompanyDetailPage({
           email: referralFormData.email || undefined,
           phoneNumber: referralFormData.phoneNumber || undefined,
           notes: referralFormData.notes || undefined,
+          tags: stringTags.length > 0 ? stringTags : undefined,
         });
       } else {
         // Create new referral
@@ -102,6 +135,7 @@ export default function CompanyDetailPage({
           email: referralFormData.email || undefined,
           phoneNumber: referralFormData.phoneNumber || undefined,
           notes: referralFormData.notes || undefined,
+          tags: stringTags.length > 0 ? stringTags : undefined,
         });
       }
 
@@ -112,6 +146,7 @@ export default function CompanyDetailPage({
         email: "",
         phoneNumber: "",
         notes: "",
+        tags: [],
       });
       setShowReferralForm(false);
       setEditingReferralId(null);
@@ -130,14 +165,26 @@ export default function CompanyDetailPage({
     email?: string;
     phoneNumber?: string;
     notes?: string;
+    tags?: string[];
   }) => {
     setEditingReferralId(referral._id);
+
+    // Parse tags from string format
+    const parsedTags = (referral.tags || []).map((tagString: string) => {
+      const [name, colorIndex] = tagString.split("|");
+      return {
+        name,
+        color: parseInt(colorIndex) || 0,
+      };
+    });
+
     setReferralFormData({
       name: referral.name,
       linkedinUrl: referral.linkedinUrl || "",
       email: referral.email || "",
       phoneNumber: referral.phoneNumber || "",
       notes: referral.notes || "",
+      tags: parsedTags,
     });
     setShowReferralForm(true);
   };
@@ -150,6 +197,7 @@ export default function CompanyDetailPage({
       email: "",
       phoneNumber: "",
       notes: "",
+      tags: [],
     });
     setShowReferralForm(false);
   };
@@ -219,6 +267,134 @@ export default function CompanyDetailPage({
       setShowEditCompanyForm(true);
     }
   };
+
+  // Tags handling functions
+  const addTag = () => {
+    if (
+      newTagName.trim() &&
+      !referralFormData.tags.some((tag) => tag.name === newTagName.trim())
+    ) {
+      setReferralFormData((prev) => ({
+        ...prev,
+        tags: [
+          ...prev.tags,
+          { name: newTagName.trim(), color: selectedColorIndex },
+        ],
+      }));
+      setNewTagName("");
+      setShowColorPicker(false);
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setReferralFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag.name !== tagToRemove),
+    }));
+  };
+
+  const handleTagKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag();
+    }
+  };
+
+  const selectColor = (index: number) => {
+    setSelectedColorIndex(index);
+    setShowColorPicker(false);
+  };
+
+  // Parse tags for display in the referral list
+  const parseTagsForDisplay = (referralTags: string[] | undefined) => {
+    if (!referralTags) return [];
+
+    return referralTags.map((tagString) => {
+      const [name, colorIndex] = tagString.split("|");
+      return {
+        name,
+        color: parseInt(colorIndex) || 0,
+      };
+    });
+  };
+
+  // Render tags section component
+  const renderTagsSection = () => (
+    <div>
+      <label
+        htmlFor="tags"
+        className="block text-sm font-medium text-gray-300 mb-1"
+      >
+        Tags
+      </label>
+      <div className="flex flex-wrap gap-2 mb-2">
+        {referralFormData.tags.map((tag) => (
+          <div
+            key={tag.name}
+            className={`flex items-center ${TAG_COLORS[tag.color].bg} ${
+              TAG_COLORS[tag.color].text
+            } rounded-full px-3 py-1 text-sm border border-[#20253d]/50`}
+          >
+            <span>{tag.name}</span>
+            <button
+              type="button"
+              onClick={() => removeTag(tag.name)}
+              className={`ml-1.5 ${
+                TAG_COLORS[tag.color].text
+              } hover:opacity-80 focus:outline-none cursor-pointer`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className="flex">
+        <input
+          type="text"
+          value={newTagName}
+          onChange={(e) => setNewTagName(e.target.value)}
+          onKeyDown={handleTagKeyPress}
+          placeholder="Add a tag"
+          className="bg-[#0c1029] shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-[#20253d]/50 rounded-md rounded-r-none px-3 py-2 text-white"
+        />
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowColorPicker(!showColorPicker)}
+            className={`inline-flex items-center px-3 py-2 border-y border-r border-[#20253d]/50 rounded-none shadow-sm text-sm font-medium ${TAG_COLORS[selectedColorIndex].bg} ${TAG_COLORS[selectedColorIndex].text} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+          >
+            <span className="w-4 h-4 rounded-full mr-1"></span>
+            <ChevronDown className="h-4 w-4" />
+          </button>
+          {showColorPicker && (
+            <div className="absolute right-0 mt-1 w-48 bg-[#0c1029] rounded-md shadow-lg z-10 border border-[#20253d]/50">
+              <div className="p-2 grid grid-cols-3 gap-1">
+                {TAG_COLORS.map((color, index) => (
+                  <button
+                    key={index}
+                    onClick={() => selectColor(index)}
+                    className={`${color.bg} ${color.text} px-2 py-1 rounded text-xs font-medium flex items-center justify-between cursor-pointer border border-[#20253d]/50`}
+                  >
+                    {color.name}
+                    {selectedColorIndex === index && (
+                      <Check className="h-3 w-3" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={addTag}
+          className="inline-flex items-center px-3 py-2 border-y border-r border-[#20253d]/50 rounded-r-md shadow-sm text-sm font-medium text-gray-300 bg-[#0c1029] hover:bg-[#121a36]/50 focus:outline-none cursor-pointer"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
 
   // Use effect to navigate after company is loaded or deleted
   useEffect(() => {
@@ -654,6 +830,8 @@ export default function CompanyDetailPage({
                   </div>
                 </div>
 
+                <div className="mt-6">{renderTagsSection()}</div>
+
                 <div className="mt-6 flex justify-end">
                   <button
                     type="button"
@@ -711,9 +889,25 @@ export default function CompanyDetailPage({
                     <div className="flex items-start">
                       <User className="h-10 w-10 text-gray-400 mr-4 bg-[#0c1029] p-2 rounded-full border border-[#20253d]/50" />
                       <div>
-                        <h4 className="text-lg font-medium text-gray-200">
-                          {referral.name}
-                        </h4>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="text-lg font-medium text-gray-200">
+                            {referral.name}
+                          </h4>
+                          {referral.tags &&
+                            referral.tags.length > 0 &&
+                            parseTagsForDisplay(referral.tags).map((tag) => (
+                              <span
+                                key={tag.name}
+                                className={`px-2 py-0.5 text-xs ${
+                                  TAG_COLORS[tag.color].bg
+                                } ${
+                                  TAG_COLORS[tag.color].text
+                                } rounded-full border border-[#20253d]/70`}
+                              >
+                                {tag.name}
+                              </span>
+                            ))}
+                        </div>
                         {referral.linkedinUrl && (
                           <a
                             href={referral.linkedinUrl}

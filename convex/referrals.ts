@@ -54,6 +54,7 @@ export const create = mutation({
     phoneNumber: v.optional(v.string()),
     notes: v.optional(v.string()),
     status: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const referralId = await ctx.db.insert("referrals", {
@@ -65,6 +66,7 @@ export const create = mutation({
       phoneNumber: args.phoneNumber,
       notes: args.notes,
       status: args.status || "pending",
+      tags: args.tags || [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -83,6 +85,7 @@ export const update = mutation({
     phoneNumber: v.optional(v.string()),
     notes: v.optional(v.string()),
     status: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;

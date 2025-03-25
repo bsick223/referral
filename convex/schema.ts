@@ -83,6 +83,7 @@ export default defineSchema({
     phoneNumber: v.optional(v.string()),
     notes: v.optional(v.string()),
     status: v.string(),
+    tags: v.optional(v.array(v.string())),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
