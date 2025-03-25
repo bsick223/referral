@@ -12,6 +12,7 @@ import {
   RefreshCw,
   ExternalLink,
   Pencil,
+  Edit,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -40,6 +41,13 @@ export default function CompanyDetailPage({
     notes: "",
   });
 
+  const [showEditCompanyForm, setShowEditCompanyForm] = useState(false);
+  const [companyFormData, setCompanyFormData] = useState({
+    name: "",
+    description: "",
+    website: "",
+  });
+
   // Get company details
   const company = useQuery(api.companies.getById, {
     id: companyId,
@@ -56,6 +64,7 @@ export default function CompanyDetailPage({
   const updateReferral = useMutation(api.referrals.update);
   const deleteReferral = useMutation(api.referrals.remove);
   const deleteCompany = useMutation(api.companies.remove);
+  const updateCompany = useMutation(api.companies.update);
 
   const handleReferralChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -173,6 +182,44 @@ export default function CompanyDetailPage({
     return false;
   };
 
+  const handleCompanyChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setCompanyFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCompanySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      await updateCompany({
+        id: companyId,
+        name: companyFormData.name || undefined,
+        description: companyFormData.description || undefined,
+        website: companyFormData.website || undefined,
+      });
+
+      setShowEditCompanyForm(false);
+    } catch (error) {
+      console.error("Error updating company:", error);
+    }
+  };
+
+  const startEditingCompany = () => {
+    if (company) {
+      setCompanyFormData({
+        name: company.name || "",
+        description: company.description || "",
+        website: company.website || "",
+      });
+      setShowEditCompanyForm(true);
+    }
+  };
+
   // Use effect to navigate after company is loaded or deleted
   useEffect(() => {
     // Navigation logic - handle both cases:
@@ -255,108 +302,213 @@ export default function CompanyDetailPage({
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Company info */}
         <div className="bg-[#121a36]/50 backdrop-blur-sm shadow border border-[#20253d]/50 rounded-lg p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="col-span-2">
-              <div className="flex items-start mb-4">
-                {/* Company Logo */}
-                <div className="w-20 h-20 mr-4 bg-gray-800/50 rounded-md flex items-center justify-center overflow-hidden">
-                  {company.website && company.website.length > 0 ? (
-                    <img
-                      src={`https://logo.clearbit.com/${
-                        company.website
-                          .replace(/^https?:\/\//, "")
-                          .replace(/\/$/, "")
-                          .split("/")[0]
-                      }`}
-                      alt={`${company.name} logo`}
-                      className="max-w-full max-h-full object-contain p-2"
-                      onError={(e) => {
-                        // Show fallback icon if logo can't be loaded
-                        const target = e.target as HTMLImageElement;
-                        const parent = target.parentElement;
-                        if (parent) {
-                          // Hide the image
-                          target.style.display = "none";
-                          // Create and append the SVG
-                          const svgElement = document.createElementNS(
-                            "http://www.w3.org/2000/svg",
-                            "svg"
-                          );
-                          svgElement.setAttribute(
-                            "xmlns",
-                            "http://www.w3.org/2000/svg"
-                          );
-                          svgElement.setAttribute(
-                            "class",
-                            "h-8 w-8 text-orange-400"
-                          );
-                          svgElement.setAttribute("fill", "none");
-                          svgElement.setAttribute("viewBox", "0 0 24 24");
-                          svgElement.setAttribute("stroke", "currentColor");
-
-                          const pathElement = document.createElementNS(
-                            "http://www.w3.org/2000/svg",
-                            "path"
-                          );
-                          pathElement.setAttribute("stroke-linecap", "round");
-                          pathElement.setAttribute("stroke-linejoin", "round");
-                          pathElement.setAttribute("stroke-width", "2");
-                          pathElement.setAttribute(
-                            "d",
-                            "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                          );
-
-                          svgElement.appendChild(pathElement);
-                          parent.appendChild(svgElement);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-8 w-8 text-orange-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+          {showEditCompanyForm ? (
+            <div>
+              <h3 className="text-lg font-medium text-gray-200 mb-4">
+                Edit Company
+              </h3>
+              <form onSubmit={handleCompanySubmit}>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-300"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      Company Name
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={companyFormData.name}
+                        onChange={handleCompanyChange}
+                        className="block w-full sm:text-sm rounded-md px-3 py-2 
+                        bg-[#0c1029] border-[#20253d] text-gray-300
+                        focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g. Google"
                       />
-                    </svg>
-                  )}
-                </div>
-                <div>
-                  <h2 className="text-lg font-medium text-gray-200 mb-2">
-                    Company Information
-                  </h2>
-                  {company.description && (
-                    <p className="text-gray-300 mb-4">{company.description}</p>
-                  )}
-                  {company.website && (
-                    <a
-                      href={company.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-blue-400 hover:text-blue-300"
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="website"
+                      className="block text-sm font-medium text-gray-300"
                     >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      <span>Visit Website</span>
-                    </a>
-                  )}
+                      Website
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        type="url"
+                        id="website"
+                        name="website"
+                        value={companyFormData.website}
+                        onChange={handleCompanyChange}
+                        className="block w-full sm:text-sm rounded-md px-3 py-2 
+                        bg-[#0c1029] border-[#20253d] text-gray-300
+                        focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g. https://google.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label
+                      htmlFor="description"
+                      className="block text-sm font-medium text-gray-300"
+                    >
+                      Description
+                    </label>
+                    <div className="mt-1">
+                      <textarea
+                        id="description"
+                        name="description"
+                        rows={3}
+                        value={companyFormData.description}
+                        onChange={handleCompanyChange}
+                        className="block w-full sm:text-sm rounded-md px-3 py-2 
+                        bg-[#0c1029] border-[#20253d] text-gray-300
+                        focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Brief description of the company"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditCompanyForm(false)}
+                    className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center px-4 py-2 border-0 border-transparent rounded-md text-sm font-medium text-white bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 hover:from-orange-500 hover:via-purple-500 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer shadow-[0_0_15px_rgba(249,115,22,0.5)]"
+                  >
+                    Update Company
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="col-span-2">
+                <div className="flex items-start mb-4">
+                  {/* Company Logo */}
+                  <div className="w-20 h-20 mr-4 bg-gray-800/50 rounded-md flex items-center justify-center overflow-hidden">
+                    {company.website && company.website.length > 0 ? (
+                      <img
+                        src={`https://logo.clearbit.com/${
+                          company.website
+                            .replace(/^https?:\/\//, "")
+                            .replace(/\/$/, "")
+                            .split("/")[0]
+                        }`}
+                        alt={`${company.name} logo`}
+                        className="max-w-full max-h-full object-contain p-2"
+                        onError={(e) => {
+                          // Show fallback icon if logo can't be loaded
+                          const target = e.target as HTMLImageElement;
+                          const parent = target.parentElement;
+                          if (parent) {
+                            // Hide the image
+                            target.style.display = "none";
+                            // Create and append the SVG
+                            const svgElement = document.createElementNS(
+                              "http://www.w3.org/2000/svg",
+                              "svg"
+                            );
+                            svgElement.setAttribute(
+                              "xmlns",
+                              "http://www.w3.org/2000/svg"
+                            );
+                            svgElement.setAttribute(
+                              "class",
+                              "h-8 w-8 text-orange-400"
+                            );
+                            svgElement.setAttribute("fill", "none");
+                            svgElement.setAttribute("viewBox", "0 0 24 24");
+                            svgElement.setAttribute("stroke", "currentColor");
+
+                            const pathElement = document.createElementNS(
+                              "http://www.w3.org/2000/svg",
+                              "path"
+                            );
+                            pathElement.setAttribute("stroke-linecap", "round");
+                            pathElement.setAttribute(
+                              "stroke-linejoin",
+                              "round"
+                            );
+                            pathElement.setAttribute("stroke-width", "2");
+                            pathElement.setAttribute(
+                              "d",
+                              "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                            );
+
+                            svgElement.appendChild(pathElement);
+                            parent.appendChild(svgElement);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8 text-orange-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-medium text-gray-200 mb-2">
+                      Company Information
+                    </h2>
+                    {company.description && (
+                      <p className="text-gray-300 mb-4">
+                        {company.description}
+                      </p>
+                    )}
+                    {company.website && (
+                      <a
+                        href={company.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center text-blue-400 hover:text-blue-300"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        <span>Visit Website</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="col-span-1">
+                <div className="bg-[#0c1029] p-4 rounded-md border border-[#20253d]/50 relative">
+                  <p className="text-sm text-gray-400">
+                    Added on: {new Date(company.createdAt).toLocaleDateString()}
+                  </p>
+                  <button
+                    onClick={startEditingCompany}
+                    className="absolute bottom-2 right-2 text-gray-400 hover:text-gray-300 transition p-1"
+                    title="Edit Company"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             </div>
-            <div className="col-span-1">
-              <div className="bg-[#0c1029] p-4 rounded-md border border-[#20253d]/50">
-                <p className="text-sm text-gray-400">
-                  Added on: {new Date(company.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Referrals section */}

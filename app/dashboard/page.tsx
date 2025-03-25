@@ -210,7 +210,6 @@ export default function DashboardPage() {
                         {company.name}
                       </h3>
                     </div>
-                    <Building className="h-5 w-5 text-orange-400 group-hover:text-orange-300 transition-colors duration-300" />
                   </div>
                   {company.description && (
                     <p className="mt-2 text-sm text-gray-400 line-clamp-2">
