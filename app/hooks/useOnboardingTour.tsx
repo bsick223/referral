@@ -223,16 +223,45 @@ export default function useOnboardingTour({
 
   // Auto-start the tour if user is new and hasn't completed it
   useEffect(() => {
+    // Only execute on client side
+    if (typeof window === "undefined") return;
+
+    // Check if everything is ready
     if (isNewUser && !hasCompletedTour && tour) {
+      console.log("Hook detected new user, preparing to auto-start tour...");
+
       // Small delay to ensure elements are rendered
       const timer = setTimeout(() => {
         try {
-          tour.start();
-          console.log("Auto-started tour for new user");
+          // Check if DOM elements exist first
+          const addCompanyElement = document.querySelector(
+            '[data-tour="add-company"]'
+          );
+          const messagesElement = document.querySelector(
+            '[data-tour="messages"]'
+          );
+          const leaderboardElement = document.querySelector(
+            '[data-tour="leaderboard"]'
+          );
+
+          console.log("Tour elements found?", {
+            addCompany: !!addCompanyElement,
+            messages: !!messagesElement,
+            leaderboard: !!leaderboardElement,
+          });
+
+          if (addCompanyElement && messagesElement && leaderboardElement) {
+            tour.start();
+            console.log("Auto-started tour for new user");
+          } else {
+            console.warn(
+              "Could not start tour - some elements were not found in DOM"
+            );
+          }
         } catch (error) {
           console.error("Error starting tour:", error);
         }
-      }, 1000);
+      }, 2000); // Increase delay to ensure DOM elements are ready
 
       return () => clearTimeout(timer);
     }
@@ -242,8 +271,15 @@ export default function useOnboardingTour({
     console.log("useOnboardingTour: startTour called, tour exists:", !!tour);
     if (tour) {
       try {
+        // Reset local storage to ensure tour can be shown again
+        localStorage.removeItem("onboardingTourCompleted");
+
+        // Force all steps to be shown again
+        tour.complete();
+
+        // Start the tour
         tour.start();
-        console.log("useOnboardingTour: tour started");
+        console.log("useOnboardingTour: tour started manually");
       } catch (error) {
         console.error("Error starting tour:", error);
       }

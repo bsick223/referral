@@ -28,10 +28,35 @@ export default function DashboardPage() {
     api.seedMessages.ensureDefaultTemplate
   );
 
+  // Check if user is new
+  const isNewUser = companies !== undefined && companies.length === 0;
+
+  // Debug log
+  useEffect(() => {
+    if (companies !== undefined) {
+      console.log("User companies:", companies.length);
+      console.log("Is user new?", isNewUser);
+    }
+  }, [companies, isNewUser]);
+
   // Initialize the onboarding tour
   const { startTour } = useOnboardingTour({
-    isNewUser: companies !== undefined && companies.length === 0,
+    isNewUser: isNewUser,
   });
+
+  // Force start the tour for new users
+  useEffect(() => {
+    if (isNewUser && companies !== undefined) {
+      console.log("Attempting to force start tour for new user");
+      // Use a longer delay to ensure everything is loaded
+      const timer = setTimeout(() => {
+        console.log("Starting tour now...");
+        startTour();
+      }, 1500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isNewUser, companies, startTour]);
 
   useEffect(() => {
     if (user) {
