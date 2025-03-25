@@ -108,6 +108,7 @@ export default defineSchema({
   userProfiles: defineTable({
     userId: v.string(),
     linkedinUrl: v.optional(v.string()),
+    onboardingCompleted: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user_id", ["userId"]),

@@ -3,30 +3,34 @@
 import { useEffect, useState } from "react";
 import Shepherd from "shepherd.js";
 import "shepherd.js/dist/css/shepherd.css";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 interface UseOnboardingTourProps {
-  isNewUser: boolean;
+  userId: string;
 }
 
-export default function useOnboardingTour({
-  isNewUser,
-}: UseOnboardingTourProps) {
+export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
   const [tour, setTour] = useState<any>(null);
-  const [hasCompletedTour, setHasCompletedTour] = useState(false);
+
+  // Use Convex to check if user has completed onboarding
+  const hasCompletedOnboarding = useQuery(
+    api.userProfiles.hasCompletedOnboarding,
+    {
+      userId,
+    }
+  );
+
+  // Use Convex mutation to mark onboarding as completed
+  const markOnboardingCompleted = useMutation(
+    api.userProfiles.markOnboardingCompleted
+  );
 
   useEffect(() => {
     // Only run on client-side
     if (typeof window === "undefined") return;
 
     try {
-      // Check local storage to see if user has already completed the tour
-      const tourCompleted =
-        localStorage.getItem("onboardingTourCompleted") === "true";
-
-      if (tourCompleted) {
-        setHasCompletedTour(true);
-      }
-
       // Create a new tour regardless of user status
       const newTour = new Shepherd.Tour({
         defaultStepOptions: {
@@ -189,7 +193,11 @@ export default function useOnboardingTour({
         text: `<p class="text-white mb-2">We'll guide you through the main features of our platform to help you get started.</p>`,
         buttons: [
           {
-            action: newTour.cancel,
+            action: () => {
+              // Mark onboarding as skipped in Convex
+              markOnboardingCompleted({ userId });
+              newTour.cancel();
+            },
             classes: "shepherd-button-secondary",
             text: "Skip Tour",
           },
@@ -278,8 +286,8 @@ export default function useOnboardingTour({
           },
           {
             action: () => {
-              localStorage.setItem("onboardingTourCompleted", "true");
-              setHasCompletedTour(true);
+              // Mark onboarding as completed in Convex
+              markOnboardingCompleted({ userId });
               newTour.complete();
             },
             classes: "shepherd-button-primary",
@@ -304,16 +312,18 @@ export default function useOnboardingTour({
     } catch (error) {
       console.error("Error initializing tour:", error);
     }
-  }, []); // Remove isNewUser dependency so tour is always initialized
+  }, [userId, markOnboardingCompleted]); // Add dependencies
 
-  // Auto-start the tour if user is new and hasn't completed it
+  // Auto-start the tour if user hasn't completed onboarding
   useEffect(() => {
-    // Only execute on client side
-    if (typeof window === "undefined") return;
+    // Only execute on client side and when tour is initialized
+    if (typeof window === "undefined" || !tour) return;
 
-    // Check if everything is ready
-    if (isNewUser && !hasCompletedTour && tour) {
-      console.log("Hook detected new user, preparing to auto-start tour...");
+    // The only condition: auto-start unless explicitly completed
+    // The hasCompletedOnboarding will be undefined while loading, which is fine
+    if (hasCompletedOnboarding !== true) {
+      console.log("Auto-starting tour as onboarding not completed yet");
+      console.log("Current onboarding status:", hasCompletedOnboarding);
 
       // Longer delay to ensure elements are fully rendered and styled
       const timer = setTimeout(() => {
@@ -342,7 +352,7 @@ export default function useOnboardingTour({
             // Small additional delay to ensure scroll is complete
             setTimeout(() => {
               tour.start();
-              console.log("Auto-started tour for new user");
+              console.log("Auto-started tour - onboarding not completed");
             }, 200);
           } else {
             console.warn(
@@ -355,19 +365,15 @@ export default function useOnboardingTour({
       }, 2500); // Increased delay to ensure everything is fully loaded
 
       return () => clearTimeout(timer);
+    } else {
+      console.log("Not auto-starting tour - onboarding already completed");
     }
-  }, [isNewUser, hasCompletedTour, tour]);
+  }, [hasCompletedOnboarding, tour]);
 
   const startTour = () => {
     console.log("useOnboardingTour: startTour called, tour exists:", !!tour);
     if (tour) {
       try {
-        // Reset local storage to ensure tour can be shown again
-        localStorage.removeItem("onboardingTourCompleted");
-
-        // Force all steps to be shown again
-        tour.complete();
-
         // Start the tour
         tour.start();
         console.log("useOnboardingTour: tour started manually");
@@ -379,8 +385,8 @@ export default function useOnboardingTour({
 
   const completeTour = () => {
     if (tour) {
-      localStorage.setItem("onboardingTourCompleted", "true");
-      setHasCompletedTour(true);
+      // Mark onboarding as completed in Convex
+      markOnboardingCompleted({ userId });
       tour.complete();
     }
   };
@@ -388,6 +394,6 @@ export default function useOnboardingTour({
   return {
     startTour,
     completeTour,
-    hasCompletedTour,
+    hasCompletedOnboarding: hasCompletedOnboarding === true,
   };
 }

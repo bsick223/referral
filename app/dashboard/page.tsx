@@ -36,27 +36,24 @@ export default function DashboardPage() {
     if (companies !== undefined) {
       console.log("User companies:", companies.length);
       console.log("Is user new?", isNewUser);
+      console.log("User ID for onboarding:", user?.id || "");
     }
-  }, [companies, isNewUser]);
+  }, [companies, isNewUser, user?.id]);
+
+  // Get onboarding status directly from Convex for debugging
+  const onboardingStatus = useQuery(api.userProfiles.hasCompletedOnboarding, {
+    userId: user?.id || "",
+  });
+
+  // Debug log for onboarding
+  useEffect(() => {
+    console.log("Onboarding status from Convex:", onboardingStatus);
+  }, [onboardingStatus]);
 
   // Initialize the onboarding tour
   const { startTour } = useOnboardingTour({
-    isNewUser: isNewUser,
+    userId: user?.id || "",
   });
-
-  // Force start the tour for new users
-  useEffect(() => {
-    if (isNewUser && companies !== undefined) {
-      console.log("Attempting to force start tour for new user");
-      // Use a longer delay to ensure everything is loaded
-      const timer = setTimeout(() => {
-        console.log("Starting tour now...");
-        startTour();
-      }, 1500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [isNewUser, companies, startTour]);
 
   useEffect(() => {
     if (user) {

@@ -98,3 +98,50 @@ export const getByUserIds = query({
     return profiles;
   },
 });
+
+// Mark user onboarding as completed
+export const markOnboardingCompleted = mutation({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const { userId } = args;
+
+    // Check if profile already exists
+    const existingProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+
+    if (existingProfile) {
+      // Update existing profile
+      await ctx.db.patch(existingProfile._id, {
+        onboardingCompleted: true,
+        updatedAt: Date.now(),
+      });
+      return existingProfile._id;
+    } else {
+      // Create new profile
+      const profileId = await ctx.db.insert("userProfiles", {
+        userId,
+        onboardingCompleted: true,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      return profileId;
+    }
+  },
+});
+
+// Check if user has completed onboarding
+export const hasCompletedOnboarding = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .first();
+
+    // Return true only if profile exists AND onboardingCompleted is explicitly true
+    // Return false for undefined/null/false values
+    return profile?.onboardingCompleted === true;
+  },
+});
