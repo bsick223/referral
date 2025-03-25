@@ -3,140 +3,251 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-const ParticleBackground = () => {
+const WaveFieldBackground = () => {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log("ParticleBackground mounting");
-
-    // Create scene, camera, and renderer immediately to avoid potential issues
-    const scene = new THREE.Scene();
+    console.log("WaveFieldBackground mounting");
 
     // Only proceed if the mounting element is available
     const initScene = () => {
       const currentRef = mountRef.current;
       if (!currentRef) {
         console.log("Mount ref not available, trying again...");
-        // Try again in the next frame if not ready
         requestAnimationFrame(initScene);
         return;
       }
 
       console.log("Initializing Three.js scene");
 
-      // Set up camera
+      // Scene setup
+      const scene = new THREE.Scene();
+
+      // Camera setup
       const camera = new THREE.PerspectiveCamera(
-        75,
+        60,
         window.innerWidth / window.innerHeight,
         0.1,
         1000
       );
-      camera.position.z = 20;
+      camera.position.set(0, 0, 30);
+      camera.lookAt(0, 0, 0);
 
-      // Set up renderer with explicit pixel ratio
+      // Renderer setup
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
-        powerPreference: "high-performance",
       });
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
-
-      // Check if the renderer was created successfully
-      if (!renderer.domElement) {
-        console.error("Failed to create WebGL renderer");
-        return;
-      }
-
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       currentRef.appendChild(renderer.domElement);
-      console.log("Renderer attached to DOM");
-
-      // Force renderer to clear everything
       renderer.setClearColor(0x000000, 0);
-      renderer.clear();
 
-      // Create particles
-      const particlesCount = 2000;
-      const particlesGeometry = new THREE.BufferGeometry();
-      const particlePositions = new Float32Array(particlesCount * 3);
-      const particleSizes = new Float32Array(particlesCount);
-      const particleColors = new Float32Array(particlesCount * 3);
+      // =================================
+      // Create Wave Mesh
+      // =================================
 
-      // Create a color palette representing oranges, blues, and purples from the site
-      const colors = [
-        new THREE.Color("#ff7e00"), // orange
-        new THREE.Color("#3b82f6"), // blue
-        new THREE.Color("#8b5cf6"), // purple
-        new THREE.Color("#ffffff"), // white - added for more contrast
-      ];
+      // Size of the wave grid
+      const width = 60;
+      const height = 60;
+      const segments = 120;
 
-      for (let i = 0; i < particlesCount; i++) {
-        // Random positions across a sphere
-        const radius = 15 + Math.random() * 10;
+      // Create wave plane geometry
+      const geometry = new THREE.PlaneGeometry(
+        width,
+        height,
+        segments,
+        segments
+      );
+
+      // Define custom shader for the waves
+      const material = new THREE.ShaderMaterial({
+        uniforms: {
+          time: { value: 0 },
+          colorA: { value: new THREE.Color("#ff7e00") }, // Orange
+          colorB: { value: new THREE.Color("#3b82f6") }, // Blue
+          colorC: { value: new THREE.Color("#8b5cf6") }, // Purple
+        },
+        vertexShader: `
+          uniform float time;
+          varying vec2 vUv;
+          varying float vElevation;
+          
+          // Simplex noise implementation
+          // Credits: Ian McEwan, Ashima Arts
+          vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+          
+          float snoise(vec2 v) {
+            const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                     -0.577350269189626, 0.024390243902439);
+            vec2 i  = floor(v + dot(v, C.yy));
+            vec2 x0 = v -   i + dot(i, C.xx);
+            vec2 i1;
+            i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+            vec4 x12 = x0.xyxy + C.xxzz;
+            x12.xy -= i1;
+            i = mod(i, 289.0);
+            vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+                  + i.x + vec3(0.0, i1.x, 1.0 ));
+            vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
+                    dot(x12.zw,x12.zw)), 0.0);
+            m = m*m;
+            m = m*m;
+            vec3 x = 2.0 * fract(p * C.www) - 1.0;
+            vec3 h = abs(x) - 0.5;
+            vec3 ox = floor(x + 0.5);
+            vec3 a0 = x - ox;
+            m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+            vec3 g;
+            g.x  = a0.x  * x0.x  + h.x  * x0.y;
+            g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+            return 130.0 * dot(m, g);
+          }
+          
+          void main() {
+            vUv = uv;
+            
+            // Calculate multiple waves
+            float elevation = 0.0;
+            
+            // First wave set
+            float wave1 = sin((position.x * 0.5 + time * 0.5)) * 0.5;
+            float wave2 = sin((position.y * 0.5 + time * 0.7)) * 0.5;
+            
+            // Noise-based waves
+            float noise1 = snoise(vec2(position.x * 0.05 + time * 0.1, position.y * 0.05 + time * 0.1)) * 1.5;
+            float noise2 = snoise(vec2(position.x * 0.02 - time * 0.15, position.y * 0.02 + time * 0.05)) * 2.0;
+            
+            // Combine waves
+            elevation = wave1 + wave2 + noise1 + noise2;
+            elevation *= 0.8; // Scale down the height
+            
+            // Modify vertex position
+            vec3 newPosition = position;
+            newPosition.z += elevation;
+            
+            vElevation = elevation;
+            
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform float time;
+          uniform vec3 colorA;
+          uniform vec3 colorB;
+          uniform vec3 colorC;
+          
+          varying vec2 vUv;
+          varying float vElevation;
+          
+          void main() {
+            // Create a flowing color pattern based on elevation and position
+            float strength = smoothstep(-1.0, 1.0, vElevation);
+            
+            // Dynamic flowing pattern
+            float pattern = sin((vUv.x * 10.0) + (vUv.y * 10.0) + time) * 0.5 + 0.5;
+            pattern *= strength;
+            
+            // Create a blend of colors
+            vec3 mixColorAB = mix(colorA, colorB, pattern);
+            vec3 finalColor = mix(mixColorAB, colorC, sin(time * 0.2) * 0.5 + 0.5);
+            
+            // Add a subtle glow effect
+            float glow = smoothstep(0.0, 0.5, strength) * 0.6;
+            finalColor += glow * mix(colorA, colorB, sin(time * 0.3));
+            
+            // Set transparency based on elevation
+            float alpha = 0.7 * smoothstep(-2.0, 0.8, vElevation);
+            
+            gl_FragColor = vec4(finalColor, alpha);
+          }
+        `,
+        transparent: true,
+        side: THREE.DoubleSide,
+      });
+
+      // Create wave mesh and add to scene
+      const waveMesh = new THREE.Mesh(geometry, material);
+      waveMesh.rotation.x = -Math.PI / 2; // Rotate to be horizontal
+      waveMesh.position.y = -5; // Position below center
+      scene.add(waveMesh);
+
+      // =================================
+      // Create Floating Particles
+      // =================================
+
+      // Particle count and geometry
+      const particleCount = 300;
+      const particleGeometry = new THREE.BufferGeometry();
+      const particlePositions = new Float32Array(particleCount * 3);
+      const particleSizes = new Float32Array(particleCount);
+
+      // Set random particle positions in a dome shape above the waves
+      for (let i = 0; i < particleCount; i++) {
+        // Dome distribution
+        const radius = 25 + Math.random() * 15;
         const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(Math.random() * 2 - 1);
+        const phi = Math.random() * Math.PI * 0.5; // Half sphere (dome)
 
         particlePositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-        particlePositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-        particlePositions[i * 3 + 2] = radius * Math.cos(phi);
+        particlePositions[i * 3 + 1] = Math.abs(radius * Math.cos(phi)); // Keep Y positive for dome
+        particlePositions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
 
-        // Larger sizes
-        particleSizes[i] = Math.random() * 1.5 + 0.5;
-
-        // Apply random color from palette
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        particleColors[i * 3] = color.r;
-        particleColors[i * 3 + 1] = color.g;
-        particleColors[i * 3 + 2] = color.b;
+        // Vary particle sizes
+        particleSizes[i] = Math.random() * 0.6 + 0.2;
       }
 
-      particlesGeometry.setAttribute(
+      particleGeometry.setAttribute(
         "position",
         new THREE.BufferAttribute(particlePositions, 3)
       );
-      particlesGeometry.setAttribute(
+      particleGeometry.setAttribute(
         "size",
         new THREE.BufferAttribute(particleSizes, 1)
       );
-      particlesGeometry.setAttribute(
-        "color",
-        new THREE.BufferAttribute(particleColors, 3)
-      );
 
-      // Create shader material for better looking particles
-      const particlesMaterial = new THREE.ShaderMaterial({
+      // Particle material with custom shader
+      const particleMaterial = new THREE.ShaderMaterial({
         uniforms: {
           time: { value: 0 },
+          pointTexture: { value: createCircleTexture() },
         },
         vertexShader: `
-          attribute float size;
-          attribute vec3 color;
-          varying vec3 vColor;
           uniform float time;
+          attribute float size;
+          varying vec3 vPosition;
           
           void main() {
-            vColor = color;
+            vPosition = position;
             
-            // Slightly animate position
+            // Add gentle floating motion
             vec3 pos = position;
-            pos.x += sin(time * 0.2 + pos.z * 0.1) * 0.5;
-            pos.y += cos(time * 0.1 + pos.x * 0.1) * 0.5;
+            pos.y += sin(time * 0.2 + position.x * 0.05) * 1.0;
+            pos.x += cos(time * 0.3 + position.z * 0.05) * 1.0;
+            pos.z += sin(time * 0.2 + position.y * 0.05) * 1.0;
             
             vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-            gl_PointSize = size * (50.0 / -mvPosition.z);
+            gl_PointSize = size * (40.0 / -mvPosition.z);
             gl_Position = projectionMatrix * mvPosition;
           }
         `,
         fragmentShader: `
-          varying vec3 vColor;
+          uniform float time;
+          uniform sampler2D pointTexture;
+          varying vec3 vPosition;
           
           void main() {
-            // Create circular particles with soft edges
-            float dist = length(gl_PointCoord - vec2(0.5, 0.5));
-            if (dist > 0.5) discard;
+            // Soft circular particles
+            vec4 texColor = texture2D(pointTexture, gl_PointCoord);
             
-            float alpha = 1.0 - smoothstep(0.3, 0.5, dist);
-            gl_FragColor = vec4(vColor, alpha * 0.8);
+            // Create color based on position and time
+            float r = sin(time * 0.2 + vPosition.x * 0.05) * 0.5 + 0.5;
+            float g = sin(time * 0.3 + vPosition.y * 0.05) * 0.3 + 0.3;
+            float b = sin(time * 0.4 + vPosition.z * 0.05) * 0.5 + 0.5;
+            
+            vec3 color = vec3(r, g, b);
+            
+            gl_FragColor = vec4(color, texColor.a * 0.6);
           }
         `,
         transparent: true,
@@ -144,85 +255,73 @@ const ParticleBackground = () => {
         blending: THREE.AdditiveBlending,
       });
 
-      const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+      const particles = new THREE.Points(particleGeometry, particleMaterial);
+      particles.position.y = 0; // Position above the waves
       scene.add(particles);
 
-      // Add subtle lines between some particles
-      const lineGeometry = new THREE.BufferGeometry();
-      const linePositions: number[] = [];
-      const lineColors: number[] = [];
+      // Helper function to create circular texture for particles
+      function createCircleTexture() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 64;
+        canvas.height = 64;
 
-      // Connect approximately 15% of particles with lines
-      const connectionCount = Math.floor(particlesCount * 0.15);
-      for (let i = 0; i < connectionCount; i++) {
-        const index1 = Math.floor(Math.random() * particlesCount);
-        const index2 = Math.floor(Math.random() * particlesCount);
+        const context = canvas.getContext("2d");
+        if (context) {
+          context.beginPath();
+          context.arc(32, 32, 28, 0, Math.PI * 2);
+          context.closePath();
 
-        // Start point
-        linePositions.push(
-          particlePositions[index1 * 3],
-          particlePositions[index1 * 3 + 1],
-          particlePositions[index1 * 3 + 2]
-        );
+          // Create radial gradient
+          const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+          gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
+          gradient.addColorStop(0.5, "rgba(200, 200, 255, 0.5)");
+          gradient.addColorStop(1, "rgba(100, 100, 255, 0)");
 
-        // End point
-        linePositions.push(
-          particlePositions[index2 * 3],
-          particlePositions[index2 * 3 + 1],
-          particlePositions[index2 * 3 + 2]
-        );
-
-        // Line color (with increased opacity)
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        lineColors.push(color.r, color.g, color.b);
-        lineColors.push(color.r, color.g, color.b);
-      }
-
-      lineGeometry.setAttribute(
-        "position",
-        new THREE.Float32BufferAttribute(linePositions, 3)
-      );
-      lineGeometry.setAttribute(
-        "color",
-        new THREE.Float32BufferAttribute(lineColors, 3)
-      );
-
-      const lineMaterial = new THREE.LineBasicMaterial({
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.4,
-        blending: THREE.AdditiveBlending,
-      });
-
-      const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-      scene.add(lines);
-
-      // Animation
-      let frameId: number;
-      let time = 0;
-      const animate = () => {
-        frameId = requestAnimationFrame(animate);
-        time += 0.01;
-
-        if (particlesMaterial.uniforms) {
-          particlesMaterial.uniforms.time.value = time;
+          context.fillStyle = gradient;
+          context.fill();
         }
 
-        // Rotate entire particle system
-        particles.rotation.y = time * 0.05;
-        lines.rotation.y = time * 0.05;
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+        return texture;
+      }
 
-        // Subtle camera movement
-        camera.position.x = Math.sin(time * 0.1) * 2;
-        camera.position.y = Math.cos(time * 0.1) * 2;
+      // Animation loop
+      let time = 0;
+      function animate() {
+        const animationId = requestAnimationFrame(animate);
+        time += 0.01;
+
+        // Update shader uniforms
+        if (material.uniforms) {
+          material.uniforms.time.value = time;
+        }
+        if (particleMaterial.uniforms) {
+          particleMaterial.uniforms.time.value = time;
+        }
+
+        // Gentle camera movement
+        camera.position.x = Math.sin(time * 0.05) * 3;
+        camera.position.y = Math.cos(time * 0.1) * 2 + 5;
         camera.lookAt(0, 0, 0);
 
+        // Render the scene
         renderer.render(scene, camera);
-      };
 
-      animate();
+        // Cleanup function
+        return () => {
+          cancelAnimationFrame(animationId);
+          if (currentRef && currentRef.contains(renderer.domElement)) {
+            currentRef.removeChild(renderer.domElement);
+          }
+          geometry.dispose();
+          material.dispose();
+          particleGeometry.dispose();
+          particleMaterial.dispose();
+        };
+      }
 
-      // Handle resize
+      // Window resize handler
       const handleResize = () => {
         const width = window.innerWidth;
         const height = window.innerHeight;
@@ -234,33 +333,23 @@ const ParticleBackground = () => {
 
       window.addEventListener("resize", handleResize);
 
-      // Call resize once to ensure correct initial size
-      handleResize();
+      // Start animation
+      const cleanup = animate();
 
-      // Cleanup
+      // Return cleanup function
       return () => {
-        console.log("ParticleBackground unmounting");
-        cancelAnimationFrame(frameId);
+        console.log("Cleaning up WaveFieldBackground");
         window.removeEventListener("resize", handleResize);
-
-        if (currentRef.contains(renderer.domElement)) {
-          currentRef.removeChild(renderer.domElement);
-        }
-
-        // Dispose geometries and materials
-        particlesGeometry.dispose();
-        lineGeometry.dispose();
-        particlesMaterial.dispose();
-        lineMaterial.dispose();
+        if (cleanup) cleanup();
       };
     };
 
     // Start initialization
     initScene();
 
+    // Cleanup
     return () => {
-      console.log("ParticleBackground unmounting");
-      // Cleanup handled in the initScene function
+      console.log("WaveFieldBackground unmounting");
     };
   }, []);
 
@@ -273,9 +362,9 @@ const ParticleBackground = () => {
         width: "100vw",
         overflow: "hidden",
       }}
-      data-testid="particle-background"
+      data-testid="wave-field-background"
     />
   );
 };
 
-export default ParticleBackground;
+export default WaveFieldBackground;
