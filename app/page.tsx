@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
 import LeaderboardSection from "@/components/LeaderboardSection";
-import WaveFieldBackground from "@/components/ParticleBackground";
+import DataVisualizationBackground from "@/components/ParticleBackground";
 
 export default function Home() {
   return (
@@ -23,8 +23,8 @@ export default function Home() {
       <div className="absolute right-0 top-0 w-1/3 h-1/2 bg-blue-600/20 rounded-full opacity-20 blur-[100px]"></div>
       <div className="absolute right-1/4 bottom-0 w-1/3 h-1/3 bg-indigo-600/20 rounded-full opacity-20 blur-[80px]"></div>
 
-      {/* Interactive Three.js Wave Field Background */}
-      <WaveFieldBackground />
+      {/* Interactive Three.js Data Visualization Background */}
+      <DataVisualizationBackground />
 
       {/* Main content */}
       <div className="container mx-auto px-4 pt-16 md:pt-24 pb-24 md:pb-32 relative z-20">

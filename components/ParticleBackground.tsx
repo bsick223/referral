@@ -3,11 +3,11 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-const WaveFieldBackground = () => {
+const DataVisualizationBackground = () => {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log("WaveFieldBackground mounting");
+    console.log("DataVisualizationBackground mounting");
 
     // Only proceed if the mounting element is available
     const initScene = () => {
@@ -18,19 +18,19 @@ const WaveFieldBackground = () => {
         return;
       }
 
-      console.log("Initializing Three.js scene");
+      console.log("Initializing Three.js data visualization scene");
 
       // Scene setup
       const scene = new THREE.Scene();
 
       // Camera setup
       const camera = new THREE.PerspectiveCamera(
-        60,
+        70,
         window.innerWidth / window.innerHeight,
         0.1,
         1000
       );
-      camera.position.set(0, 0, 30);
+      camera.position.set(0, 0, 24);
       camera.lookAt(0, 0, 0);
 
       // Renderer setup
@@ -44,284 +44,641 @@ const WaveFieldBackground = () => {
       renderer.setClearColor(0x000000, 0);
 
       // =================================
-      // Create Wave Mesh
+      // Grid System
       // =================================
+      const createGrid = () => {
+        const gridSize = 30;
+        const gridDivisions = 20;
+        const gridGeometry = new THREE.PlaneGeometry(
+          gridSize,
+          gridSize,
+          gridDivisions,
+          gridDivisions
+        );
 
-      // Size of the wave grid
-      const width = 60;
-      const height = 60;
-      const segments = 120;
+        // Custom grid shader
+        const gridMaterial = new THREE.ShaderMaterial({
+          vertexShader: `
+            varying vec2 vUv;
+            varying vec3 vPosition;
+            
+            void main() {
+              vUv = uv;
+              vPosition = position;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            varying vec2 vUv;
+            varying vec3 vPosition;
+            uniform float uTime;
+            
+            float grid(vec2 st, float res) {
+              vec2 grid = fract(st * res);
+              return (step(0.98, grid.x) + step(0.98, grid.y)) * 0.5;
+            }
+            
+            void main() {
+              // Base grid
+              float baseGrid = grid(vUv, 20.0) * 0.3;
+              
+              // Animated pulse
+              float timeFactor = sin(uTime * 0.5) * 0.5 + 0.5;
+              float pulse = sin(vPosition.x * 2.0 + vPosition.y * 2.0 + uTime * 2.0) * 0.5 + 0.5;
+              pulse = smoothstep(0.3, 0.7, pulse) * timeFactor * 0.2;
+              
+              // Distance from center for radial fade
+              vec2 center = vUv - 0.5;
+              float dist = length(center);
+              float alpha = smoothstep(0.8, 0.0, dist) * 0.4;
+              
+              // Combine grid and pulse
+              float finalGrid = baseGrid + pulse;
+              
+              // Create color gradient (blue to purple)
+              vec3 color1 = vec3(0.1, 0.3, 0.8); // Blue
+              vec3 color2 = vec3(0.6, 0.2, 0.8); // Purple
+              vec3 color3 = vec3(0.9, 0.3, 0.1); // Orange
+              
+              // Mix colors based on position and time
+              float colorMix = sin(vPosition.x * 0.2 + vPosition.y * 0.2 + uTime * 0.3) * 0.5 + 0.5;
+              vec3 finalColor = mix(color1, color2, colorMix);
+              finalColor = mix(finalColor, color3, pulse * 2.0);
+              
+              gl_FragColor = vec4(finalColor, alpha * finalGrid);
+            }
+          `,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          side: THREE.DoubleSide,
+          uniforms: {
+            uTime: { value: 0 },
+          },
+        });
 
-      // Create wave plane geometry
-      const geometry = new THREE.PlaneGeometry(
-        width,
-        height,
-        segments,
-        segments
-      );
+        // Create grid mesh
+        const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial);
+        gridMesh.rotation.x = -Math.PI / 2; // Rotate to be horizontal
+        gridMesh.position.y = -6; // Position below the scene
+        scene.add(gridMesh);
 
-      // Define custom shader for the waves
-      const material = new THREE.ShaderMaterial({
-        uniforms: {
-          time: { value: 0 },
-          colorA: { value: new THREE.Color("#ff7e00") }, // Orange
-          colorB: { value: new THREE.Color("#3b82f6") }, // Blue
-          colorC: { value: new THREE.Color("#8b5cf6") }, // Purple
-        },
-        vertexShader: `
-          uniform float time;
-          varying vec2 vUv;
-          varying float vElevation;
-          
-          // Simplex noise implementation
-          // Credits: Ian McEwan, Ashima Arts
-          vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
-          
-          float snoise(vec2 v) {
-            const vec4 C = vec4(0.211324865405187, 0.366025403784439,
-                     -0.577350269189626, 0.024390243902439);
-            vec2 i  = floor(v + dot(v, C.yy));
-            vec2 x0 = v -   i + dot(i, C.xx);
-            vec2 i1;
-            i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-            vec4 x12 = x0.xyxy + C.xxzz;
-            x12.xy -= i1;
-            i = mod(i, 289.0);
-            vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
-                  + i.x + vec3(0.0, i1.x, 1.0 ));
-            vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
-                    dot(x12.zw,x12.zw)), 0.0);
-            m = m*m;
-            m = m*m;
-            vec3 x = 2.0 * fract(p * C.www) - 1.0;
-            vec3 h = abs(x) - 0.5;
-            vec3 ox = floor(x + 0.5);
-            vec3 a0 = x - ox;
-            m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
-            vec3 g;
-            g.x  = a0.x  * x0.x  + h.x  * x0.y;
-            g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-            return 130.0 * dot(m, g);
-          }
-          
-          void main() {
-            vUv = uv;
-            
-            // Calculate multiple waves
-            float elevation = 0.0;
-            
-            // First wave set
-            float wave1 = sin((position.x * 0.5 + time * 0.5)) * 0.5;
-            float wave2 = sin((position.y * 0.5 + time * 0.7)) * 0.5;
-            
-            // Noise-based waves
-            float noise1 = snoise(vec2(position.x * 0.05 + time * 0.1, position.y * 0.05 + time * 0.1)) * 1.5;
-            float noise2 = snoise(vec2(position.x * 0.02 - time * 0.15, position.y * 0.02 + time * 0.05)) * 2.0;
-            
-            // Combine waves
-            elevation = wave1 + wave2 + noise1 + noise2;
-            elevation *= 0.8; // Scale down the height
-            
-            // Modify vertex position
-            vec3 newPosition = position;
-            newPosition.z += elevation;
-            
-            vElevation = elevation;
-            
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-          }
-        `,
-        fragmentShader: `
-          uniform float time;
-          uniform vec3 colorA;
-          uniform vec3 colorB;
-          uniform vec3 colorC;
-          
-          varying vec2 vUv;
-          varying float vElevation;
-          
-          void main() {
-            // Create a flowing color pattern based on elevation and position
-            float strength = smoothstep(-1.0, 1.0, vElevation);
-            
-            // Dynamic flowing pattern
-            float pattern = sin((vUv.x * 10.0) + (vUv.y * 10.0) + time) * 0.5 + 0.5;
-            pattern *= strength;
-            
-            // Create a blend of colors
-            vec3 mixColorAB = mix(colorA, colorB, pattern);
-            vec3 finalColor = mix(mixColorAB, colorC, sin(time * 0.2) * 0.5 + 0.5);
-            
-            // Add a subtle glow effect
-            float glow = smoothstep(0.0, 0.5, strength) * 0.6;
-            finalColor += glow * mix(colorA, colorB, sin(time * 0.3));
-            
-            // Set transparency based on elevation
-            float alpha = 0.7 * smoothstep(-2.0, 0.8, vElevation);
-            
-            gl_FragColor = vec4(finalColor, alpha);
-          }
-        `,
-        transparent: true,
-        side: THREE.DoubleSide,
-      });
+        return { mesh: gridMesh, material: gridMaterial };
+      };
 
-      // Create wave mesh and add to scene
-      const waveMesh = new THREE.Mesh(geometry, material);
-      waveMesh.rotation.x = -Math.PI / 2; // Rotate to be horizontal
-      waveMesh.position.y = -5; // Position below center
-      scene.add(waveMesh);
+      // Create grid
+      const grid = createGrid();
 
       // =================================
-      // Create Floating Particles
+      // Data Nodes
       // =================================
 
-      // Particle count and geometry
-      const particleCount = 300;
-      const particleGeometry = new THREE.BufferGeometry();
-      const particlePositions = new Float32Array(particleCount * 3);
-      const particleSizes = new Float32Array(particleCount);
+      // Node parameters
+      const nodeParams = {
+        count: 60,
+        minSize: 0.05,
+        maxSize: 0.4,
+        connectionThreshold: 8, // Maximum distance for nodes to connect
+        colors: [
+          new THREE.Color("#ff7e00"), // Orange
+          new THREE.Color("#3b82f6"), // Blue
+          new THREE.Color("#8b5cf6"), // Purple
+          new THREE.Color("#ffffff"), // White
+        ],
+      };
 
-      // Set random particle positions in a dome shape above the waves
-      for (let i = 0; i < particleCount; i++) {
-        // Dome distribution
-        const radius = 25 + Math.random() * 15;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.random() * Math.PI * 0.5; // Half sphere (dome)
+      // Node generation
+      const createNodes = () => {
+        // Create geometry
+        const nodesGeometry = new THREE.BufferGeometry();
+        const nodePositions = new Float32Array(nodeParams.count * 3);
+        const nodeSizes = new Float32Array(nodeParams.count);
+        const nodeColors = new Float32Array(nodeParams.count * 3);
+        const nodeSpeed = new Float32Array(nodeParams.count);
 
-        particlePositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-        particlePositions[i * 3 + 1] = Math.abs(radius * Math.cos(phi)); // Keep Y positive for dome
-        particlePositions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+        // Create nodes with random positions, sizes, and colors
+        for (let i = 0; i < nodeParams.count; i++) {
+          // Position nodes in a disc shape (concentrated around the center)
+          const radius = 15 * Math.pow(Math.random(), 0.5); // Squared distribution for more central density
+          const theta = Math.random() * Math.PI * 2;
+          const height = (Math.random() - 0.5) * 10;
 
-        // Vary particle sizes
-        particleSizes[i] = Math.random() * 0.6 + 0.2;
-      }
+          nodePositions[i * 3] = Math.cos(theta) * radius;
+          nodePositions[i * 3 + 1] = height;
+          nodePositions[i * 3 + 2] = Math.sin(theta) * radius;
 
-      particleGeometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(particlePositions, 3)
-      );
-      particleGeometry.setAttribute(
-        "size",
-        new THREE.BufferAttribute(particleSizes, 1)
-      );
+          // Random sizes - important nodes (closer to center) are larger
+          const distanceFromCenter = Math.sqrt(
+            Math.pow(nodePositions[i * 3], 2) +
+              Math.pow(nodePositions[i * 3 + 2], 2)
+          );
 
-      // Particle material with custom shader
-      const particleMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-          time: { value: 0 },
-          pointTexture: { value: createCircleTexture() },
-        },
-        vertexShader: `
-          uniform float time;
-          attribute float size;
-          varying vec3 vPosition;
-          
-          void main() {
-            vPosition = position;
-            
-            // Add gentle floating motion
-            vec3 pos = position;
-            pos.y += sin(time * 0.2 + position.x * 0.05) * 1.0;
-            pos.x += cos(time * 0.3 + position.z * 0.05) * 1.0;
-            pos.z += sin(time * 0.2 + position.y * 0.05) * 1.0;
-            
-            vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-            gl_PointSize = size * (40.0 / -mvPosition.z);
-            gl_Position = projectionMatrix * mvPosition;
-          }
-        `,
-        fragmentShader: `
-          uniform float time;
-          uniform sampler2D pointTexture;
-          varying vec3 vPosition;
-          
-          void main() {
-            // Soft circular particles
-            vec4 texColor = texture2D(pointTexture, gl_PointCoord);
-            
-            // Create color based on position and time
-            float r = sin(time * 0.2 + vPosition.x * 0.05) * 0.5 + 0.5;
-            float g = sin(time * 0.3 + vPosition.y * 0.05) * 0.3 + 0.3;
-            float b = sin(time * 0.4 + vPosition.z * 0.05) * 0.5 + 0.5;
-            
-            vec3 color = vec3(r, g, b);
-            
-            gl_FragColor = vec4(color, texColor.a * 0.6);
-          }
-        `,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      });
+          // Size based on distance from center
+          const sizeFactor = 1 - Math.min(distanceFromCenter / 15, 1);
+          nodeSizes[i] =
+            nodeParams.minSize +
+            sizeFactor * (nodeParams.maxSize - nodeParams.minSize);
 
-      const particles = new THREE.Points(particleGeometry, particleMaterial);
-      particles.position.y = 0; // Position above the waves
-      scene.add(particles);
+          // More important nodes (larger) move slower
+          nodeSpeed[i] = 0.2 + (1 - sizeFactor) * 0.8;
 
-      // Helper function to create circular texture for particles
-      function createCircleTexture() {
-        const canvas = document.createElement("canvas");
-        canvas.width = 64;
-        canvas.height = 64;
+          // Color assignment - important nodes get more vibrant colors
+          const colorIndex = Math.floor(
+            Math.random() * nodeParams.colors.length
+          );
+          const color = nodeParams.colors[colorIndex];
 
-        const context = canvas.getContext("2d");
-        if (context) {
-          context.beginPath();
-          context.arc(32, 32, 28, 0, Math.PI * 2);
-          context.closePath();
-
-          // Create radial gradient
-          const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
-          gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
-          gradient.addColorStop(0.5, "rgba(200, 200, 255, 0.5)");
-          gradient.addColorStop(1, "rgba(100, 100, 255, 0)");
-
-          context.fillStyle = gradient;
-          context.fill();
+          nodeColors[i * 3] = color.r;
+          nodeColors[i * 3 + 1] = color.g;
+          nodeColors[i * 3 + 2] = color.b;
         }
 
-        const texture = new THREE.CanvasTexture(canvas);
-        texture.needsUpdate = true;
-        return texture;
-      }
+        // Set geometry attributes
+        nodesGeometry.setAttribute(
+          "position",
+          new THREE.BufferAttribute(nodePositions, 3)
+        );
+        nodesGeometry.setAttribute(
+          "size",
+          new THREE.BufferAttribute(nodeSizes, 1)
+        );
+        nodesGeometry.setAttribute(
+          "color",
+          new THREE.BufferAttribute(nodeColors, 3)
+        );
+        nodesGeometry.setAttribute(
+          "speed",
+          new THREE.BufferAttribute(nodeSpeed, 1)
+        );
 
-      // Animation loop
+        // Custom shader material for nodes
+        const nodesMaterial = new THREE.ShaderMaterial({
+          vertexShader: `
+            attribute float size;
+            attribute vec3 color;
+            attribute float speed;
+            varying vec3 vColor;
+            varying float vSize;
+            uniform float uTime;
+            
+            void main() {
+              vColor = color;
+              vSize = size;
+              
+              // Calculate animated position
+              vec3 pos = position;
+              
+              // Gentle oscillating movement
+              float timeFactor = uTime * speed;
+              pos.x += sin(timeFactor * 0.3 + position.z * 0.2) * 0.3;
+              pos.y += cos(timeFactor * 0.4 + position.x * 0.2) * 0.2;
+              pos.z += sin(timeFactor * 0.5 + position.y * 0.2) * 0.3;
+              
+              // Project position to screen space
+              vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+              gl_PointSize = size * (300.0 / -mvPosition.z);
+              gl_Position = projectionMatrix * mvPosition;
+            }
+          `,
+          fragmentShader: `
+            varying vec3 vColor;
+            varying float vSize;
+            uniform float uTime;
+            
+            void main() {
+              // Create circular points with soft edges
+              float dist = length(gl_PointCoord - vec2(0.5));
+              if (dist > 0.5) discard;
+              
+              // Glow effect
+              float glow = 1.0 - smoothstep(0.0, 0.5, dist);
+              glow = pow(glow, 1.5);
+              
+              // Pulse effect based on size (larger nodes pulse more)
+              float pulse = (sin(uTime * 2.0 * (0.5 + vSize)) * 0.15 + 0.85) * glow;
+              
+              // Final color with brightness based on pulse
+              vec3 finalColor = vColor * pulse * 1.5;
+              gl_FragColor = vec4(finalColor, glow);
+            }
+          `,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          uniforms: {
+            uTime: { value: 0 },
+          },
+        });
+
+        // Create points
+        const nodePoints = new THREE.Points(nodesGeometry, nodesMaterial);
+        scene.add(nodePoints);
+
+        return {
+          points: nodePoints,
+          geometry: nodesGeometry,
+          material: nodesMaterial,
+        };
+      };
+
+      // Create nodes
+      const nodes = createNodes();
+
+      // =================================
+      // Connection Lines
+      // =================================
+
+      // Function to create connection lines between nodes
+      const createConnections = () => {
+        // Line geometry
+        const linesGeometry = new THREE.BufferGeometry();
+
+        // Material with custom shader
+        const linesMaterial = new THREE.ShaderMaterial({
+          vertexShader: `
+            attribute float opacity;
+            attribute vec3 color;
+            varying float vOpacity;
+            varying vec3 vColor;
+            
+            void main() {
+              vColor = color;
+              vOpacity = opacity;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            varying float vOpacity;
+            varying vec3 vColor;
+            uniform float uTime;
+            
+            void main() {
+              // Animated flow effect
+              float flow = sin(uTime * 3.0) * 0.5 + 0.5;
+              gl_FragColor = vec4(vColor, vOpacity * (0.6 + flow * 0.4));
+            }
+          `,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          uniforms: {
+            uTime: { value: 0 },
+          },
+        });
+
+        // Create lines
+        const lines = new THREE.LineSegments(linesGeometry, linesMaterial);
+        scene.add(lines);
+
+        return {
+          lines,
+          geometry: linesGeometry,
+          material: linesMaterial,
+        };
+      };
+
+      // Create connections
+      const connections = createConnections();
+
+      // Function to update connections based on node positions
+      const updateConnections = () => {
+        // Get current node positions
+        const positions = nodes.geometry.attributes.position.array;
+        const colors = nodes.geometry.attributes.color.array;
+
+        // Arrays to store line vertices, colors, and opacities
+        const linePositions = [];
+        const lineColors = [];
+        const lineOpacities = [];
+
+        // Check distances between nodes and create connections
+        for (let i = 0; i < nodeParams.count; i++) {
+          const ix = i * 3;
+          const iy = i * 3 + 1;
+          const iz = i * 3 + 2;
+
+          for (let j = i + 1; j < nodeParams.count; j++) {
+            const jx = j * 3;
+            const jy = j * 3 + 1;
+            const jz = j * 3 + 2;
+
+            // Calculate distance between nodes
+            const dx = positions[ix] - positions[jx];
+            const dy = positions[iy] - positions[jy];
+            const dz = positions[iz] - positions[jz];
+            const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+            // Connect if within threshold
+            if (distance < nodeParams.connectionThreshold) {
+              // Calculate opacity based on distance (closer = more opaque)
+              const opacity = 1 - distance / nodeParams.connectionThreshold;
+
+              // Add line vertices
+              linePositions.push(
+                positions[ix],
+                positions[iy],
+                positions[iz],
+                positions[jx],
+                positions[jy],
+                positions[jz]
+              );
+
+              // Mix colors from both nodes
+              const color1 = [colors[ix], colors[iy], colors[iz]];
+              const color2 = [colors[jx], colors[jy], colors[jz]];
+
+              // Add colors (one for each vertex)
+              for (let k = 0; k < 2; k++) {
+                lineColors.push(
+                  ...color1.map((c, idx) => c * 0.6 + color2[idx] * 0.4)
+                );
+              }
+
+              // Add opacity for each vertex
+              for (let k = 0; k < 2; k++) {
+                lineOpacities.push(opacity);
+              }
+            }
+          }
+        }
+
+        // Update geometry
+        connections.geometry.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(linePositions, 3)
+        );
+
+        connections.geometry.setAttribute(
+          "color",
+          new THREE.Float32BufferAttribute(lineColors, 3)
+        );
+
+        connections.geometry.setAttribute(
+          "opacity",
+          new THREE.Float32BufferAttribute(lineOpacities, 1)
+        );
+      };
+
+      // =================================
+      // Data Pulses
+      // =================================
+
+      // Create pulses that travel along the connections
+      const createDataPulses = () => {
+        const pulseCount = 40;
+        const pulseGeometry = new THREE.BufferGeometry();
+        const pulsePositions = new Float32Array(pulseCount * 3);
+        const pulseSizes = new Float32Array(pulseCount);
+        const pulseColors = new Float32Array(pulseCount * 3);
+        const pulseData = [];
+
+        // Initialize pulse data
+        for (let i = 0; i < pulseCount; i++) {
+          pulseData.push({
+            active: false,
+            sourceNode: -1,
+            targetNode: -1,
+            progress: 0,
+            speed: 0,
+            size: 0,
+          });
+
+          pulsePositions[i * 3] = 0;
+          pulsePositions[i * 3 + 1] = 0;
+          pulsePositions[i * 3 + 2] = 0;
+          pulseSizes[i] = 0;
+        }
+
+        pulseGeometry.setAttribute(
+          "position",
+          new THREE.BufferAttribute(pulsePositions, 3)
+        );
+        pulseGeometry.setAttribute(
+          "size",
+          new THREE.BufferAttribute(pulseSizes, 1)
+        );
+        pulseGeometry.setAttribute(
+          "color",
+          new THREE.BufferAttribute(pulseColors, 3)
+        );
+
+        // Pulse material
+        const pulseMaterial = new THREE.ShaderMaterial({
+          vertexShader: `
+            attribute float size;
+            attribute vec3 color;
+            varying vec3 vColor;
+            
+            void main() {
+              vColor = color;
+              vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+              gl_PointSize = size * (200.0 / -mvPosition.z);
+              gl_Position = projectionMatrix * mvPosition;
+            }
+          `,
+          fragmentShader: `
+            varying vec3 vColor;
+            
+            void main() {
+              // Create circular pulse with soft edges
+              float dist = length(gl_PointCoord - vec2(0.5));
+              if (dist > 0.5) discard;
+              
+              // Add glow
+              float glow = 1.0 - smoothstep(0.0, 0.5, dist);
+              glow = pow(glow, 1.5);
+              
+              vec3 finalColor = vColor;
+              gl_FragColor = vec4(finalColor, glow);
+            }
+          `,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        });
+
+        const pulses = new THREE.Points(pulseGeometry, pulseMaterial);
+        scene.add(pulses);
+
+        return {
+          pulses,
+          geometry: pulseGeometry,
+          material: pulseMaterial,
+          data: pulseData,
+        };
+      };
+
+      // Create pulses
+      const dataPulses = createDataPulses();
+
+      // Function to update pulse positions and create new pulses
+      const updatePulses = (time: number) => {
+        // Get node positions
+        const nodePositions = nodes.geometry.attributes.position.array;
+        const nodeColors = nodes.geometry.attributes.color.array;
+
+        // Get pulse data
+        const pulsePositions = dataPulses.geometry.attributes.position.array;
+        const pulseSizes = dataPulses.geometry.attributes.size.array;
+        const pulseColors = dataPulses.geometry.attributes.color.array;
+
+        // Random chance to create new pulse
+        if (Math.random() < 0.05) {
+          // Find an inactive pulse
+          for (let i = 0; i < dataPulses.data.length; i++) {
+            if (!dataPulses.data[i].active) {
+              // Pick source and target nodes
+              const sourceNode = Math.floor(Math.random() * nodeParams.count);
+
+              // Find a target node that's close enough
+              const candidates = [];
+              for (let j = 0; j < nodeParams.count; j++) {
+                if (j !== sourceNode) {
+                  const sx = nodePositions[sourceNode * 3];
+                  const sy = nodePositions[sourceNode * 3 + 1];
+                  const sz = nodePositions[sourceNode * 3 + 2];
+
+                  const tx = nodePositions[j * 3];
+                  const ty = nodePositions[j * 3 + 1];
+                  const tz = nodePositions[j * 3 + 2];
+
+                  const dx = tx - sx;
+                  const dy = ty - sy;
+                  const dz = tz - sz;
+                  const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                  if (distance < nodeParams.connectionThreshold) {
+                    candidates.push({
+                      index: j,
+                      distance: distance,
+                    });
+                  }
+                }
+              }
+
+              // If we found candidates, create a pulse
+              if (candidates.length > 0) {
+                const target =
+                  candidates[Math.floor(Math.random() * candidates.length)];
+
+                // Activate pulse
+                dataPulses.data[i] = {
+                  active: true,
+                  sourceNode: sourceNode,
+                  targetNode: target.index,
+                  progress: 0,
+                  speed: 0.02 + Math.random() * 0.03,
+                  size: 0.1 + Math.random() * 0.15,
+                };
+
+                // Set initial position (at source node)
+                pulsePositions[i * 3] = nodePositions[sourceNode * 3];
+                pulsePositions[i * 3 + 1] = nodePositions[sourceNode * 3 + 1];
+                pulsePositions[i * 3 + 2] = nodePositions[sourceNode * 3 + 2];
+
+                // Set size
+                pulseSizes[i] = dataPulses.data[i].size;
+
+                // Set color (use source node color)
+                pulseColors[i * 3] = nodeColors[sourceNode * 3];
+                pulseColors[i * 3 + 1] = nodeColors[sourceNode * 3 + 1];
+                pulseColors[i * 3 + 2] = nodeColors[sourceNode * 3 + 2];
+
+                break;
+              }
+            }
+          }
+        }
+
+        // Update active pulses
+        for (let i = 0; i < dataPulses.data.length; i++) {
+          if (dataPulses.data[i].active) {
+            const pulse = dataPulses.data[i];
+
+            // Update progress
+            pulse.progress += pulse.speed;
+
+            // When complete, deactivate
+            if (pulse.progress >= 1.0) {
+              pulse.active = false;
+              pulseSizes[i] = 0;
+              continue;
+            }
+
+            // Interpolate position between source and target nodes
+            const sourceNode = pulse.sourceNode;
+            const targetNode = pulse.targetNode;
+
+            const sx = nodePositions[sourceNode * 3];
+            const sy = nodePositions[sourceNode * 3 + 1];
+            const sz = nodePositions[sourceNode * 3 + 2];
+
+            const tx = nodePositions[targetNode * 3];
+            const ty = nodePositions[targetNode * 3 + 1];
+            const tz = nodePositions[targetNode * 3 + 2];
+
+            // Add some arc to the path
+            const midProgress = Math.sin(pulse.progress * Math.PI);
+            const arcHeight = 0.5; // Arc height factor
+
+            pulsePositions[i * 3] = sx + (tx - sx) * pulse.progress;
+            pulsePositions[i * 3 + 1] =
+              sy + (ty - sy) * pulse.progress + midProgress * arcHeight;
+            pulsePositions[i * 3 + 2] = sz + (tz - sz) * pulse.progress;
+
+            // Update size with pulse effect
+            pulseSizes[i] = pulse.size * (1.0 + Math.sin(time * 10) * 0.2);
+          }
+        }
+
+        // Update geometry attributes
+        dataPulses.geometry.attributes.position.needsUpdate = true;
+        dataPulses.geometry.attributes.size.needsUpdate = true;
+      };
+
+      // =================================
+      // Animation
+      // =================================
+
       let time = 0;
       function animate() {
         const animationId = requestAnimationFrame(animate);
         time += 0.01;
 
-        // Update shader uniforms
-        if (material.uniforms) {
-          material.uniforms.time.value = time;
+        // Update node positions (gently animating)
+        if (nodes.geometry.attributes.position) {
+          // Update connections every frame
+          updateConnections();
+
+          // Update data pulses
+          updatePulses(time);
         }
-        if (particleMaterial.uniforms) {
-          particleMaterial.uniforms.time.value = time;
+
+        // Update uniforms
+        if (grid.material.uniforms) {
+          grid.material.uniforms.uTime.value = time;
+        }
+
+        if (nodes.material.uniforms) {
+          nodes.material.uniforms.uTime.value = time;
+        }
+
+        if (connections.material.uniforms) {
+          connections.material.uniforms.uTime.value = time;
         }
 
         // Gentle camera movement
-        camera.position.x = Math.sin(time * 0.05) * 3;
-        camera.position.y = Math.cos(time * 0.1) * 2 + 5;
+        camera.position.x = Math.sin(time * 0.1) * 1.5;
+        camera.position.y = Math.cos(time * 0.15) * 1;
         camera.lookAt(0, 0, 0);
 
-        // Render the scene
+        // Render
         renderer.render(scene, camera);
-
-        // Cleanup function
-        return () => {
-          cancelAnimationFrame(animationId);
-          if (currentRef && currentRef.contains(renderer.domElement)) {
-            currentRef.removeChild(renderer.domElement);
-          }
-          geometry.dispose();
-          material.dispose();
-          particleGeometry.dispose();
-          particleMaterial.dispose();
-        };
       }
 
-      // Window resize handler
+      // Start animation
+      animate();
+
+      // Handle window resize
       const handleResize = () => {
         const width = window.innerWidth;
         const height = window.innerHeight;
@@ -333,14 +690,29 @@ const WaveFieldBackground = () => {
 
       window.addEventListener("resize", handleResize);
 
-      // Start animation
-      const cleanup = animate();
-
-      // Return cleanup function
+      // Cleanup
       return () => {
-        console.log("Cleaning up WaveFieldBackground");
+        console.log("Cleaning up DataVisualizationBackground");
+
         window.removeEventListener("resize", handleResize);
-        if (cleanup) cleanup();
+
+        // Dispose geometries and materials
+        grid.mesh.geometry.dispose();
+        grid.material.dispose();
+
+        nodes.geometry.dispose();
+        nodes.material.dispose();
+
+        connections.geometry.dispose();
+        connections.material.dispose();
+
+        dataPulses.geometry.dispose();
+        dataPulses.material.dispose();
+
+        // Remove from DOM
+        if (currentRef && currentRef.contains(renderer.domElement)) {
+          currentRef.removeChild(renderer.domElement);
+        }
       };
     };
 
@@ -349,7 +721,7 @@ const WaveFieldBackground = () => {
 
     // Cleanup
     return () => {
-      console.log("WaveFieldBackground unmounting");
+      console.log("DataVisualizationBackground unmounting");
     };
   }, []);
 
@@ -362,9 +734,9 @@ const WaveFieldBackground = () => {
         width: "100vw",
         overflow: "hidden",
       }}
-      data-testid="wave-field-background"
+      data-testid="data-visualization-background"
     />
   );
 };
 
-export default WaveFieldBackground;
+export default DataVisualizationBackground;
