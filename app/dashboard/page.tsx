@@ -12,6 +12,8 @@ import {
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
+import useOnboardingTour from "../hooks/useOnboardingTour";
+import OnboardingButton from "../components/OnboardingButton";
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -25,6 +27,11 @@ export default function DashboardPage() {
   const ensureDefaultTemplate = useMutation(
     api.seedMessages.ensureDefaultTemplate
   );
+
+  // Initialize the onboarding tour
+  const { startTour } = useOnboardingTour({
+    isNewUser: companies !== undefined && companies.length === 0,
+  });
 
   useEffect(() => {
     if (user) {
@@ -43,6 +50,9 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#090d1b] relative">
+      {/* Help button to manually start tour */}
+      <OnboardingButton startTour={startTour} />
+
       {/* Noise Overlay */}
       <div
         className="absolute inset-0 opacity-[0.03] mix-blend-soft-light pointer-events-none"
@@ -72,6 +82,7 @@ export default function DashboardPage() {
             <Link
               href="/leaderboard"
               className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
+              data-tour="leaderboard"
             >
               <Trophy className="h-4 w-4 sm:mr-2 text-orange-400" />
               <span className="hidden sm:inline">Leaderboard</span>
@@ -79,6 +90,7 @@ export default function DashboardPage() {
             <Link
               href="/dashboard/messages"
               className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
+              data-tour="messages"
             >
               <MessageSquare className="h-4 w-4 sm:mr-2 text-orange-400" />
               <span className="hidden sm:inline">Messages</span>
@@ -86,6 +98,7 @@ export default function DashboardPage() {
             <Link
               href="/dashboard/companies/new"
               className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
+              data-tour="add-company"
             >
               <PlusCircle className="h-4 w-4 sm:mr-2 text-orange-400" />
               <span className="hidden sm:inline">Add Company</span>
@@ -107,6 +120,7 @@ export default function DashboardPage() {
               <Link
                 href="/dashboard/companies/new"
                 className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
+                data-tour="empty-add-company"
               >
                 <PlusCircle className="h-4 w-4 sm:mr-2 text-orange-400" />
                 <span className="hidden sm:inline">Add Company</span>

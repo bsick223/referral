@@ -124,9 +124,7 @@ export default function NewCompanyPage() {
                   className="block text-sm font-medium text-gray-300"
                 >
                   Website{" "}
-                  <span className="text-xs text-gray-400">
-                    (logo display)
-                  </span>
+                  <span className="text-xs text-gray-400">(logo display)</span>
                 </label>
                 <div className="mt-1">
                   <input
