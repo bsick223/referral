@@ -87,7 +87,7 @@ export default function CompanyDetailPage({
         await updateReferral({
           id: editingReferralId,
           name: referralFormData.name,
-          linkedinUrl: referralFormData.linkedinUrl,
+          linkedinUrl: referralFormData.linkedinUrl || undefined,
           email: referralFormData.email || undefined,
           phoneNumber: referralFormData.phoneNumber || undefined,
           notes: referralFormData.notes || undefined,
@@ -98,7 +98,7 @@ export default function CompanyDetailPage({
           companyId,
           userId: user.id,
           name: referralFormData.name,
-          linkedinUrl: referralFormData.linkedinUrl,
+          linkedinUrl: referralFormData.linkedinUrl || undefined,
           email: referralFormData.email || undefined,
           phoneNumber: referralFormData.phoneNumber || undefined,
           notes: referralFormData.notes || undefined,
@@ -568,14 +568,13 @@ export default function CompanyDetailPage({
                       htmlFor="linkedinUrl"
                       className="block text-sm font-medium text-gray-300"
                     >
-                      LinkedIn URL *
+                      LinkedIn URL
                     </label>
                     <div className="mt-1">
                       <input
                         type="url"
                         id="linkedinUrl"
                         name="linkedinUrl"
-                        required
                         value={referralFormData.linkedinUrl}
                         onChange={handleReferralChange}
                         className="block w-full sm:text-sm rounded-md px-3 py-2 
@@ -713,15 +712,17 @@ export default function CompanyDetailPage({
                         <h4 className="text-lg font-medium text-gray-200">
                           {referral.name}
                         </h4>
-                        <a
-                          href={referral.linkedinUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-1 text-sm text-blue-400 hover:text-blue-300 inline-flex items-center cursor-pointer"
-                        >
-                          LinkedIn Profile
-                          <ExternalLink className="h-3 w-3 ml-1" />
-                        </a>
+                        {referral.linkedinUrl && (
+                          <a
+                            href={referral.linkedinUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 text-sm text-blue-400 hover:text-blue-300 inline-flex items-center cursor-pointer"
+                          >
+                            LinkedIn Profile
+                            <ExternalLink className="h-3 w-3 ml-1" />
+                          </a>
+                        )}
                       </div>
                     </div>
                     <div className="flex">

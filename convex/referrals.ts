@@ -49,7 +49,7 @@ export const create = mutation({
     companyId: v.id("companies"),
     userId: v.string(),
     name: v.string(),
-    linkedinUrl: v.string(),
+    linkedinUrl: v.optional(v.string()),
     email: v.optional(v.string()),
     phoneNumber: v.optional(v.string()),
     notes: v.optional(v.string()),
