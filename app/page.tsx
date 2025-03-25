@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
 import LeaderboardSection from "@/components/LeaderboardSection";
+import ParticleBackground from "@/components/ParticleBackground";
 
 export default function Home() {
   return (
@@ -22,91 +23,11 @@ export default function Home() {
       <div className="absolute right-0 top-0 w-1/3 h-1/2 bg-blue-600/20 rounded-full opacity-20 blur-[100px]"></div>
       <div className="absolute right-1/4 bottom-0 w-1/3 h-1/3 bg-indigo-600/20 rounded-full opacity-20 blur-[80px]"></div>
 
-      {/* Constellation pattern */}
-      <div className="absolute inset-0 opacity-50 pointer-events-none">
-        <div className="relative h-full w-full">
-          {/* Dots and lines */}
-          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white rounded-full"></div>
-          <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-white rounded-full"></div>
-          <div className="absolute bottom-1/3 left-1/3 w-2 h-2 bg-white rounded-full"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-white rounded-full"></div>
-          <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full"></div>
-
-          {/* Lines */}
-          <svg
-            className="absolute inset-0 w-full h-full"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <line
-              x1="25%"
-              y1="25%"
-              x2="33%"
-              y2="33%"
-              stroke="rgba(255,255,255,0.3)"
-              strokeWidth="1"
-            />
-            <line
-              x1="33%"
-              y1="33%"
-              x2="50%"
-              y2="50%"
-              stroke="rgba(255,255,255,0.3)"
-              strokeWidth="1"
-            />
-            <line
-              x1="50%"
-              y1="50%"
-              x2="67%"
-              y2="33%"
-              stroke="rgba(255,255,255,0.3)"
-              strokeWidth="1"
-            />
-            <line
-              x1="67%"
-              y1="33%"
-              x2="75%"
-              y2="25%"
-              stroke="rgba(255,255,255,0.3)"
-              strokeWidth="1"
-            />
-            <line
-              x1="50%"
-              y1="50%"
-              x2="33%"
-              y2="67%"
-              stroke="rgba(255,255,255,0.3)"
-              strokeWidth="1"
-            />
-            <line
-              x1="33%"
-              y1="67%"
-              x2="25%"
-              y2="75%"
-              stroke="rgba(255,255,255,0.3)"
-              strokeWidth="1"
-            />
-            <line
-              x1="50%"
-              y1="50%"
-              x2="67%"
-              y2="67%"
-              stroke="rgba(255,255,255,0.3)"
-              strokeWidth="1"
-            />
-            <line
-              x1="67%"
-              y1="67%"
-              x2="75%"
-              y2="75%"
-              stroke="rgba(255,255,255,0.3)"
-              strokeWidth="1"
-            />
-          </svg>
-        </div>
-      </div>
+      {/* Interactive Three.js Particle Background */}
+      <ParticleBackground />
 
       {/* Main content */}
-      <div className="container mx-auto px-4 pt-16 md:pt-24 pb-24 md:pb-32 relative z-10">
+      <div className="container mx-auto px-4 pt-16 md:pt-24 pb-24 md:pb-32 relative z-20">
         <div className="w-full max-w-4xl mx-auto text-center">
           {/* Main Heading */}
           <h1 className="text-4xl md:text-6xl font-light text-white mb-6 leading-tight italic">
