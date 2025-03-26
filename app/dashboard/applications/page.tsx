@@ -218,13 +218,31 @@ export default function ApplicationsPage() {
   ) => {
     if (isReorderingColumns) return; // Don't allow application dragging while reordering columns
 
-    e.dataTransfer.setData("applicationId", applicationId);
-    e.dataTransfer.setData(
-      "sourceStatusId",
-      applications.find((app) => app._id === applicationId)?.statusId || ""
-    );
+    const application = applications.find((app) => app._id === applicationId);
+    if (!application) return;
+
+    e.dataTransfer.setData("applicationId", applicationId.toString());
+    e.dataTransfer.setData("sourceStatusId", application.statusId.toString());
+
+    // Set drag image to the element itself for better visual feedback
+    if (e.target instanceof HTMLElement) {
+      const rect = e.target.getBoundingClientRect();
+      e.dataTransfer.setDragImage(
+        e.target,
+        e.clientX - rect.left,
+        e.clientY - rect.top
+      );
+    }
+
     setIsDraggingApplication(true);
     setDraggedApplicationId(applicationId);
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    setIsDraggingApplication(false);
+    setDraggedApplicationId(null);
+    setDropTargetId(null);
+    setDropPosition(null);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -233,7 +251,21 @@ export default function ApplicationsPage() {
     // Skip if we're reordering columns or if nothing is being dragged
     if (isReorderingColumns || !isDraggingApplication) return;
 
-    // Clear previous drop target
+    // Remove any existing drop-target classes
+    document.querySelectorAll(".drop-target").forEach((el) => {
+      el.classList.remove("drop-target");
+    });
+
+    // If dragging over a column header or body, add drop-target class
+    const target = e.currentTarget;
+    if (
+      target.classList.contains("column-header") ||
+      target.classList.contains("column-body")
+    ) {
+      target.classList.add("drop-target");
+    }
+
+    // Clear previous drop target for application cards
     setDropTargetId(null);
     setDropPosition(null);
 
@@ -262,90 +294,161 @@ export default function ApplicationsPage() {
 
   const handleApplicationDrop = async (e: React.DragEvent) => {
     e.preventDefault();
-    if (!draggedApplicationId || !dropTargetId || !dropPosition) return;
 
-    // Get status information from applications
-    const draggedApp = applications.find(
-      (app) => app._id === draggedApplicationId
-    );
-    const targetApp = applications.find((app) => app._id === dropTargetId);
+    // Get the dragged application ID from dataTransfer
+    const applicationId = e.dataTransfer.getData(
+      "applicationId"
+    ) as Id<"applications">;
+    const sourceStatusId = e.dataTransfer.getData(
+      "sourceStatusId"
+    ) as Id<"applicationStatuses">;
 
-    if (!draggedApp || !targetApp) return;
+    if (!applicationId) {
+      setIsDraggingApplication(false);
+      setDraggedApplicationId(null);
+      return;
+    }
 
     try {
-      // If dragging into the same list and to a different position
-      if (draggedApp.statusId === targetApp.statusId) {
-        // Get all applications in this status
-        const appsInStatus = applications.filter(
-          (app) => app.statusId === targetApp.statusId
+      // Remove any drop target highlights
+      document.querySelectorAll(".drop-target").forEach((el) => {
+        el.classList.remove("drop-target");
+      });
+
+      // First, determine if we're dropping on a column or an application
+      const targetElement = e.currentTarget;
+      const isColumnHeader = targetElement.classList.contains("column-header");
+      const isColumnBody = targetElement.classList.contains("column-body");
+      const isApplicationCard =
+        targetElement.classList.contains("application-card");
+
+      // If dropping on a column header or body, move to that status
+      if (isColumnHeader || isColumnBody) {
+        // Find the status ID of the column we're dropping on
+        const statusColumn = targetElement.closest(".status-column");
+        if (!statusColumn) return;
+
+        const targetStatusId = statusColumn.getAttribute(
+          "data-status-id"
+        ) as Id<"applicationStatuses">;
+        if (!targetStatusId || targetStatusId === sourceStatusId) return;
+
+        // Optimistically update the UI
+        setApplications((prevApps) =>
+          prevApps.map((app) =>
+            app._id === applicationId
+              ? { ...app, statusId: targetStatusId }
+              : app
+          )
         );
 
-        // Find current positions
-        const draggedIndex = appsInStatus.findIndex(
-          (app) => app._id === draggedApplicationId
-        );
-        const targetIndex = appsInStatus.findIndex(
-          (app) => app._id === dropTargetId
-        );
-
-        // Calculate the new position
-        let newIndex = targetIndex;
-        if (dropPosition === "after") {
-          newIndex++;
-        }
-
-        // Adjust if moving down
-        if (draggedIndex < newIndex) {
-          newIndex--;
-        }
-
-        // Rearrange the array
-        const newApps = [...appsInStatus];
-        const [removed] = newApps.splice(draggedIndex, 1);
-        newApps.splice(newIndex, 0, removed);
-
-        // Extract IDs and create order indices
-        const applicationIds = newApps.map((app) => app._id);
-        const orderIndices = newApps.map((_, index) => index);
-
-        // Optimistically update UI
-        setApplications((prevApps) => {
-          // Create map of app ID to new order index
-          const orderMap = applicationIds.reduce((map, id, index) => {
-            map[id] = index;
-            return map;
-          }, {} as Record<string, number>);
-
-          // Update all apps with new order indices
-          return prevApps.map((app) => {
-            if (orderMap[app._id] !== undefined) {
-              return { ...app, orderIndex: orderMap[app._id] };
-            }
-            return app;
-          });
-        });
-
-        // Call API to update orders
-        await updateApplicationOrder({
-          applicationIds,
-          orderIndices,
-        });
-
-        showToast("success", "Application order updated");
-      } else {
-        // If changing status, use existing handler
+        // Update the application status
         await updateApplicationStatus({
-          id: draggedApplicationId,
-          statusId: targetApp.statusId,
+          id: applicationId,
+          statusId: targetStatusId,
         });
 
-        showToast("success", "Application status updated");
+        showToast("success", "Application moved to new status");
+      }
+      // If dropping on another application, check if reordering or changing status
+      else if (isApplicationCard || dropTargetId) {
+        // Get target app from the element or from dropTargetId
+        const targetAppId = isApplicationCard
+          ? (targetElement.getAttribute("data-app-id") as Id<"applications">)
+          : dropTargetId;
+
+        if (!targetAppId) return;
+
+        const targetApp = applications.find((app) => app._id === targetAppId);
+        if (!targetApp) return;
+
+        // If dragging to a different status, update the status
+        if (sourceStatusId !== targetApp.statusId) {
+          // Optimistically update the UI
+          setApplications((prevApps) =>
+            prevApps.map((app) =>
+              app._id === applicationId
+                ? { ...app, statusId: targetApp.statusId }
+                : app
+            )
+          );
+
+          await updateApplicationStatus({
+            id: applicationId,
+            statusId: targetApp.statusId,
+          });
+
+          showToast("success", "Application moved to new status");
+        }
+        // Otherwise reorder within the same status
+        else if (dropTargetId && dropPosition) {
+          // Get all applications in this status
+          const appsInStatus = applications.filter(
+            (app) => app.statusId === targetApp.statusId
+          );
+
+          // Find current positions
+          const draggedIndex = appsInStatus.findIndex(
+            (app) => app._id === applicationId
+          );
+          const targetIndex = appsInStatus.findIndex(
+            (app) => app._id === dropTargetId
+          );
+
+          if (draggedIndex === -1 || targetIndex === -1) return;
+
+          // Calculate the new position
+          let newIndex = targetIndex;
+          if (dropPosition === "after") {
+            newIndex++;
+          }
+
+          // Adjust if moving down
+          if (draggedIndex < newIndex) {
+            newIndex--;
+          }
+
+          // Rearrange the array
+          const newApps = [...appsInStatus];
+          const [removed] = newApps.splice(draggedIndex, 1);
+          newApps.splice(newIndex, 0, removed);
+
+          // Extract IDs and create order indices
+          const applicationIds = newApps.map((app) => app._id);
+          const orderIndices = newApps.map((_, index) => index);
+
+          // Optimistically update UI
+          setApplications((prevApps) => {
+            // Create map of app ID to new order index
+            const orderMap = applicationIds.reduce((map, id, index) => {
+              map[id] = index;
+              return map;
+            }, {} as Record<string, number>);
+
+            // Update all apps with new order indices
+            return prevApps.map((app) => {
+              if (orderMap[app._id] !== undefined) {
+                return { ...app, orderIndex: orderMap[app._id] };
+              }
+              return app;
+            });
+          });
+
+          // Call API to update orders
+          await updateApplicationOrder({
+            applicationIds,
+            orderIndices,
+          });
+
+          showToast("success", "Application order updated");
+        }
       }
     } catch (error) {
       console.error("Error updating application:", error);
       showToast("error", "Failed to update application");
     } finally {
       // Reset drag state
+      setIsDraggingApplication(false);
       setDraggedApplicationId(null);
       setDropTargetId(null);
       setDropPosition(null);
@@ -1251,9 +1354,9 @@ export default function ApplicationsPage() {
 
                 {/* Column Header */}
                 <div
-                  className={`px-3 py-2.5 sm:px-4 sm:py-3 ${status.color}/20 border-b border-[#20253d]/50 flex items-center justify-between relative`}
+                  className={`column-header px-3 py-2.5 sm:px-4 sm:py-3 ${status.color}/20 border-b border-[#20253d]/50 flex items-center justify-between relative`}
                   onDragOver={handleDragOver}
-                  onDrop={(e) => handleApplicationDrop(e)}
+                  onDrop={handleApplicationDrop}
                 >
                   {editingStatusId === status._id ? (
                     <div className="flex items-center space-x-2 w-full pr-8 editing-status-container">
@@ -1351,9 +1454,9 @@ export default function ApplicationsPage() {
 
                 {/* Cards */}
                 <div
-                  className="p-2 h-[calc(100vh-11rem)] sm:h-[calc(100vh-12rem)] md:h-[calc(100vh-13rem)] overflow-y-auto"
+                  className="column-body p-2 h-[calc(100vh-11rem)] sm:h-[calc(100vh-12rem)] md:h-[calc(100vh-13rem)] overflow-y-auto"
                   onDragOver={handleDragOver}
-                  onDrop={(e) => handleApplicationDrop(e)}
+                  onDrop={handleApplicationDrop}
                 >
                   {filteredApplications
                     .filter((app) => app.statusId === status._id)
@@ -1369,15 +1472,11 @@ export default function ApplicationsPage() {
                         data-app-id={application._id}
                         draggable={!isReorderingColumns}
                         onDragStart={(e) => handleDragStart(e, application._id)}
+                        onDragEnd={handleDragEnd}
                         onDragOver={handleDragOver}
                         onDrop={handleApplicationDrop}
                         onClick={() => openApplicationModal(application)}
                         className={`application-card mb-2 pl-5 pr-3 py-3 bg-[#0c1029]/80 rounded-md border border-[#20253d]/50 cursor-pointer hover:shadow-md hover:border-[#20253d] transition-all duration-200 relative group
-                          ${
-                            draggedApplicationId === application._id
-                              ? "opacity-50"
-                              : ""
-                          }
                           ${
                             dropTargetId === application._id &&
                             dropPosition === "before"
@@ -1392,8 +1491,11 @@ export default function ApplicationsPage() {
                           }`}
                       >
                         {!isReorderingColumns && (
-                          <div className="absolute -left-1 top-0 bottom-0 w-3 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-grab">
-                            <GripVertical size={16} className="text-gray-400" />
+                          <div className="absolute -left-1 top-0 bottom-0 w-3 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <GripVertical
+                              size={16}
+                              className="text-gray-400 drag-handle"
+                            />
                           </div>
                         )}
                         <h4 className="text-sm font-medium text-gray-200">
@@ -1930,6 +2032,30 @@ export default function ApplicationsPage() {
           /* Gap effect when dragging */
           .status-column {
             transition: margin 0.2s ease, transform 0.2s ease;
+          }
+
+          /* Application card dragging styles */
+          .status-column .application-card[draggable="true"]:active {
+            cursor: grabbing;
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border-color: rgba(59, 130, 246, 0.5);
+            z-index: 10;
+          }
+
+          .application-card .drag-handle {
+            cursor: grab;
+          }
+
+          .application-card:active .drag-handle {
+            cursor: grabbing;
+          }
+
+          /* Highlight drop zone */
+          .column-header.drop-target,
+          .column-body.drop-target {
+            background-color: rgba(59, 130, 246, 0.1);
+            transition: background-color 0.2s ease;
           }
         `}</style>
       </main>
