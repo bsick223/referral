@@ -1888,15 +1888,6 @@ export default function ApplicationsPage() {
                           <span className="text-xs text-gray-500">
                             {formatTimeElapsed(application.createdAt)} ago
                           </span>
-                          <button
-                            onClick={(e) =>
-                              handleDeleteApplication(e, application._id)
-                            }
-                            className="p-1 text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Delete this application"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
                         </div>
                         {application.notes && (
                           <p className="mt-2 text-xs text-gray-400 border-t border-[#20253d]/30 pt-2 line-clamp-2">
