@@ -66,6 +66,14 @@ export default function DashboardHomePage() {
     userId: user?.id || "",
   });
 
+  // Fetch successful referrals count
+  const successfulReferralsCount = useQuery(
+    api.referrals.getSuccessfulReferralsCount,
+    {
+      userId: user?.id || "",
+    }
+  );
+
   // Fetch application stats
   const applicationStatusCounts = useQuery(api.applications.countByStatus, {
     userId: user?.id || "",
@@ -88,9 +96,8 @@ export default function DashboardHomePage() {
       0
     ) || 0;
 
-  // Calculate pending and successful referrals (mock data for now)
-  const pendingReferrals = 4;
-  const successfulReferrals = 2;
+  // Successful referrals are those where hasAskedForFinalReferral is true
+  const successfulReferrals = successfulReferralsCount || 0;
 
   // Calculate application stats from real data
   const calculateApplicationStats = () => {
@@ -148,6 +155,7 @@ export default function DashboardHomePage() {
   if (
     !user ||
     referralCounts === undefined ||
+    successfulReferralsCount === undefined ||
     applicationStatusCounts === undefined ||
     applicationStatuses === undefined
   ) {
@@ -253,12 +261,6 @@ export default function DashboardHomePage() {
                     <p className="text-sm text-gray-400">Total</p>
                     <p className="text-2xl font-semibold text-white">
                       {totalReferrals}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Pending</p>
-                    <p className="text-2xl font-semibold text-white">
-                      {pendingReferrals}
                     </p>
                   </div>
                   <div>

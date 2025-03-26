@@ -84,6 +84,7 @@ export default defineSchema({
     notes: v.optional(v.string()),
     status: v.string(),
     tags: v.optional(v.array(v.string())),
+    hasAskedForFinalReferral: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

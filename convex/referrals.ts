@@ -55,6 +55,7 @@ export const create = mutation({
     notes: v.optional(v.string()),
     status: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
+    hasAskedForFinalReferral: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const referralId = await ctx.db.insert("referrals", {
@@ -67,6 +68,7 @@ export const create = mutation({
       notes: args.notes,
       status: args.status || "pending",
       tags: args.tags || [],
+      hasAskedForFinalReferral: args.hasAskedForFinalReferral || false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -86,6 +88,7 @@ export const update = mutation({
     notes: v.optional(v.string()),
     status: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
+    hasAskedForFinalReferral: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
@@ -356,5 +359,49 @@ export const getUserReferralsByCompany = query({
       totalReferrals: referrals.length,
       companiesData,
     };
+  },
+});
+
+// Toggle the hasAskedForFinalReferral status
+export const toggleAskedForReferral = mutation({
+  args: {
+    id: v.id("referrals"),
+    hasAskedForFinalReferral: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const { id, hasAskedForFinalReferral } = args;
+
+    // Get the existing referral
+    const existingReferral = await ctx.db.get(id);
+    if (!existingReferral) {
+      throw new Error("Referral not found");
+    }
+
+    // Update with new status
+    await ctx.db.patch(id, {
+      hasAskedForFinalReferral,
+      updatedAt: Date.now(),
+    });
+
+    return id;
+  },
+});
+
+// Get count of successful referrals (where hasAskedForFinalReferral is true)
+export const getSuccessfulReferralsCount = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    // Get all referrals for the user
+    const referrals = await ctx.db
+      .query("referrals")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    // Count referrals where hasAskedForFinalReferral is true
+    const successfulCount = referrals.filter(
+      (ref) => ref.hasAskedForFinalReferral === true
+    ).length;
+
+    return successfulCount;
   },
 });

@@ -16,6 +16,7 @@ import {
   Tag,
   Plus,
   ChevronDown,
+  CheckCircle,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -51,6 +52,7 @@ interface Referral {
   phoneNumber?: string;
   notes?: string;
   tags?: string[];
+  hasAskedForFinalReferral?: boolean;
 }
 
 export default function CompanyDetailPage({
@@ -85,6 +87,9 @@ export default function CompanyDetailPage({
     website: "",
   });
 
+  const [tooltipReferralId, setTooltipReferralId] =
+    useState<Id<"referrals"> | null>(null);
+
   // Get company details
   const company = useQuery(api.companies.getById, {
     id: companyId,
@@ -102,6 +107,9 @@ export default function CompanyDetailPage({
   const deleteReferral = useMutation(api.referrals.remove);
   const deleteCompany = useMutation(api.companies.remove);
   const updateCompany = useMutation(api.companies.update);
+  const toggleAskedForReferral = useMutation(
+    api.referrals.toggleAskedForReferral
+  );
 
   const handleReferralChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -176,6 +184,7 @@ export default function CompanyDetailPage({
     phoneNumber?: string;
     notes?: string;
     tags?: string[];
+    hasAskedForFinalReferral?: boolean;
   }) => {
     setEditingReferralId(referral._id);
 
@@ -476,6 +485,20 @@ export default function CompanyDetailPage({
     });
 
     return { taggedReferrals, untaggedReferrals };
+  };
+
+  const handleToggleAskedForReferral = async (
+    referralId: Id<"referrals">,
+    currentStatus: boolean
+  ) => {
+    try {
+      await toggleAskedForReferral({
+        id: referralId,
+        hasAskedForFinalReferral: !currentStatus,
+      });
+    } catch (error) {
+      console.error("Error toggling referral status:", error);
+    }
   };
 
   // Loading state
@@ -1013,6 +1036,38 @@ export default function CompanyDetailPage({
                                   >
                                     <Trash className="h-4 w-4" />
                                   </button>
+                                  <div className="relative">
+                                    <button
+                                      onClick={() =>
+                                        handleToggleAskedForReferral(
+                                          referral._id,
+                                          referral.hasAskedForFinalReferral ||
+                                            false
+                                        )
+                                      }
+                                      onMouseEnter={() =>
+                                        setTooltipReferralId(referral._id)
+                                      }
+                                      onMouseLeave={() =>
+                                        setTooltipReferralId(null)
+                                      }
+                                      className={`ml-2 p-1 relative ${
+                                        referral.hasAskedForFinalReferral
+                                          ? "text-green-400 hover:text-green-300"
+                                          : "text-gray-400 hover:text-gray-300"
+                                      }`}
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                    </button>
+                                    {tooltipReferralId === referral._id && (
+                                      <div className="absolute top-1/2 right-full transform -translate-y-1/2 mr-2 px-3 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap z-50">
+                                        Check this when you asked for a
+                                        referral, and have applied through their
+                                        link
+                                        <div className="absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                               {(referral.email || referral.phoneNumber) && (
@@ -1131,6 +1186,38 @@ export default function CompanyDetailPage({
                                     >
                                       <Trash className="h-4 w-4" />
                                     </button>
+                                    <div className="relative">
+                                      <button
+                                        onClick={() =>
+                                          handleToggleAskedForReferral(
+                                            referral._id,
+                                            referral.hasAskedForFinalReferral ||
+                                              false
+                                          )
+                                        }
+                                        onMouseEnter={() =>
+                                          setTooltipReferralId(referral._id)
+                                        }
+                                        onMouseLeave={() =>
+                                          setTooltipReferralId(null)
+                                        }
+                                        className={`ml-2 p-1 relative ${
+                                          referral.hasAskedForFinalReferral
+                                            ? "text-green-400 hover:text-green-300"
+                                            : "text-gray-400 hover:text-gray-300"
+                                        }`}
+                                      >
+                                        <CheckCircle className="h-4 w-4" />
+                                      </button>
+                                      {tooltipReferralId === referral._id && (
+                                        <div className="absolute top-1/2 right-full transform -translate-y-1/2 mr-2 px-3 py-1 bg-gray-900 text-white text-xs rounded max-w-[200px] text-center z-50">
+                                          Check this when you asked for a
+                                          referral, and have applied through
+                                          their link
+                                          <div className="absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                                 {(referral.email || referral.phoneNumber) && (
