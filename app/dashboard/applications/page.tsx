@@ -2155,26 +2155,46 @@ export default function ApplicationsPage() {
                         </p>
                       </div>
                       <div className="mt-2 md:mt-0">
-                        <div
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                          style={{
-                            backgroundColor: "rgba(0, 0, 0, 0.1)",
-                          }}
-                        >
-                          <span
-                            className={statuses
-                              .find(
-                                (s) => s._id === selectedApplication.statusId
-                              )
-                              ?.color.replace("bg-", "text-")}
-                          >
-                            {
-                              statuses.find(
-                                (s) => s._id === selectedApplication.statusId
-                              )?.name
-                            }
-                          </span>
-                        </div>
+                        {(() => {
+                          const status = statuses.find(
+                            (s) => s._id === selectedApplication.statusId
+                          );
+                          const color = status?.color || "";
+
+                          // Map Tailwind bg colors to hex values
+                          let textColor = "#6b7280"; // Default gray
+
+                          if (color.includes("blue")) textColor = "#3b82f6";
+                          else if (color.includes("purple"))
+                            textColor = "#8b5cf6";
+                          else if (color.includes("indigo"))
+                            textColor = "#6366f1";
+                          else if (color.includes("cyan"))
+                            textColor = "#06b6d4";
+                          else if (color.includes("emerald"))
+                            textColor = "#10b981";
+                          else if (color.includes("green"))
+                            textColor = "#22c55e";
+                          else if (color.includes("yellow"))
+                            textColor = "#eab308";
+                          else if (color.includes("orange"))
+                            textColor = "#f97316";
+                          else if (color.includes("red")) textColor = "#ef4444";
+                          else if (color.includes("pink"))
+                            textColor = "#ec4899";
+
+                          return (
+                            <div
+                              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                              style={{
+                                backgroundColor: "rgba(0, 0, 0, 0.1)",
+                                color: textColor,
+                              }}
+                            >
+                              {status?.name || ""}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
