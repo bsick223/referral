@@ -29,6 +29,33 @@ export default function DashboardPage() {
     userId: user?.id || "",
   });
 
+  // Fetch referral counts per company
+  const referralCounts = useQuery(api.referrals.getUserReferralsByCompany, {
+    userId: user?.id || "",
+  });
+
+  // Map to easily lookup referral counts by company ID
+  const companyReferralMap = new Map();
+  if (referralCounts?.companiesData) {
+    referralCounts.companiesData.forEach((item) => {
+      companyReferralMap.set(item.companyId, item.referralCount);
+    });
+  }
+
+  // Function to get color based on referral count (0-5)
+  const getReferralProgressColor = (count: number) => {
+    if (count >= 5) return "from-orange-500 via-green-500 to-blue-500";
+    if (count >= 3) return "from-orange-500 to-green-500";
+    return "from-orange-500 to-orange-400";
+  };
+
+  // Function to get width percentage based on referral count (0-5)
+  const getReferralProgressWidth = (count: number) => {
+    // Cap at 5 referrals for 100% width
+    const percentage = Math.min((count / 5) * 100, 100);
+    return `${percentage}%`;
+  };
+
   // Initialize seed data
   const ensureDefaultTemplate = useMutation(
     api.seedMessages.ensureDefaultTemplate
@@ -136,7 +163,7 @@ export default function DashboardPage() {
   }, [user, ensureDefaultTemplate]);
 
   // Loading state
-  if (!user || companies === undefined) {
+  if (!user || companies === undefined || referralCounts === undefined) {
     return (
       <div className="min-h-screen bg-[#090d1b] flex items-center justify-center">
         <RefreshCw className="h-10 w-10 text-orange-500 animate-spin" />
@@ -384,9 +411,19 @@ export default function DashboardPage() {
                       {company.description}
                     </p>
                   )}
-                  <div className="mt-4 pt-4 border-t border-[#20253d]/50 group-hover:border-[#20253d]/70 transition-colors duration-300 flex justify-between">
-                    <div className="text-sm text-gray-400">
-                      Added {new Date(company.createdAt).toLocaleDateString()}
+                  <div className="mt-4 pt-4 border-t border-[#20253d]/50 group-hover:border-[#20253d]/70 transition-colors duration-300 flex items-center">
+                    <div className="w-1/3 h-1.5 rounded-full bg-[#0c1029] overflow-hidden">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${getReferralProgressColor(
+                          companyReferralMap.get(company._id) || 0
+                        )}`}
+                        style={{
+                          width: getReferralProgressWidth(
+                            companyReferralMap.get(company._id) || 0
+                          ),
+                          transition: "width 0.5s ease-in-out",
+                        }}
+                      ></div>
                     </div>
                   </div>
                 </div>
