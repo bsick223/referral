@@ -357,44 +357,46 @@ export default function ApplicationsPage() {
   // Click outside handlers
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Check if we're clicking on the color picker or one of its buttons
-      const isColorPickerClick =
-        colorPickerRef.current?.contains(event.target as Node) ||
-        (event.target as HTMLElement).closest(".color-picker-trigger");
+      const target = event.target as HTMLElement;
 
-      // Close color picker when clicking outside (but not if clicking on its trigger)
+      // Is the click inside or related to the color picker?
+      const isColorPickerClick =
+        colorPickerRef.current?.contains(target) ||
+        target.closest(".color-picker-trigger") !== null;
+
+      // Is the click inside or related to the status menu or its buttons?
+      const isStatusMenuOrTriggerClick =
+        statusMenuRef.current?.contains(target) ||
+        target.closest(".status-menu-trigger") !== null ||
+        target.closest(".editing-status-container") !== null;
+
+      // Close color picker when clicking outside (excluding triggers)
       if (
         colorPickerRef.current &&
-        !colorPickerRef.current.contains(event.target as Node)
+        colorPickerRef.current.style.display !== "none" &&
+        !colorPickerRef.current.contains(target) &&
+        !isColorPickerClick
       ) {
-        // Don't close if clicking on a color button that triggered it
-        if (
-          !(event.target as HTMLElement).classList.contains(
-            "color-picker-trigger"
-          )
-        ) {
-          colorPickerRef.current.classList.add("hidden");
-          colorPickerRef.current.style.display = "none";
-        }
+        colorPickerRef.current.style.display = "none";
+        colorPickerRef.current.classList.add("hidden");
       }
 
-      // Close new status form when clicking outside, but not if clicking on color picker or its buttons
+      // Close new status form when clicking outside
       if (
         newStatusFormRef.current &&
-        !newStatusFormRef.current.contains(event.target as Node) &&
-        !(event.target as HTMLElement).classList.contains(
-          "add-status-trigger"
-        ) &&
+        isAddingStatus &&
+        !newStatusFormRef.current.contains(target) &&
+        !target.closest(".add-status-trigger") &&
         !isColorPickerClick
       ) {
         setIsAddingStatus(false);
       }
 
-      // Close status menu when clicking outside
+      // Close status menu when clicking outside (but not on its trigger or the menu itself)
       if (
-        statusMenuRef.current &&
-        !statusMenuRef.current.contains(event.target as Node) &&
-        !(event.target as HTMLElement).classList.contains("status-menu-trigger")
+        editingStatusId !== null &&
+        !isStatusMenuOrTriggerClick &&
+        !isColorPickerClick
       ) {
         setEditingStatusId(null);
       }
@@ -402,14 +404,11 @@ export default function ApplicationsPage() {
       // Handle click outside application modal
       if (
         applicationModalRef.current &&
-        !applicationModalRef.current.contains(event.target as Node) &&
-        selectedApplication
+        selectedApplication &&
+        !applicationModalRef.current.contains(target) &&
+        target.classList.contains("modal-overlay")
       ) {
-        // Only close if clicking on the overlay (not inside the modal)
-        const target = event.target as HTMLElement;
-        if (target.classList.contains("modal-overlay")) {
-          closeApplicationModal();
-        }
+        closeApplicationModal();
       }
     };
 
@@ -417,7 +416,7 @@ export default function ApplicationsPage() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [selectedApplication]);
+  }, [selectedApplication, editingStatusId, isAddingStatus]);
 
   // Show color picker
   const showColorPicker = (
@@ -821,16 +820,20 @@ export default function ApplicationsPage() {
                   onDrop={(e) => handleDrop(e, status._id)}
                 >
                   {editingStatusId === status._id ? (
-                    <div className="flex items-center space-x-2 w-full pr-8">
+                    <div className="flex items-center space-x-2 w-full pr-8 editing-status-container">
                       <input
                         type="text"
                         value={editingStatusName}
                         onChange={(e) => setEditingStatusName(e.target.value)}
                         className="bg-[#0c1029]/50 border border-[#20253d]/70 px-2 py-1 rounded text-white text-sm flex-1"
                         autoFocus
+                        onClick={(e) => e.stopPropagation()}
                       />
                       <button
-                        onClick={(e) => showColorPicker(e, status._id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          showColorPicker(e, status._id);
+                        }}
                         className="color-picker-trigger p-1 rounded hover:bg-[#0c1029]/30"
                       >
                         <div
@@ -838,13 +841,19 @@ export default function ApplicationsPage() {
                         ></div>
                       </button>
                       <button
-                        onClick={() => handleUpdateStatus(status._id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUpdateStatus(status._id);
+                        }}
                         className="p-1 text-green-400 hover:text-green-300"
                       >
                         <Check className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => setEditingStatusId(null)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingStatusId(null);
+                        }}
                         className="p-1 text-gray-400 hover:text-gray-300"
                       >
                         <X className="h-4 w-4" />
@@ -859,6 +868,7 @@ export default function ApplicationsPage() {
                         <div
                           className={`h-3 w-3 rounded-full ${status.color} mr-2 cursor-pointer hover:ring-2 hover:ring-white/30`}
                           onClick={(e) => {
+                            e.stopPropagation();
                             if (!isReorderingColumns) {
                               showColorPicker(e, status._id);
                             }
@@ -878,7 +888,10 @@ export default function ApplicationsPage() {
                         </span>
                         {!isReorderingColumns && (
                           <button
-                            onClick={() => startEditingStatus(status)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startEditingStatus(status);
+                            }}
                             className="status-menu-trigger p-1 text-gray-400 hover:text-gray-200"
                           >
                             <MoreVertical className="h-4 w-4" />
@@ -893,10 +906,14 @@ export default function ApplicationsPage() {
                     <div
                       ref={statusMenuRef}
                       className="absolute top-full right-0 mt-1 w-36 bg-[#0c1029] rounded-md shadow-lg border border-[#20253d]/70 z-20"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <div className="py-1">
                         <button
-                          onClick={() => startEditingStatus(status)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startEditingStatus(status);
+                          }}
                           className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-[#121a36] hover:text-white"
                         >
                           <Edit2 className="h-4 w-4 mr-2" />
@@ -904,7 +921,10 @@ export default function ApplicationsPage() {
                         </button>
                         {!status.isDefault && (
                           <button
-                            onClick={() => handleDeleteStatus(status._id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteStatus(status._id);
+                            }}
                             className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-[#121a36] hover:text-red-300"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
