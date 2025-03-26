@@ -68,11 +68,49 @@ type Application = {
   contactEmail?: string;
   url?: string;
   orderIndex?: number;
+  createdAt: number;
+  updatedAt: number;
 };
 
 type ToastMessage = {
   type: "success" | "error" | "info";
   message: string;
+};
+
+// Add this function after the type definitions and before the component
+// Format time elapsed since a given date
+const formatTimeElapsed = (date: string | number): string => {
+  const dateObj = typeof date === "string" ? new Date(date) : new Date(date);
+  const now = new Date();
+  const diffMs = now.getTime() - dateObj.getTime();
+
+  // Convert to seconds
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return `${diffSec}s`;
+
+  // Convert to minutes
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m`;
+
+  // Convert to hours
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours}hr`;
+
+  // Convert to days
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d`;
+
+  // Convert to weeks
+  const diffWeeks = Math.floor(diffDays / 7);
+  if (diffWeeks < 4) return `${diffWeeks}w`;
+
+  // Convert to months
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) return `${diffMonths}mo`;
+
+  // Convert to years
+  const diffYears = Math.floor(diffDays / 365);
+  return `${diffYears}yr`;
 };
 
 export default function ApplicationsPage() {
@@ -1847,8 +1885,12 @@ export default function ApplicationsPage() {
                           {application.companyName}
                         </p>
                         <div className="flex items-center justify-between mt-2">
-                          <span className="text-xs text-gray-500">
-                            Applied: {application.dateApplied}
+                          <span className="text-xs text-gray-500 group relative">
+                            {formatTimeElapsed(application.createdAt)} ago
+                            <span className="hidden group-hover:block absolute left-0 bottom-full mb-1 px-2 py-1 bg-[#0c1029] border border-[#20253d] rounded text-xs text-white whitespace-nowrap">
+                              Added:{" "}
+                              {new Date(application.createdAt).toLocaleString()}
+                            </span>
                           </span>
                           <button
                             onClick={(e) =>
@@ -2162,75 +2204,77 @@ export default function ApplicationsPage() {
                         </p>
                       </div>
 
-                      {selectedApplication.location && (
-                        <div>
-                          <h5 className="text-sm font-medium text-gray-400">
-                            Location
-                          </h5>
-                          <p className="text-white">
-                            {selectedApplication.location}
-                          </p>
-                        </div>
-                      )}
-
-                      {selectedApplication.salary && (
-                        <div>
-                          <h5 className="text-sm font-medium text-gray-400">
-                            Salary
-                          </h5>
-                          <p className="text-white">
-                            {selectedApplication.salary}
-                          </p>
-                        </div>
-                      )}
-
-                      {selectedApplication.contactName && (
-                        <div>
-                          <h5 className="text-sm font-medium text-gray-400">
-                            Contact
-                          </h5>
-                          <p className="text-white">
-                            {selectedApplication.contactName}
-                          </p>
-                        </div>
-                      )}
-
-                      {selectedApplication.contactEmail && (
-                        <div>
-                          <h5 className="text-sm font-medium text-gray-400">
-                            Contact Email
-                          </h5>
-                          <p className="text-white">
-                            {selectedApplication.contactEmail}
-                          </p>
-                        </div>
-                      )}
-
-                      {selectedApplication.url && (
-                        <div>
-                          <h5 className="text-sm font-medium text-gray-400">
-                            Job URL
-                          </h5>
-                          <a
-                            href={selectedApplication.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-400 hover:text-blue-300 underline truncate block"
-                          >
-                            {selectedApplication.url}
-                          </a>
-                        </div>
-                      )}
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-400">
+                          Added
+                        </h5>
+                        <p className="text-white">
+                          {new Date(
+                            selectedApplication.createdAt
+                          ).toLocaleDateString()}{" "}
+                          ({formatTimeElapsed(selectedApplication.createdAt)}{" "}
+                          ago)
+                        </p>
+                      </div>
                     </div>
 
-                    {selectedApplication.notes && (
-                      <div className="border-t border-[#20253d] pt-4">
-                        <h5 className="text-sm font-medium text-gray-400 mb-2">
-                          Notes
+                    {selectedApplication.location && (
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-400">
+                          Location
                         </h5>
-                        <p className="text-white whitespace-pre-wrap">
-                          {selectedApplication.notes}
+                        <p className="text-white">
+                          {selectedApplication.location}
                         </p>
+                      </div>
+                    )}
+
+                    {selectedApplication.salary && (
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-400">
+                          Salary
+                        </h5>
+                        <p className="text-white">
+                          {selectedApplication.salary}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedApplication.contactName && (
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-400">
+                          Contact
+                        </h5>
+                        <p className="text-white">
+                          {selectedApplication.contactName}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedApplication.contactEmail && (
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-400">
+                          Contact Email
+                        </h5>
+                        <p className="text-white">
+                          {selectedApplication.contactEmail}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedApplication.url && (
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-400">
+                          Job URL
+                        </h5>
+                        <a
+                          href={selectedApplication.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:text-blue-300 underline truncate block"
+                        >
+                          {selectedApplication.url}
+                        </a>
                       </div>
                     )}
                   </div>
