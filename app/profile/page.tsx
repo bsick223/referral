@@ -294,7 +294,7 @@ export default function ProfilePage() {
                       : "-"}
                   </p>
                   <p className="text-sm text-gray-400 mt-1">
-                    {percentile > 0 ? `Top ${percentile}%` : "Not ranked yet"}
+                    {percentile > 0 ? `Top ${100 - percentile}%` : "Not ranked yet"}
                   </p>
                 </div>
                 <Link
