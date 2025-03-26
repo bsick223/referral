@@ -43,13 +43,14 @@ export default function DashboardPage() {
         )
     : [];
 
-  // Handle click outside to close search
+  // Handle click outside to close search only if search query is empty
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         isSearchExpanded &&
         searchInputRef.current &&
-        !searchInputRef.current.contains(event.target as Node)
+        !searchInputRef.current.contains(event.target as Node) &&
+        !searchQuery // Only collapse if there's no search query
       ) {
         setIsSearchExpanded(false);
       }
@@ -59,7 +60,7 @@ export default function DashboardPage() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isSearchExpanded]);
+  }, [isSearchExpanded, searchQuery]); // Add searchQuery as a dependency
 
   // Focus input when search expands
   useEffect(() => {

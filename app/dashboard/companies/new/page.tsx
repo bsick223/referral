@@ -37,11 +37,26 @@ export default function NewCompanyPage() {
 
     setIsSubmitting(true);
 
+    // Format website URL if provided
+    let formattedWebsite = formData.website;
+    if (formattedWebsite) {
+      // If it doesn't start with http:// or https://
+      if (!formattedWebsite.match(/^https?:\/\//)) {
+        // If it starts with www.
+        if (formattedWebsite.startsWith("www.")) {
+          formattedWebsite = `https://${formattedWebsite}`;
+        } else {
+          // If it's just a domain like google.com
+          formattedWebsite = `https://${formattedWebsite}`;
+        }
+      }
+    }
+
     try {
       await createCompany({
         name: formData.name,
         description: formData.description || undefined,
-        website: formData.website || undefined,
+        website: formattedWebsite || undefined,
         userId: user.id,
       });
 
@@ -128,7 +143,7 @@ export default function NewCompanyPage() {
                 </label>
                 <div className="mt-1">
                   <input
-                    type="url"
+                    type="text"
                     id="website"
                     name="website"
                     value={formData.website}
@@ -136,7 +151,7 @@ export default function NewCompanyPage() {
                     className="block w-full sm:text-sm rounded-md px-3 py-2 
                     bg-[#0c1029] border-[#20253d] text-gray-300
                     focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g. https://google.com"
+                    placeholder="e.g. google.com"
                   />
                   {/* <p className="mt-1 text-xs text-gray-400">
                     Adding a website URL helps us automatically display the
