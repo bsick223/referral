@@ -123,6 +123,16 @@ export default function ApplicationsPage() {
     null
   );
 
+  // Add these below the existing state variables
+  const [touchDragging, setTouchDragging] = useState(false);
+  const [touchStartY, setTouchStartY] = useState(0);
+  const [touchCurrentTarget, setTouchCurrentTarget] =
+    useState<HTMLElement | null>(null);
+  const [ghostElement, setGhostElement] = useState<HTMLElement | null>(null);
+
+  // Add a state for showing mobile instructions
+  const [showDragInstructions, setShowDragInstructions] = useState(false);
+
   // Get status data from Convex
   const statusesData = useQuery(api.applicationStatuses.listByUser, {
     userId: user?.id || "",
@@ -173,6 +183,19 @@ export default function ApplicationsPage() {
     }
   }, [statuses]);
 
+  // Add this useEffect for mobile instructions
+  useEffect(() => {
+    if (isMobile && showingAllColumns) {
+      setShowDragInstructions(true);
+      // Auto-hide after 8 seconds
+      const timer = setTimeout(() => {
+        setShowDragInstructions(false);
+      }, 8000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isMobile, showingAllColumns]);
+
   // Swipe handlers for mobile column navigation
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => {
@@ -195,7 +218,17 @@ export default function ApplicationsPage() {
 
   // Toggle between single column and all columns view on mobile
   const toggleColumnsView = () => {
-    setShowingAllColumns(!showingAllColumns);
+    const newValue = !showingAllColumns;
+    setShowingAllColumns(newValue);
+
+    // Show instructions when switching to all columns view on mobile
+    if (newValue && isMobile) {
+      setShowDragInstructions(true);
+      // Auto-hide after 8 seconds
+      setTimeout(() => {
+        setShowDragInstructions(false);
+      }, 8000);
+    }
   };
 
   // Horizontal scrolling functionality
@@ -957,6 +990,318 @@ export default function ApplicationsPage() {
     };
   }, []);
 
+  // Add these touch event handlers
+  const handleTouchStart = (
+    e: React.TouchEvent,
+    applicationId: Id<"applications">
+  ) => {
+    // Don't start drag in single column mode when swiping might be used for navigation
+    if (isReorderingColumns || (isMobile && !showingAllColumns)) return;
+
+    // Store the time when touch started to differentiate between tap and drag
+    const touchStartTime = Date.now();
+
+    const application = applications.find((app) => app._id === applicationId);
+    if (!application) return;
+
+    // Create ghost element after a small delay to confirm it's a drag and not a tap
+    const target = e.currentTarget as HTMLElement;
+
+    // Only start drag after finger has moved a bit or held for more than 150ms
+    const startLongPressTimer = setTimeout(() => {
+      const rect = target.getBoundingClientRect();
+      const ghost = document.createElement("div");
+
+      // Copy the original element
+      ghost.innerHTML = target.outerHTML;
+      const ghostCard = ghost.firstChild as HTMLElement;
+
+      if (ghostCard) {
+        // Adjust styling
+        ghostCard.style.position = "fixed";
+        ghostCard.style.top = `${rect.top}px`;
+        ghostCard.style.left = `${rect.left}px`;
+        ghostCard.style.width = `${rect.width}px`;
+        ghostCard.style.height = `${rect.height}px`;
+        ghostCard.style.transform = "scale(1.05)";
+        ghostCard.style.opacity = "0.8";
+        ghostCard.style.zIndex = "9999";
+        ghostCard.style.pointerEvents = "none";
+        ghostCard.style.boxShadow = "0 5px 15px rgba(0, 0, 0, 0.3)";
+        ghostCard.style.transition = "none";
+        ghostCard.style.borderColor = "#3b82f6";
+
+        // Add the ghost-card class for mobile-specific styles
+        ghostCard.classList.add("ghost-card");
+
+        document.body.appendChild(ghostCard);
+        setGhostElement(ghostCard);
+      }
+
+      // Add a visual feedback for long press
+      target.classList.add("touch-dragging");
+
+      setTouchStartY(e.touches[0].clientY);
+      setTouchCurrentTarget(target);
+      setTouchDragging(true);
+      setIsDraggingApplication(true);
+      setDraggedApplicationId(applicationId);
+
+      // Add a subtle haptic feedback if available
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }, 150);
+
+    // Store the timer so we can clear it if needed
+    (e.currentTarget as any).longPressTimer = startLongPressTimer;
+  };
+
+  // Update the touch move handler to handle drag cancellation if moved too quickly
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // If we haven't started dragging properly yet, but user moved finger,
+    // clear the timer and prevent starting drag
+    const target = e.currentTarget as any;
+    if (target.longPressTimer && !touchDragging) {
+      clearTimeout(target.longPressTimer);
+      target.longPressTimer = null;
+      return;
+    }
+
+    if (!touchDragging || !ghostElement || !touchCurrentTarget) return;
+
+    e.preventDefault(); // Prevent scrolling while dragging
+
+    const touchY = e.touches[0].clientY;
+    const touchX = e.touches[0].clientX;
+
+    // Move the ghost element to follow the finger
+    ghostElement.style.top = `${touchY - 50}px`;
+    ghostElement.style.left = `${touchX - 100}px`;
+
+    // Find what's under the touch point using elementFromPoint
+    // We need to temporarily hide the ghost to find elements under it
+    ghostElement.style.display = "none";
+    const elemBelow = document.elementFromPoint(touchX, touchY) as HTMLElement;
+    ghostElement.style.display = "block";
+
+    if (!elemBelow) return;
+
+    // Reset any previous drop targets
+    document.querySelectorAll(".drop-target").forEach((el) => {
+      el.classList.remove("drop-target");
+    });
+
+    // Detect application cards below
+    const appCardBelow = elemBelow.closest(".application-card") as HTMLElement;
+    if (appCardBelow) {
+      const appId = appCardBelow.getAttribute(
+        "data-app-id"
+      ) as Id<"applications"> | null;
+      if (appId && appId !== draggedApplicationId) {
+        const rect = appCardBelow.getBoundingClientRect();
+        const isBeforeMiddle = touchY < rect.top + rect.height / 2;
+
+        setDropTargetId(appId);
+        setDropPosition(isBeforeMiddle ? "before" : "after");
+      }
+      return;
+    }
+
+    // Detect column headers or bodies
+    const columnHeader = elemBelow.closest(".column-header") as HTMLElement;
+    const columnBody = elemBelow.closest(".column-body") as HTMLElement;
+
+    if (columnHeader) {
+      columnHeader.classList.add("drop-target");
+    } else if (columnBody) {
+      columnBody.classList.add("drop-target");
+    }
+  };
+
+  // Update the touch end handler
+  const handleTouchEnd = async (e: React.TouchEvent) => {
+    // Clear the timer if touch ended before dragging started
+    const target = e.currentTarget as any;
+    if (target.longPressTimer) {
+      clearTimeout(target.longPressTimer);
+      target.longPressTimer = null;
+    }
+
+    // If we weren't dragging, this was just a click, so let the click handler work
+    if (!touchDragging) {
+      return;
+    }
+
+    // Don't open the modal when we end a drag
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Rest of the handle touch end function...
+    if (!touchDragging || !touchCurrentTarget || !draggedApplicationId) {
+      cleanupTouchDrag();
+      return;
+    }
+
+    // Find what's under the touch point
+    const touch = e.changedTouches[0];
+    const touchX = touch.clientX;
+    const touchY = touch.clientY;
+
+    // Hide ghost temporarily to detect elements below
+    if (ghostElement) {
+      ghostElement.style.display = "none";
+    }
+
+    const elemBelow = document.elementFromPoint(touchX, touchY) as HTMLElement;
+
+    if (elemBelow) {
+      // Check if dropping on application card
+      const appCardBelow = elemBelow.closest(
+        ".application-card"
+      ) as HTMLElement;
+      if (appCardBelow && dropTargetId && dropPosition) {
+        const targetApp = applications.find((app) => app._id === dropTargetId);
+        if (targetApp) {
+          // Same logic as in handleApplicationDrop
+          const application = applications.find(
+            (app) => app._id === draggedApplicationId
+          );
+
+          if (application) {
+            if (application.statusId !== targetApp.statusId) {
+              // Move to different status
+              await updateApplicationStatus({
+                id: draggedApplicationId,
+                statusId: targetApp.statusId,
+              });
+              showToast("success", "Application moved to new status");
+            } else {
+              // Reorder within status
+              const appsInStatus = applications.filter(
+                (app) => app.statusId === targetApp.statusId
+              );
+              const draggedIndex = appsInStatus.findIndex(
+                (app) => app._id === draggedApplicationId
+              );
+              const targetIndex = appsInStatus.findIndex(
+                (app) => app._id === dropTargetId
+              );
+
+              if (draggedIndex !== -1 && targetIndex !== -1) {
+                // Calculate new order
+                let newIndex = targetIndex;
+                if (dropPosition === "after") newIndex++;
+                if (draggedIndex < newIndex) newIndex--;
+
+                // Rearrange
+                const newApps = [...appsInStatus];
+                const [removed] = newApps.splice(draggedIndex, 1);
+                newApps.splice(newIndex, 0, removed);
+
+                // Update order
+                const applicationIds = newApps.map((app) => app._id);
+                const orderIndices = newApps.map((_, index) => index);
+
+                await updateApplicationOrder({
+                  applicationIds,
+                  orderIndices,
+                });
+                showToast("success", "Application order updated");
+              }
+            }
+          }
+        }
+      } else {
+        // Check if dropping on column
+        const columnHeader = elemBelow.closest(".column-header") as HTMLElement;
+        const columnBody = elemBelow.closest(".column-body") as HTMLElement;
+        const statusColumn = (columnHeader || columnBody)?.closest(
+          ".status-column"
+        ) as HTMLElement;
+
+        if (statusColumn) {
+          const targetStatusId = statusColumn.getAttribute(
+            "data-status-id"
+          ) as Id<"applicationStatuses"> | null;
+          const application = applications.find(
+            (app) => app._id === draggedApplicationId
+          );
+
+          if (
+            targetStatusId &&
+            application &&
+            application.statusId !== targetStatusId
+          ) {
+            await updateApplicationStatus({
+              id: draggedApplicationId,
+              statusId: targetStatusId,
+            });
+            showToast("success", "Application moved to new status");
+          }
+        }
+      }
+    }
+
+    cleanupTouchDrag();
+  };
+
+  const cleanupTouchDrag = () => {
+    // Remove ghost element
+    if (ghostElement) {
+      document.body.removeChild(ghostElement);
+      setGhostElement(null);
+    }
+
+    // Remove touch-dragging class from all cards
+    document.querySelectorAll(".touch-dragging").forEach((el) => {
+      el.classList.remove("touch-dragging");
+    });
+
+    // Reset states
+    setTouchDragging(false);
+    setTouchCurrentTarget(null);
+    setIsDraggingApplication(false);
+    setDraggedApplicationId(null);
+    setDropTargetId(null);
+    setDropPosition(null);
+
+    // Remove any drop targets
+    document.querySelectorAll(".drop-target").forEach((el) => {
+      el.classList.remove("drop-target");
+    });
+  };
+
+  // Add this function to show a ripple effect for touch and hold
+  const showTouchIndicator = (e: React.TouchEvent) => {
+    // Only show the indicator if we're in all columns view where drag is supported
+    if (isReorderingColumns || (isMobile && !showingAllColumns)) return;
+
+    const target = e.currentTarget as HTMLElement;
+    const touch = e.touches[0];
+    const rect = target.getBoundingClientRect();
+
+    // Calculate position relative to the card
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    // Create the ripple element
+    const ripple = document.createElement("div");
+    ripple.className = "touch-indicator";
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
+
+    // Add it to the card
+    target.appendChild(ripple);
+
+    // Remove it after animation completes
+    setTimeout(() => {
+      if (target.contains(ripple)) {
+        target.removeChild(ripple);
+      }
+    }, 750);
+  };
+
   // Loading state
   if (!user || statusesData === undefined || applicationsData === undefined) {
     return (
@@ -1475,6 +1820,12 @@ export default function ApplicationsPage() {
                         onDragEnd={handleDragEnd}
                         onDragOver={handleDragOver}
                         onDrop={handleApplicationDrop}
+                        onTouchStart={(e) => {
+                          showTouchIndicator(e);
+                          handleTouchStart(e, application._id);
+                        }}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
                         onClick={() => openApplicationModal(application)}
                         className={`application-card mb-2 pl-5 pr-3 py-3 bg-[#0c1029]/80 rounded-md border border-[#20253d]/50 cursor-pointer hover:shadow-md hover:border-[#20253d] transition-all duration-200 relative group
                           ${
@@ -1587,6 +1938,21 @@ export default function ApplicationsPage() {
                   <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
                 </svg>
               )}
+            </button>
+          </div>
+        )}
+
+        {/* Mobile drag instructions */}
+        {isMobile && showingAllColumns && (
+          <div className="fixed bottom-32 left-1/2 transform -translate-x-1/2 z-20 bg-[#121a36] border border-[#20253d] rounded-md shadow-lg p-3 text-sm text-gray-200 max-w-xs text-center">
+            <p>
+              Touch and hold cards to drag them between columns or reorder them.
+            </p>
+            <button
+              onClick={() => setShowDragInstructions(false)}
+              className="mt-2 text-xs text-blue-400 hover:text-blue-300"
+            >
+              Got it
             </button>
           </div>
         )}
@@ -2057,7 +2423,92 @@ export default function ApplicationsPage() {
             background-color: rgba(59, 130, 246, 0.1);
             transition: background-color 0.2s ease;
           }
+
+          /* Add these styles to the style jsx global section */
+          /* Styles for touch dragging on mobile */
+          .touch-dragging {
+            transform: scale(1.02);
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          }
+
+          /* Indicator for long-press */
+          .application-card:active::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(
+              circle at center,
+              rgba(59, 130, 246, 0.15) 0%,
+              transparent 70%
+            );
+            border-radius: inherit;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+          }
+
+          /* Improve visual feedback for touch targets */
+          .drop-target {
+            background-color: rgba(59, 130, 246, 0.15) !important;
+            transition: background-color 0.2s ease;
+          }
+
+          /* Improve ghost card visibility on mobile */
+          @media (max-width: 768px) {
+            .ghost-card {
+              opacity: 0.9 !important;
+              transform: scale(0.9) !important;
+              box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4) !important;
+              border: 2px solid #3b82f6 !important;
+            }
+          }
+
+          /* Add to the global styles */
+          .touch-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: rgba(59, 130, 246, 0.4);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.75s ease-out;
+            pointer-events: none;
+          }
+
+          @keyframes ripple {
+            to {
+              transform: scale(8);
+              opacity: 0;
+            }
+          }
         `}</style>
+
+        {/* Help button for mobile */}
+        {isMobile && (
+          <div className="fixed bottom-28 right-4 z-20">
+            <button
+              onClick={() => setShowDragInstructions(!showDragInstructions)}
+              className="p-3 rounded-full bg-blue-600 border border-blue-700 shadow-lg text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              aria-label="Help"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );
