@@ -17,12 +17,17 @@ import {
   PaintBucket,
   GripHorizontal,
   Move,
+  ArrowLeft,
+  Menu,
+  Columns,
 } from "lucide-react";
 import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Toast } from "../../components/Toast";
+import { useSwipeable } from "react-swipeable";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 // Available colors for status columns
 const STATUS_COLORS = [
@@ -94,6 +99,11 @@ export default function ApplicationsPage() {
   const [editedApplication, setEditedApplication] =
     useState<Application | null>(null);
 
+  // New mobile-specific state
+  const [activeColumnIndex, setActiveColumnIndex] = useState(0);
+  const [showingAllColumns, setShowingAllColumns] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
   // Refs for click outside detection
   const colorPickerRef = useRef<HTMLDivElement>(null);
   const statusMenuRef = useRef<HTMLDivElement>(null);
@@ -141,6 +151,38 @@ export default function ApplicationsPage() {
       setApplications(applicationsData);
     }
   }, [applicationsData]);
+
+  // Reset active column index when statuses change
+  useEffect(() => {
+    if (statuses && statuses.length > 0) {
+      setActiveColumnIndex((prev) => (prev >= statuses.length ? 0 : prev));
+    }
+  }, [statuses]);
+
+  // Swipe handlers for mobile column navigation
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (!isMobile || showingAllColumns) return;
+      setActiveColumnIndex((prev) => Math.min(prev + 1, statuses.length - 1));
+    },
+    onSwipedRight: () => {
+      if (!isMobile || showingAllColumns) return;
+      setActiveColumnIndex((prev) => Math.max(prev - 1, 0));
+    },
+    trackMouse: false,
+  });
+
+  // Function to navigate to a specific column by index
+  const navigateToColumn = (index: number) => {
+    if (index >= 0 && index < statuses.length) {
+      setActiveColumnIndex(index);
+    }
+  };
+
+  // Toggle between single column and all columns view on mobile
+  const toggleColumnsView = () => {
+    setShowingAllColumns(!showingAllColumns);
+  };
 
   // Horizontal scrolling functionality
   const scrollContainer = (direction: "left" | "right") => {
@@ -661,6 +703,46 @@ export default function ApplicationsPage() {
     }
   };
 
+  // Add click outside detection for mobile menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Close mobile menu when clicking outside
+      const actionsMenu = document.getElementById("mobile-actions-menu");
+      if (
+        actionsMenu &&
+        !actionsMenu.contains(target) &&
+        !target.closest('button[aria-controls="mobile-actions-menu"]')
+      ) {
+        actionsMenu.classList.add("hidden");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Add document listeners for closing menus on navigation
+  useEffect(() => {
+    const closeMenus = () => {
+      // Close mobile menus when navigating
+      const actionsMenu = document.getElementById("mobile-actions-menu");
+      const searchInput = document.getElementById("mobile-search");
+      if (actionsMenu) actionsMenu.classList.add("hidden");
+      if (searchInput) searchInput.classList.add("hidden");
+    };
+
+    // Listen for navigation events
+    window.addEventListener("popstate", closeMenus);
+
+    return () => {
+      window.removeEventListener("popstate", closeMenus);
+    };
+  }, []);
+
   // Loading state
   if (!user || statusesData === undefined || applicationsData === undefined) {
     return (
@@ -719,15 +801,35 @@ export default function ApplicationsPage() {
       <main className="relative z-10 max-w-full mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-3">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <h2 className="text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-gray-300 relative z-10">
-                Job Applications
-              </h2>
-              <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-blue-500/80 via-purple-500/60 to-indigo-500/40"></div>
+            {/* Back button and title */}
+            <div className="flex items-center">
+              <Link
+                href="/dashboard"
+                className="p-2 rounded-md text-gray-300 hover:bg-[#121a36] hover:text-white mr-2"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+              <div className="relative">
+                {isMobile && !showingAllColumns && statuses.length > 0 && (
+                  <div className="flex items-center space-x-1 mb-1 text-xs text-gray-400">
+                    <span>{activeColumnIndex + 1}</span>
+                    <span>/</span>
+                    <span>{statuses.length}</span>
+                  </div>
+                )}
+                <h2 className="text-lg md:text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-gray-300 relative z-10">
+                  {isMobile && !showingAllColumns && statuses.length > 0
+                    ? statuses.sort((a, b) => a.order - b.order)[
+                        activeColumnIndex
+                      ]?.name || "Applications"
+                    : "Job Applications"}
+                </h2>
+                <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-blue-500/80 via-purple-500/60 to-indigo-500/40"></div>
+              </div>
             </div>
 
-            {/* Search input */}
-            <div className="ml-4">
+            {/* Search input - only visible on larger screens */}
+            <div className="hidden md:block ml-4">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search className="h-4 w-4 text-gray-400" />
@@ -743,44 +845,159 @@ export default function ApplicationsPage() {
             </div>
           </div>
 
-          <div className="flex space-x-2 md:space-x-3">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
-            >
-              <ChevronLeft className="h-4 w-4 mr-2 text-blue-400" />
-              Dashboard
-            </Link>
-
+          {/* Mobile search icon and menu */}
+          <div className="flex items-center space-x-2">
+            {/* Search button for mobile */}
             <button
-              onClick={toggleReorderingMode}
-              className={`inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm ${
-                isReorderingColumns
-                  ? "border-blue-500 bg-blue-500/30 text-white"
-                  : "border-[#20253d]/50 text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70"
-              }`}
+              className="md:hidden p-2 rounded-md text-gray-300 hover:bg-[#121a36] hover:text-white"
+              onClick={() => {
+                // Implement search display toggle for mobile
+                const searchInput = document.getElementById("mobile-search");
+                if (searchInput) {
+                  searchInput.classList.toggle("hidden");
+                  if (!searchInput.classList.contains("hidden")) {
+                    setTimeout(() => {
+                      const input = searchInput.querySelector("input");
+                      if (input) input.focus();
+                    }, 100);
+                  }
+                }
+              }}
             >
-              <Move className="h-4 w-4 mr-2 text-blue-400" />
-              {isReorderingColumns ? "Done" : "Reorder"}
+              <Search className="h-5 w-5" />
             </button>
 
-            <button
-              onClick={() => setIsAddingStatus(true)}
-              className="add-status-trigger inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
-            >
-              <Plus className="h-4 w-4 mr-2 text-blue-400" />
-              <span className="hidden sm:inline">Add Status</span>
-              <span className="sm:hidden">Status</span>
-            </button>
+            {/* Desktop buttons */}
+            <div className="hidden md:flex space-x-2 md:space-x-3">
+              <button
+                onClick={toggleReorderingMode}
+                className={`inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm ${
+                  isReorderingColumns
+                    ? "border-blue-500 bg-blue-500/30 text-white"
+                    : "border-[#20253d]/50 text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70"
+                }`}
+              >
+                <Move className="h-4 w-4 mr-2 text-blue-400" />
+                {isReorderingColumns ? "Done" : "Reorder"}
+              </button>
 
-            <Link
-              href="/dashboard/applications/new"
-              className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
-            >
-              <Plus className="h-4 w-4 mr-2 text-blue-400" />
-              <span className="hidden sm:inline">New Application</span>
-              <span className="sm:hidden">New</span>
-            </Link>
+              <button
+                onClick={() => setIsAddingStatus(true)}
+                className="add-status-trigger inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
+              >
+                <Plus className="h-4 w-4 mr-2 text-blue-400" />
+                <span className="hidden sm:inline">Add Status</span>
+                <span className="sm:hidden">Status</span>
+              </button>
+
+              <Link
+                href="/dashboard/applications/new"
+                className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
+              >
+                <Plus className="h-4 w-4 mr-2 text-blue-400" />
+                <span className="hidden sm:inline">New Application</span>
+                <span className="sm:hidden">New</span>
+              </Link>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button
+                className="p-2 rounded-md text-gray-300 hover:bg-[#121a36] hover:text-white"
+                onClick={() => {
+                  // Toggle mobile menu dropdown
+                  const mobileMenu = document.getElementById(
+                    "mobile-actions-menu"
+                  );
+                  if (mobileMenu) {
+                    mobileMenu.classList.toggle("hidden");
+                  }
+                }}
+                aria-controls="mobile-actions-menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+
+              {/* Mobile menu dropdown */}
+              <div
+                id="mobile-actions-menu"
+                className="hidden absolute right-2 top-14 z-50 bg-[#121a36] border border-[#20253d] rounded-md shadow-lg overflow-hidden w-48"
+              >
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setIsAddingStatus(true);
+                      document
+                        .getElementById("mobile-actions-menu")
+                        ?.classList.add("hidden");
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#1a2545] hover:text-white flex items-center"
+                  >
+                    <Plus className="h-4 w-4 mr-3 text-blue-400" />
+                    Add Status
+                  </button>
+
+                  <Link
+                    href="/dashboard/applications/new"
+                    className="block px-4 py-2 text-sm text-gray-300 hover:bg-[#1a2545] hover:text-white flex items-center"
+                    onClick={() =>
+                      document
+                        .getElementById("mobile-actions-menu")
+                        ?.classList.add("hidden")
+                    }
+                  >
+                    <Plus className="h-4 w-4 mr-3 text-blue-400" />
+                    New Application
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      toggleReorderingMode();
+                      document
+                        .getElementById("mobile-actions-menu")
+                        ?.classList.add("hidden");
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#1a2545] hover:text-white flex items-center"
+                  >
+                    <Move className="h-4 w-4 mr-3 text-blue-400" />
+                    {isReorderingColumns
+                      ? "Done Reordering"
+                      : "Reorder Columns"}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      toggleColumnsView();
+                      document
+                        .getElementById("mobile-actions-menu")
+                        ?.classList.add("hidden");
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#1a2545] hover:text-white flex items-center"
+                  >
+                    <Columns className="h-4 w-4 mr-3 text-blue-400" />
+                    {showingAllColumns
+                      ? "Single Column View"
+                      : "All Columns View"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile search bar (hidden by default) */}
+        <div id="mobile-search" className="md:hidden mb-4 hidden">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-10 pr-3 py-2 border border-[#20253d]/50 rounded-md leading-5 bg-[#121a36]/50 text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              placeholder="Search applications..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
 
@@ -862,14 +1079,21 @@ export default function ApplicationsPage() {
 
         {/* Trello-like Board */}
         <div
+          {...swipeHandlers}
           id="board-container"
-          className="flex overflow-x-auto pb-4 space-x-3 md:space-x-4 hide-scrollbar"
+          className={`flex ${
+            !isMobile || showingAllColumns
+              ? "overflow-x-auto"
+              : "overflow-hidden"
+          } pb-4 space-x-3 md:space-x-4 ${
+            !isMobile || showingAllColumns ? "hide-scrollbar" : ""
+          } relative`}
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {/* Status Columns */}
           {statuses
             .sort((a, b) => a.order - b.order)
-            .map((status) => (
+            .map((status, index) => (
               <div
                 key={status._id}
                 data-status-id={status._id}
@@ -882,6 +1106,12 @@ export default function ApplicationsPage() {
                     ? dropZone.position === "before"
                       ? "drop-zone-left"
                       : "drop-zone-right"
+                    : ""
+                } ${
+                  isMobile && !showingAllColumns
+                    ? index === activeColumnIndex
+                      ? "block w-full transform-none"
+                      : "hidden"
                     : ""
                 }`}
                 draggable={isReorderingColumns}
@@ -1055,6 +1285,67 @@ export default function ApplicationsPage() {
               </div>
             ))}
         </div>
+
+        {/* Mobile Column Navigation Dots */}
+        {isMobile && !showingAllColumns && statuses.length > 0 && (
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
+            {statuses
+              .sort((a, b) => a.order - b.order)
+              .map((status, index) => (
+                <button
+                  key={status._id}
+                  onClick={() => navigateToColumn(index)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    index === activeColumnIndex
+                      ? `${status.color} w-4`
+                      : "bg-gray-600 hover:bg-gray-500"
+                  }`}
+                  aria-label={`Navigate to ${status.name}`}
+                />
+              ))}
+          </div>
+        )}
+
+        {/* Mobile Toggle View Button (Zoom in/out) */}
+        {isMobile && (
+          <div className="fixed bottom-16 right-4 z-20">
+            <button
+              onClick={toggleColumnsView}
+              className="p-3 rounded-full bg-[#121a36] border border-[#20253d] shadow-lg text-gray-200 hover:bg-[#192245] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              aria-label={showingAllColumns ? "Zoom In" : "Zoom Out"}
+            >
+              {showingAllColumns ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                </svg>
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Application Modal */}
         {selectedApplication && (
