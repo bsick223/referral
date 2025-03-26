@@ -151,4 +151,22 @@ export default defineSchema({
   })
     .index("by_user_id", ["userId"])
     .index("by_user_and_order", ["userId", "order"]),
+
+  // Achievements table to track user achievements
+  achievements: defineTable({
+    userId: v.string(),
+    category: v.string(), // e.g., "applications", "referrals", "interviews", etc.
+    tier: v.string(), // "bronze", "silver", "gold"
+    name: v.string(), // Name of the achievement
+    description: v.string(), // Description of the achievement
+    earnedAt: v.number(), // Timestamp when earned
+    progress: v.optional(v.number()), // Current progress toward the achievement (optional)
+    requirement: v.optional(v.number()), // Total required for achievement (optional)
+    icon: v.optional(v.string()), // Icon identifier (optional)
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_user_and_category", ["userId", "category"])
+    .index("by_user_and_tier", ["userId", "tier"]),
 });

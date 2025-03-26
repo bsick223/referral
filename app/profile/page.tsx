@@ -3,65 +3,94 @@
 import { useUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import React, { useEffect } from "react";
 import {
   ArrowLeft,
   Medal,
   Trophy,
   Award,
-  BarChart2,
   Users,
+  Calendar,
+  CheckCircle,
+  Shield,
+  Rocket,
   Star,
+  Link as LinkIcon,
+  MessageSquare,
+  Send,
+  UserCheck,
+  Zap,
+  RefreshCw,
+  Target,
+  Loader2,
 } from "lucide-react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
-// Function to generate achievements based on user data
-const generateAchievements = (
-  referrals: any[] = [],
-  companies: any[] = [],
-  successfulReferrals = 0
-) => [
-  {
-    id: 1,
-    title: "Referral Pioneer",
-    description: "Made your first referral",
-    icon: <Medal className="h-6 w-6 text-orange-400" />,
-    earned: referrals.length > 0,
-    date:
-      referrals.length > 0
-        ? new Date(
-            referrals[referrals.length - 1].createdAt
-          ).toLocaleDateString()
-        : null,
+// Map for achievement icons
+const achievementIcons: Record<string, React.ReactNode> = {
+  medal: <Medal className="h-6 w-6" />,
+  trophy: <Trophy className="h-6 w-6" />,
+  award: <Award className="h-6 w-6" />,
+  users: <Users className="h-6 w-6" />,
+  calendar: <Calendar className="h-6 w-6" />,
+  "check-circle": <CheckCircle className="h-6 w-6" />,
+  shield: <Shield className="h-6 w-6" />,
+  rocket: <Rocket className="h-6 w-6" />,
+  star: <Star className="h-6 w-6" />,
+  link: <LinkIcon className="h-6 w-6" />,
+  "message-square": <MessageSquare className="h-6 w-6" />,
+  send: <Send className="h-6 w-6" />,
+  "user-check": <UserCheck className="h-6 w-6" />,
+  zap: <Zap className="h-6 w-6" />,
+  "refresh-cw": <RefreshCw className="h-6 w-6" />,
+  target: <Target className="h-6 w-6" />,
+};
+
+// Map tier names to colors
+const tierColors: Record<
+  string,
+  { bgColor: string; textColor: string; borderColor: string }
+> = {
+  bronze: {
+    bgColor: "from-amber-700/20 to-amber-800/30",
+    textColor: "text-amber-400",
+    borderColor: "border-amber-700/40",
   },
-  {
-    id: 2,
-    title: "Network Builder",
-    description: "Referred 5 different people",
-    icon: <Users className="h-6 w-6 text-blue-400" />,
-    earned: referrals.length >= 5,
-    date:
-      referrals.length >= 5
-        ? new Date(referrals[4].createdAt).toLocaleDateString()
-        : null,
+  silver: {
+    bgColor: "from-slate-400/20 to-slate-500/30",
+    textColor: "text-slate-300",
+    borderColor: "border-slate-400/40",
   },
-  {
-    id: 3,
-    title: "Career Catalyst",
-    description: "Had 3 successful referrals",
-    icon: <Star className="h-6 w-6 text-yellow-400" />,
-    earned: successfulReferrals >= 3,
-    date: successfulReferrals >= 3 ? new Date().toLocaleDateString() : null,
+  gold: {
+    bgColor: "from-yellow-500/20 to-yellow-600/30",
+    textColor: "text-yellow-400",
+    borderColor: "border-yellow-500/40",
   },
-  {
-    id: 4,
-    title: "Industry Connector",
-    description: "Made referrals to 3 different companies",
-    icon: <Award className="h-6 w-6 text-purple-400" />,
-    earned: companies.length >= 3,
-    date: companies.length >= 3 ? new Date().toLocaleDateString() : null,
-  },
-];
+};
+
+// Map category names to readable titles
+const categoryTitles: Record<string, string> = {
+  applications: "Applications Sent",
+  referrals: "Referrals Received",
+  followups: "Follow-ups Completed",
+  interviews: "Interviews Secured",
+  offers: "Offers Received",
+  rejections: "Rejections Handled",
+};
+
+// Type for achievement
+interface Achievement {
+  id: string;
+  category: string;
+  tier: string;
+  name: string;
+  description: string;
+  icon: string;
+  earned: boolean;
+  progress: number;
+  requirement: number;
+}
 
 export default function ProfilePage() {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -71,10 +100,16 @@ export default function ProfilePage() {
     redirect("/");
   }
 
-  // Fetch user's referrals
+  // Fetch user's referrals and applications
   const referrals =
     useQuery(
       api.referrals.listByUser,
+      user?.id ? { userId: user.id } : "skip"
+    ) || [];
+
+  const applications =
+    useQuery(
+      api.applications.listByUser,
       user?.id ? { userId: user.id } : "skip"
     ) || [];
 
@@ -84,28 +119,26 @@ export default function ProfilePage() {
     user?.id ? { userId: user.id } : "skip"
   );
 
-  // Fetch referrals by company
+  // Fetch user's company data
   const companiesData = useQuery(
     api.referrals.getUserReferralsByCompany,
     user?.id ? { userId: user.id } : "skip"
   );
 
-  // Fetch successful referrals count
-  const successfulReferrals =
-    useQuery(
-      api.referrals.getSuccessfulReferralsCount,
-      user?.id ? { userId: user.id } : "skip"
-    ) || 0;
+  // Fetch leaderboard data
+  const leaderboardData = useQuery(api.referrals.getLeaderboard, {});
 
-  // Fetch user's applications
-  const applications =
+  // Fetch formatted achievements
+  const achievements =
     useQuery(
-      api.applications.listByUser,
+      api.achievements.getFormattedUserAchievements,
       user?.id ? { userId: user.id } : "skip"
     ) || [];
 
-  // Fetch leaderboard data
-  const leaderboardData = useQuery(api.referrals.getLeaderboard, {});
+  // Mutation to check and update achievements
+  const checkAchievements = useMutation(
+    api.achievements.checkAndUpdateAchievements
+  );
 
   // Calculate user's rank in leaderboard
   const leaderboardRank = leaderboardData
@@ -122,21 +155,32 @@ export default function ProfilePage() {
         )
       : 0;
 
-  // Generate achievements based on real data
-  const achievements = generateAchievements(
-    referrals,
-    companiesData?.companiesData || [],
-    successfulReferrals
-  );
-
   // Calculate metrics from real data
   const metrics = {
-    totalReferrals: analytics?.totalReferrals || 0,
-    successfulReferrals: successfulReferrals || 0,
+    totalReferrals: referrals.length || 0,
     totalApplications: applications.length || 0,
     totalCompanies: companiesData?.companiesData?.length || 0,
     leaderboardRank: leaderboardRank || 0,
   };
+
+  // Trigger achievement check when user data is loaded
+  useEffect(() => {
+    if (user?.id) {
+      checkAchievements({ userId: user.id });
+    }
+  }, [user?.id, checkAchievements]);
+
+  // Group achievements by category
+  const achievementsByCategory: Record<string, Achievement[]> = {};
+
+  achievements.forEach((achievement) => {
+    if (!achievementsByCategory[achievement.category]) {
+      achievementsByCategory[achievement.category] = [];
+    }
+    achievementsByCategory[achievement.category].push(
+      achievement as Achievement
+    );
+  });
 
   return (
     <div className="min-h-screen bg-[#090d1b] relative">
@@ -263,9 +307,8 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Achievements and Metrics */}
+          {/* Achievements Section */}
           <div className="lg:col-span-3">
-            {/* Achievements */}
             <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50">
               <div className="px-6 py-4 bg-[#0f1326]/70 border-b border-[#20253d]/50">
                 <h3 className="text-xl font-light text-white flex items-center">
@@ -273,47 +316,103 @@ export default function ProfilePage() {
                   Your Achievements
                 </h3>
                 <p className="text-gray-400 text-sm">
-                  Badges and recognitions you've earned
+                  Badges and recognitions as you progress through your job
+                  search journey
                 </p>
               </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {achievements.map((achievement) => (
-                    <div
-                      key={achievement.id}
-                      className={`p-4 rounded-lg border ${
-                        achievement.earned
-                          ? "bg-[#0f1326]/70 border-[#20253d]/50"
-                          : "bg-[#0f1326]/30 border-[#20253d]/30 opacity-60"
-                      }`}
-                    >
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0 mr-4">
-                          {achievement.icon}
-                        </div>
-                        <div>
-                          <h4 className="text-md font-medium text-white">
-                            {achievement.title}
-                          </h4>
-                          <p className="text-sm text-gray-400 mt-1">
-                            {achievement.description}
-                          </p>
-                          {achievement.earned && achievement.date && (
-                            <p className="text-xs text-gray-500 mt-2">
-                              Earned on {achievement.date}
-                            </p>
-                          )}
-                          {!achievement.earned && (
-                            <p className="text-xs text-gray-500 mt-2">
-                              Not yet earned
-                            </p>
-                          )}
-                        </div>
+
+              {achievements.length === 0 ? (
+                <div className="p-10 text-center">
+                  <Loader2 className="h-8 w-8 mx-auto text-gray-500 animate-spin mb-4" />
+                  <p className="text-gray-400">Loading your achievements...</p>
+                </div>
+              ) : (
+                <div className="p-6">
+                  {Object.entries(categoryTitles).map(([category, title]) => (
+                    <div key={category} className="mb-8 last:mb-0">
+                      <h4 className="text-lg font-medium text-white mb-3 pb-2 border-b border-[#20253d]/30">
+                        {title}
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {achievementsByCategory[category]?.map(
+                          (achievement: Achievement) => {
+                            const tierStyle = tierColors[achievement.tier];
+                            return (
+                              <div
+                                key={achievement.id}
+                                className={`p-4 rounded-lg relative border ${
+                                  achievement.earned
+                                    ? `bg-gradient-to-br ${tierStyle.bgColor} ${tierStyle.borderColor}`
+                                    : "bg-[#0f1326]/30 border-[#20253d]/30 opacity-60"
+                                } backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]`}
+                              >
+                                {achievement.earned && (
+                                  <div className="absolute top-0 right-0 transform translate-x-1/4 -translate a0y-1/4">
+                                    <div
+                                      className={`w-6 h-6 rounded-full ${tierStyle.bgColor} flex items-center justify-center border ${tierStyle.borderColor}`}
+                                    >
+                                      <CheckCircle className="w-4 h-4 text-white" />
+                                    </div>
+                                  </div>
+                                )}
+                                <div className="flex flex-col items-center text-center">
+                                  <div
+                                    className={`mb-3 p-3 rounded-full bg-[#0f1326]/70 ${
+                                      achievement.earned
+                                        ? tierStyle.textColor
+                                        : "text-gray-500"
+                                    }`}
+                                  >
+                                    {achievementIcons[achievement.icon]}
+                                  </div>
+                                  <h5
+                                    className={`text-md font-semibold mb-1 ${
+                                      achievement.earned
+                                        ? "text-white"
+                                        : "text-gray-400"
+                                    }`}
+                                  >
+                                    {achievement.name}
+                                  </h5>
+                                  <p className="text-sm text-gray-400 mb-3">
+                                    {achievement.description}
+                                  </p>
+                                  <div className="w-full bg-[#0f1326]/70 rounded-full h-2 mt-auto">
+                                    <div
+                                      className={`${
+                                        achievement.earned
+                                          ? achievement.tier === "bronze"
+                                            ? "bg-amber-500"
+                                            : achievement.tier === "silver"
+                                            ? "bg-slate-300"
+                                            : "bg-yellow-400"
+                                          : "bg-gray-600"
+                                      } 
+                                      h-2 rounded-full transition-all duration-500`}
+                                      style={{
+                                        width: `${Math.min(
+                                          100,
+                                          (achievement.progress /
+                                            achievement.requirement) *
+                                            100
+                                        )}%`,
+                                      }}
+                                    ></div>
+                                  </div>
+                                  <p className="text-xs text-gray-500 mt-2">
+                                    {achievement.progress} /{" "}
+                                    {achievement.requirement}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          }
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

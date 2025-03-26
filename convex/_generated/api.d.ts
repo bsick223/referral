@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as achievements from "../achievements.js";
 import type * as applicationStatuses from "../applicationStatuses.js";
 import type * as applications from "../applications.js";
 import type * as companies from "../companies.js";
@@ -37,6 +38,7 @@ import type * as videos from "../videos.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  achievements: typeof achievements;
   applicationStatuses: typeof applicationStatuses;
   applications: typeof applications;
   companies: typeof companies;
