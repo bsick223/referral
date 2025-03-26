@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "shepherd.js/dist/css/shepherd.css";
 import ClientWrapper from "@/components/ClientWrapper";
-import Header from "@/components/Header";
+import HeaderWrapper from "@/components/HeaderWrapper";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
@@ -38,7 +38,7 @@ export default function RootLayout({
         <SpeedInsights />
         <ClientWrapper>
           <ScrollToTop />
-          <Header />
+          <HeaderWrapper />
           <main>{children}</main>
           <Toaster position="bottom-center" />
         </ClientWrapper>
