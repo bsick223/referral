@@ -11,9 +11,12 @@ import {
   ChevronRight,
   LogOut,
   Settings,
+  Menu,
+  X,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import Image from "next/image";
+import { useState, useEffect } from "react";
 
 export default function DashboardLayout({
   children,
@@ -21,6 +24,24 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar when route changes on mobile
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
+  // Close sidebar when screen is resized above mobile breakpoint
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const navigation = [
     { name: "Home", href: "/dashboard", icon: Home },
@@ -45,7 +66,7 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="flex h-screen bg-[#090d1b]">
+    <div className="flex h-screen bg-[#090d1b] overflow-hidden">
       {/* Noise Overlay for entire layout */}
       <div
         className="fixed inset-0 opacity-[0.03] mix-blend-soft-light pointer-events-none z-0"
@@ -62,14 +83,49 @@ export default function DashboardLayout({
       <div className="fixed right-0 top-0 w-1/3 h-1/2 bg-blue-600/20 rounded-full opacity-20 blur-[100px] z-0"></div>
       <div className="fixed right-1/4 bottom-0 w-1/3 h-1/3 bg-indigo-600/20 rounded-full opacity-20 blur-[80px] z-0"></div>
 
-      {/* Sidebar */}
-      <div className="w-64 flex-shrink-0 h-full border-r border-[#20253d]/50 backdrop-blur-sm bg-[#0c1029]/70 relative z-10">
-        <div className="h-full flex flex-col justify-between py-6">
-          {/* Logo and site name */}
+      {/* Mobile Header with Logo and Menu Button */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#0c1029]/90 border-b border-[#20253d]/50 z-20 backdrop-blur-sm flex items-center justify-between px-4">
+        <Link href="/" className="flex items-center">
+          <div className="h-8 w-8 rounded-md bg-gradient-to-br from-orange-500 to-blue-600 flex items-center justify-center text-white font-bold">
+            RT
+          </div>
+          <div className="ml-2">
+            <h1 className="text-lg font-medium text-white">Vid2Sum</h1>
+          </div>
+        </Link>
+
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-2 rounded-md text-gray-300 hover:bg-[#121a36] hover:text-white"
+        >
+          {sidebarOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Menu className="h-6 w-6" />
+          )}
+        </button>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-10"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* Sidebar - hidden on mobile unless open, always visible on desktop */}
+      <div
+        className={`${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        } fixed md:static w-64 h-full border-r border-[#20253d]/50 backdrop-blur-sm bg-[#0c1029]/90 transition-transform duration-300 ease-in-out z-20 md:z-10 pt-16 md:pt-0`}
+      >
+        <div className="h-full flex flex-col justify-between py-6 overflow-y-auto">
+          {/* Logo and site name - hidden on mobile (shown in header instead) */}
           <div className="px-6">
             <Link
               href="/"
-              className="flex items-center hover:opacity-80 transition-opacity cursor-pointer"
+              className="hidden md:flex items-center hover:opacity-80 transition-opacity cursor-pointer"
             >
               <div className="flex-shrink-0">
                 {/* Replace with your logo */}
@@ -147,8 +203,8 @@ export default function DashboardLayout({
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Main content - add padding-top on mobile for header */}
+      <div className="flex-1 flex flex-col overflow-auto md:pt-0 pt-16">
         <main className="flex-1 relative">{children}</main>
       </div>
     </div>
