@@ -99,7 +99,7 @@ export default function DashboardHomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090d1b] relative overflow-x-hidden overflow-y-auto">
+    <div className="min-h-screen bg-[#090d1b] relative overflow-x-hidden md:overflow-hidden overflow-y-auto">
       {/* Help button to manually start tour */}
       <OnboardingButton startTour={startTour} />
 
@@ -302,7 +302,7 @@ export default function DashboardHomePage() {
           </div>
 
           <div className="space-y-3">
-            {recentActivity.map((activity) => (
+            {recentActivity.slice(0, 3).map((activity) => (
               <div
                 key={activity.id}
                 className="flex items-start p-3 rounded-md bg-[#0c1029]/50 hover:bg-[#0c1029]/70 transition-colors"

@@ -204,7 +204,7 @@ export default function DashboardLayout({
       </div>
 
       {/* Main content - add padding-top on mobile for header */}
-      <div className="flex-1 flex flex-col overflow-auto md:pt-0 pt-16">
+      <div className="flex-1 flex flex-col overflow-y-auto md:pt-0 pt-16">
         <main className="flex-1 relative">{children}</main>
       </div>
     </div>
