@@ -22,7 +22,7 @@ import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Toast } from "@/app/components/Toast";
+import { Toast } from "../../components/Toast";
 
 // Available colors for status columns
 const STATUS_COLORS = [
@@ -56,6 +56,11 @@ type Application = {
   dateApplied: string;
   notes?: string;
   userId: string;
+  location?: string;
+  salary?: string;
+  contactName?: string;
+  contactEmail?: string;
+  url?: string;
 };
 
 type ToastMessage = {
@@ -79,11 +84,17 @@ export default function ApplicationsPage() {
   const [draggedStatusId, setDraggedStatusId] =
     useState<Id<"applicationStatuses"> | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [selectedApplication, setSelectedApplication] =
+    useState<Application | null>(null);
+  const [isEditingApplication, setIsEditingApplication] = useState(false);
+  const [editedApplication, setEditedApplication] =
+    useState<Application | null>(null);
 
   // Refs for click outside detection
   const colorPickerRef = useRef<HTMLDivElement>(null);
   const statusMenuRef = useRef<HTMLDivElement>(null);
   const newStatusFormRef = useRef<HTMLDivElement>(null);
+  const applicationModalRef = useRef<HTMLDivElement>(null);
 
   // Get status data from Convex
   const statusesData = useQuery(api.applicationStatuses.listByUser, {
@@ -104,6 +115,7 @@ export default function ApplicationsPage() {
   const removeStatus = useMutation(api.applicationStatuses.remove);
   const reorderStatus = useMutation(api.applicationStatuses.reorder);
   const updateApplicationStatus = useMutation(api.applications.updateStatus);
+  const updateApplication = useMutation(api.applications.update);
 
   // Initialize default statuses for new users
   useEffect(() => {
@@ -377,13 +389,26 @@ export default function ApplicationsPage() {
       ) {
         setEditingStatusId(null);
       }
+
+      // Handle click outside application modal
+      if (
+        applicationModalRef.current &&
+        !applicationModalRef.current.contains(event.target as Node) &&
+        selectedApplication
+      ) {
+        // Only close if clicking on the overlay (not inside the modal)
+        const target = event.target as HTMLElement;
+        if (target.classList.contains("modal-overlay")) {
+          closeApplicationModal();
+        }
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [selectedApplication]);
 
   // Show color picker
   const showColorPicker = (
@@ -444,6 +469,75 @@ export default function ApplicationsPage() {
   // Toggle reordering mode
   const toggleReorderingMode = () => {
     setIsReorderingColumns((prev) => !prev);
+  };
+
+  // Function to handle opening the application modal
+  const openApplicationModal = (application: Application) => {
+    setSelectedApplication(application);
+    setEditedApplication({ ...application });
+    setIsEditingApplication(false);
+  };
+
+  // Function to close the application modal
+  const closeApplicationModal = () => {
+    setSelectedApplication(null);
+    setEditedApplication(null);
+    setIsEditingApplication(false);
+  };
+
+  // Function to toggle edit mode for application
+  const toggleEditApplication = () => {
+    setIsEditingApplication(!isEditingApplication);
+  };
+
+  // Function to handle input changes in the edit form
+  const handleApplicationInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    if (!editedApplication) return;
+
+    setEditedApplication({
+      ...editedApplication,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // Function to save edited application
+  const saveApplication = async () => {
+    if (!editedApplication) return;
+
+    try {
+      // Optimistically update UI
+      setApplications((apps) =>
+        apps.map((app) =>
+          app._id === editedApplication._id ? editedApplication : app
+        )
+      );
+
+      // Update in database
+      await updateApplication({
+        id: editedApplication._id,
+        companyName: editedApplication.companyName,
+        position: editedApplication.position,
+        dateApplied: editedApplication.dateApplied,
+        notes: editedApplication.notes,
+        location: editedApplication.location,
+        salary: editedApplication.salary,
+        contactName: editedApplication.contactName,
+        contactEmail: editedApplication.contactEmail,
+        url: editedApplication.url,
+      });
+
+      // Update selected application view
+      setSelectedApplication(editedApplication);
+      setIsEditingApplication(false);
+      showToast("success", "Application updated successfully");
+    } catch (error) {
+      console.error("Error updating application:", error);
+      showToast("error", "Failed to update application");
+    }
   };
 
   // Loading state
@@ -789,6 +883,7 @@ export default function ApplicationsPage() {
                         key={application._id}
                         draggable={!isReorderingColumns}
                         onDragStart={(e) => handleDragStart(e, application._id)}
+                        onClick={() => openApplicationModal(application)}
                         className="mb-2 p-3 bg-[#0c1029]/80 rounded-md border border-[#20253d]/50 cursor-pointer hover:shadow-md hover:border-[#20253d] transition-all duration-200"
                       >
                         <h4 className="text-sm font-medium text-gray-200">
@@ -813,6 +908,330 @@ export default function ApplicationsPage() {
               </div>
             ))}
         </div>
+
+        {/* Application Modal */}
+        {selectedApplication && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center modal-overlay">
+            <div
+              ref={applicationModalRef}
+              className="bg-[#121a36] border border-[#20253d] rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+            >
+              <div className="border-b border-[#20253d] px-6 py-4 flex justify-between items-center">
+                <h3 className="text-lg font-medium text-white">
+                  {isEditingApplication
+                    ? "Edit Application"
+                    : "Application Details"}
+                </h3>
+                <button
+                  onClick={closeApplicationModal}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-10rem)]">
+                {isEditingApplication ? (
+                  /* Edit Form */
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">
+                          Company
+                        </label>
+                        <input
+                          type="text"
+                          name="companyName"
+                          value={editedApplication?.companyName || ""}
+                          onChange={handleApplicationInputChange}
+                          className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">
+                          Position
+                        </label>
+                        <input
+                          type="text"
+                          name="position"
+                          value={editedApplication?.position || ""}
+                          onChange={handleApplicationInputChange}
+                          className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">
+                          Date Applied
+                        </label>
+                        <input
+                          type="date"
+                          name="dateApplied"
+                          value={editedApplication?.dateApplied || ""}
+                          onChange={handleApplicationInputChange}
+                          className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">
+                          Status
+                        </label>
+                        <select
+                          name="statusId"
+                          value={editedApplication?.statusId || ""}
+                          onChange={handleApplicationInputChange}
+                          className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                        >
+                          {statuses.map((status) => (
+                            <option key={status._id} value={status._id}>
+                              {status.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">
+                          Location
+                        </label>
+                        <input
+                          type="text"
+                          name="location"
+                          value={editedApplication?.location || ""}
+                          onChange={handleApplicationInputChange}
+                          className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">
+                          Salary
+                        </label>
+                        <input
+                          type="text"
+                          name="salary"
+                          value={editedApplication?.salary || ""}
+                          onChange={handleApplicationInputChange}
+                          className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">
+                          Contact Name
+                        </label>
+                        <input
+                          type="text"
+                          name="contactName"
+                          value={editedApplication?.contactName || ""}
+                          onChange={handleApplicationInputChange}
+                          className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">
+                          Contact Email
+                        </label>
+                        <input
+                          type="email"
+                          name="contactEmail"
+                          value={editedApplication?.contactEmail || ""}
+                          onChange={handleApplicationInputChange}
+                          className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-1">
+                        Job URL
+                      </label>
+                      <input
+                        type="url"
+                        name="url"
+                        value={editedApplication?.url || ""}
+                        onChange={handleApplicationInputChange}
+                        className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-1">
+                        Notes
+                      </label>
+                      <textarea
+                        name="notes"
+                        value={editedApplication?.notes || ""}
+                        onChange={handleApplicationInputChange}
+                        rows={4}
+                        className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  /* View Details */
+                  <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row justify-between">
+                      <div>
+                        <h4 className="text-xl font-medium text-white">
+                          {selectedApplication.position}
+                        </h4>
+                        <p className="text-lg text-orange-400">
+                          {selectedApplication.companyName}
+                        </p>
+                      </div>
+                      <div className="mt-2 md:mt-0">
+                        <div
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-opacity-20"
+                          style={{
+                            backgroundColor: `rgba${statuses
+                              .find(
+                                (s) => s._id === selectedApplication.statusId
+                              )
+                              ?.color.replace("bg-", "")
+                              .replace("-500", "")}`,
+                            color: statuses
+                              .find(
+                                (s) => s._id === selectedApplication.statusId
+                              )
+                              ?.color.replace("bg-", "text-"),
+                          }}
+                        >
+                          {
+                            statuses.find(
+                              (s) => s._id === selectedApplication.statusId
+                            )?.name
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[#20253d] pt-4">
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-400">
+                          Date Applied
+                        </h5>
+                        <p className="text-white">
+                          {selectedApplication.dateApplied}
+                        </p>
+                      </div>
+
+                      {selectedApplication.location && (
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-400">
+                            Location
+                          </h5>
+                          <p className="text-white">
+                            {selectedApplication.location}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedApplication.salary && (
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-400">
+                            Salary
+                          </h5>
+                          <p className="text-white">
+                            {selectedApplication.salary}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedApplication.contactName && (
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-400">
+                            Contact
+                          </h5>
+                          <p className="text-white">
+                            {selectedApplication.contactName}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedApplication.contactEmail && (
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-400">
+                            Contact Email
+                          </h5>
+                          <p className="text-white">
+                            {selectedApplication.contactEmail}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedApplication.url && (
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-400">
+                            Job URL
+                          </h5>
+                          <a
+                            href={selectedApplication.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 underline truncate block"
+                          >
+                            {selectedApplication.url}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedApplication.notes && (
+                      <div className="border-t border-[#20253d] pt-4">
+                        <h5 className="text-sm font-medium text-gray-400 mb-2">
+                          Notes
+                        </h5>
+                        <p className="text-white whitespace-pre-wrap">
+                          {selectedApplication.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-[#20253d] px-6 py-4 flex justify-end gap-3">
+                {isEditingApplication ? (
+                  <>
+                    <button
+                      onClick={() => setIsEditingApplication(false)}
+                      className="px-4 py-2 border border-[#20253d] text-gray-300 rounded hover:bg-[#0c1029]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={saveApplication}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Save Changes
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={closeApplicationModal}
+                      className="px-4 py-2 border border-[#20253d] text-gray-300 rounded hover:bg-[#0c1029]"
+                    >
+                      Close
+                    </button>
+                    <button
+                      onClick={toggleEditApplication}
+                      className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+                    >
+                      Edit Application
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Add custom CSS for hiding scrollbars */}
         <style jsx global>{`
