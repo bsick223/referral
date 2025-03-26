@@ -2024,7 +2024,7 @@ export default function ApplicationsPage() {
                           name="position"
                           value={editedApplication?.position || ""}
                           onChange={handleApplicationInputChange}
-                          className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                          className="w-full border border-[#20253d] rounded px-3 py-2 text-white"
                           required
                         />
                       </div>
@@ -2156,26 +2156,24 @@ export default function ApplicationsPage() {
                       </div>
                       <div className="mt-2 md:mt-0">
                         <div
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-opacity-20"
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                           style={{
-                            backgroundColor: `rgba${statuses
-                              .find(
-                                (s) => s._id === selectedApplication.statusId
-                              )
-                              ?.color.replace("bg-", "")
-                              .replace("-500", "")}`,
-                            color: statuses
-                              .find(
-                                (s) => s._id === selectedApplication.statusId
-                              )
-                              ?.color.replace("bg-", "text-"),
+                            backgroundColor: "rgba(0, 0, 0, 0.1)",
                           }}
                         >
-                          {
-                            statuses.find(
-                              (s) => s._id === selectedApplication.statusId
-                            )?.name
-                          }
+                          <span
+                            className={statuses
+                              .find(
+                                (s) => s._id === selectedApplication.statusId
+                              )
+                              ?.color.replace("bg-", "text-")}
+                          >
+                            {
+                              statuses.find(
+                                (s) => s._id === selectedApplication.statusId
+                              )?.name
+                            }
+                          </span>
                         </div>
                       </div>
                     </div>
