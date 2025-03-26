@@ -915,7 +915,7 @@ export default function ApplicationsPage() {
                 }}
                 aria-controls="mobile-actions-menu"
               >
-                <Menu className="h-5 w-5" />
+                <MoreVertical className="h-5 w-5" />
               </button>
 
               {/* Mobile menu dropdown */}
