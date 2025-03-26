@@ -19,7 +19,6 @@ export const ensureDefaultTemplate = mutation({
         content:
           "Hi [Name], I noticed you work at [Company]. I'm looking to explore opportunities there and would appreciate your insights. Would you be open to a quick chat?",
         isDefault: true,
-        tags: ["connection|0", "networking|1"],
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });

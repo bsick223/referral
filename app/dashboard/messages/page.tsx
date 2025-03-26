@@ -74,6 +74,7 @@ export default function MessagesPage() {
   const [draggedItemId, setDraggedItemId] = useState<Id<"messages"> | null>(
     null
   );
+  const [isReordering, setIsReordering] = useState(false);
 
   // Get messages for the current user
   const messages = useQuery(api.messages.listByUser, {
@@ -87,14 +88,49 @@ export default function MessagesPage() {
 
   // Update the orderedMessages state when messages are loaded or updated
   useEffect(() => {
-    if (messages && Array.isArray(messages)) {
+    if (messages && Array.isArray(messages) && !isReordering) {
       setOrderedMessages([...messages]);
     }
-  }, [messages]);
+  }, [messages, isReordering]);
+
+  // Add CSS for dragging
+  useEffect(() => {
+    // Add a style tag for the dragging effect
+    const styleTag = document.createElement("style");
+    styleTag.innerHTML = `
+      .dragging {
+        opacity: 0.5;
+        background-color: rgba(29, 36, 66, 0.3);
+        box-shadow: 0 0 15px rgba(249, 115, 22, 0.3);
+      }
+    `;
+    document.head.appendChild(styleTag);
+
+    // Return cleanup function
+    return () => {
+      // Check if the style tag still exists before removing
+      if (styleTag && document.head.contains(styleTag)) {
+        document.head.removeChild(styleTag);
+      }
+    };
+  }, []);
 
   // Drag and drop handlers
-  const handleDragStart = (messageId: Id<"messages">) => {
+  const handleDragStart = (e: React.DragEvent, messageId: Id<"messages">) => {
+    // Only allow dragging when the grip handle is clicked
+    const target = e.target as HTMLElement;
+    if (!target.closest('[data-drag-handle="true"]')) {
+      e.preventDefault();
+      return;
+    }
+
     setDraggedItemId(messageId);
+
+    // Add a class to the entire card for styling during drag
+    const messageElement = target.closest("li");
+    if (messageElement) {
+      messageElement.classList.add("dragging");
+    }
   };
 
   const handleDragOver = (e: React.DragEvent, targetId: Id<"messages">) => {
@@ -118,32 +154,52 @@ export default function MessagesPage() {
     }
   };
 
-  const handleDragEnd = async () => {
+  const handleDragEnd = async (e: React.DragEvent) => {
     if (draggedItemId) {
+      // Remove the dragging class
+      const messageElements = document.querySelectorAll("li.dragging");
+      messageElements.forEach((el) => {
+        el.classList.remove("dragging");
+      });
+
+      // Set reordering state to prevent flickering from useEffect
+      setIsReordering(true);
+
+      // Store the current order for optimistic UI
+      const newOrder = [...orderedMessages];
+
       // Save the new order to the database
       try {
         // Get the ordered IDs
-        const newOrderIds = orderedMessages.map((message, index) => ({
+        const newOrderIds = newOrder.map((message, index) => ({
           id: message._id,
           order: index,
         }));
 
         // Update each message with its new order
-        for (const item of newOrderIds) {
-          await updateMessage({
+        const updatePromises = newOrderIds.map((item) =>
+          updateMessage({
             id: item.id,
             order: item.order,
-          });
-        }
+          })
+        );
+
+        // Wait for all updates to complete
+        await Promise.all(updatePromises);
       } catch (error) {
         console.error("Error updating message order:", error);
         // Revert to original order on error
         if (messages) {
           setOrderedMessages([...messages]);
         }
+      } finally {
+        // Reset states
+        setDraggedItemId(null);
+        // Allow refreshes from the server again after a short delay
+        setTimeout(() => {
+          setIsReordering(false);
+        }, 300);
       }
-
-      setDraggedItemId(null);
     }
   };
 
@@ -695,12 +751,15 @@ export default function MessagesPage() {
                       ? "opacity-50 bg-[#1d2442]/30"
                       : ""
                   }`}
-                  draggable={true}
-                  onDragStart={() => handleDragStart(message._id)}
+                  onDragStart={(e) => handleDragStart(e, message._id)}
                   onDragOver={(e) => handleDragOver(e, message._id)}
                   onDragEnd={handleDragEnd}
                 >
-                  <div className="absolute top-6 left-2 cursor-move">
+                  <div
+                    className="absolute top-6 left-2 cursor-move"
+                    data-drag-handle="true"
+                    draggable={true}
+                  >
                     <GripVertical className="h-5 w-5 text-gray-500 hover:text-gray-300" />
                   </div>
                   <div className="flex items-center justify-between mb-2 pl-8">
