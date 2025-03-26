@@ -220,15 +220,6 @@ export default function ApplicationsPage() {
   const toggleColumnsView = () => {
     const newValue = !showingAllColumns;
     setShowingAllColumns(newValue);
-
-    // Show instructions when switching to all columns view on mobile
-    if (newValue && isMobile) {
-      setShowDragInstructions(true);
-      // Auto-hide after 8 seconds
-      setTimeout(() => {
-        setShowDragInstructions(false);
-      }, 8000);
-    }
   };
 
   // Horizontal scrolling functionality
@@ -1943,7 +1934,7 @@ export default function ApplicationsPage() {
         )}
 
         {/* Mobile drag instructions */}
-        {isMobile && showingAllColumns && (
+        {isMobile && showingAllColumns && showDragInstructions && (
           <div className="fixed bottom-32 left-1/2 transform -translate-x-1/2 z-20 bg-[#121a36] border border-[#20253d] rounded-md shadow-lg p-3 text-sm text-gray-200 max-w-xs text-center">
             <p>
               Touch and hold cards to drag them between columns or reorder them.
@@ -2484,11 +2475,11 @@ export default function ApplicationsPage() {
         `}</style>
 
         {/* Help button for mobile */}
-        {isMobile && (
+        {isMobile && showingAllColumns && (
           <div className="fixed bottom-28 right-4 z-20">
             <button
               onClick={() => setShowDragInstructions(!showDragInstructions)}
-              className="p-3 rounded-full bg-blue-600 border border-blue-700 shadow-lg text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              className="p-3 rounded-full bg-transparent text-gray-300 hover:bg-[#121a36]/50 focus:outline-none transition-all"
               aria-label="Help"
             >
               <svg
