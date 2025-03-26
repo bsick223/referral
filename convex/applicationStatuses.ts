@@ -84,7 +84,6 @@ export const update = mutation({
 export const remove = mutation({
   args: {
     id: v.id("applicationStatuses"),
-    fallbackStatusId: v.id("applicationStatuses"), // Status to move applications to
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db.get(args.id);
@@ -93,18 +92,15 @@ export const remove = mutation({
       throw new Error("Status not found");
     }
 
-    // First, update all applications with this status to the fallback status
+    // Get all applications with this status
     const applications = await ctx.db
       .query("applications")
       .withIndex("by_status_id", (q) => q.eq("statusId", args.id))
       .collect();
 
-    // Update each application to the fallback status
+    // Delete all applications in this status
     for (const app of applications) {
-      await ctx.db.patch(app._id, {
-        statusId: args.fallbackStatusId,
-        updatedAt: Date.now(),
-      });
+      await ctx.db.delete(app._id);
     }
 
     // Delete the status

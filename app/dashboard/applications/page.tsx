@@ -116,6 +116,7 @@ export default function ApplicationsPage() {
   const reorderStatus = useMutation(api.applicationStatuses.reorder);
   const updateApplicationStatus = useMutation(api.applications.updateStatus);
   const updateApplication = useMutation(api.applications.update);
+  const removeApplication = useMutation(api.applications.remove);
 
   // Initialize default statuses for new users
   useEffect(() => {
@@ -334,13 +335,35 @@ export default function ApplicationsPage() {
       try {
         await removeStatus({
           id: statusId,
-          fallbackStatusId: fallbackStatus._id,
         });
 
         showToast("success", "Status column deleted");
       } catch (error) {
         console.error("Error deleting status:", error);
         showToast("error", "Failed to delete status column");
+      }
+    }
+  };
+
+  // Function to handle deleting an application
+  const handleDeleteApplication = async (
+    e: React.MouseEvent,
+    applicationId: Id<"applications">
+  ) => {
+    e.stopPropagation(); // Prevent opening the application modal
+
+    if (confirm("Are you sure you want to delete this application?")) {
+      try {
+        await removeApplication({ id: applicationId });
+        showToast("success", "Application deleted");
+
+        // If the deleted application is currently selected in the modal, close the modal
+        if (selectedApplication && selectedApplication._id === applicationId) {
+          closeApplicationModal();
+        }
+      } catch (error) {
+        console.error("Error deleting application:", error);
+        showToast("error", "Failed to delete application");
       }
     }
   };
@@ -923,7 +946,7 @@ export default function ApplicationsPage() {
                         draggable={!isReorderingColumns}
                         onDragStart={(e) => handleDragStart(e, application._id)}
                         onClick={() => openApplicationModal(application)}
-                        className="mb-2 p-3 bg-[#0c1029]/80 rounded-md border border-[#20253d]/50 cursor-pointer hover:shadow-md hover:border-[#20253d] transition-all duration-200"
+                        className="mb-2 p-3 bg-[#0c1029]/80 rounded-md border border-[#20253d]/50 cursor-pointer hover:shadow-md hover:border-[#20253d] transition-all duration-200 relative group"
                       >
                         <h4 className="text-sm font-medium text-gray-200">
                           {application.position}
@@ -935,6 +958,15 @@ export default function ApplicationsPage() {
                           <span className="text-xs text-gray-500">
                             Applied: {application.dateApplied}
                           </span>
+                          <button
+                            onClick={(e) =>
+                              handleDeleteApplication(e, application._id)
+                            }
+                            className="p-1 text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete this application"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                         {application.notes && (
                           <p className="mt-2 text-xs text-gray-400 border-t border-[#20253d]/30 pt-2">
@@ -1260,6 +1292,14 @@ export default function ApplicationsPage() {
                       className="px-4 py-2 border border-[#20253d] text-gray-300 rounded hover:bg-[#0c1029]"
                     >
                       Close
+                    </button>
+                    <button
+                      onClick={(e) =>
+                        handleDeleteApplication(e, selectedApplication!._id)
+                      }
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      Delete
                     </button>
                     <button
                       onClick={toggleEditApplication}
