@@ -44,9 +44,15 @@ export default function DashboardPage() {
 
   // Function to get color based on referral count (0-5)
   const getReferralProgressColor = (count: number) => {
-    if (count >= 5) return "from-orange-500 via-green-500 to-blue-500";
-    if (count >= 3) return "from-orange-500 to-green-500";
-    return "from-orange-500 to-orange-400";
+    if (count >= 5) return "bg-blue-500";
+    if (count >= 3) return "bg-green-500";
+    return "bg-orange-500";
+  };
+
+  // Function to get glow effect for the progress bar when full
+  const getProgressBarGlow = (count: number) => {
+    if (count >= 5) return "shadow-[0_0_15px_rgba(59,130,246,1.0)] z-10";
+    return "";
   };
 
   // Function to get width percentage based on referral count (0-5)
@@ -412,9 +418,11 @@ export default function DashboardPage() {
                     </p>
                   )}
                   <div className="mt-4 pt-4 border-t border-[#20253d]/50 group-hover:border-[#20253d]/70 transition-colors duration-300 flex items-center">
-                    <div className="w-1/3 h-1.5 rounded-full bg-[#0c1029] overflow-hidden">
+                    <div className="w-1/3 h-1.5 rounded-full bg-[#0c1029] border border-[#20253d]/50 relative">
                       <div
-                        className={`h-full rounded-full bg-gradient-to-r ${getReferralProgressColor(
+                        className={`h-full rounded-full ${getReferralProgressColor(
+                          companyReferralMap.get(company._id) || 0
+                        )} ${getProgressBarGlow(
                           companyReferralMap.get(company._id) || 0
                         )}`}
                         style={{
