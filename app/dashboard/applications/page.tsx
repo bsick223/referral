@@ -716,8 +716,8 @@ export default function ApplicationsPage() {
       </div>
 
       {/* Main content */}
-      <main className="relative z-10 max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
+      <main className="relative z-10 max-w-full mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-3">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="relative">
               <h2 className="text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-gray-300 relative z-10">
@@ -743,10 +743,10 @@ export default function ApplicationsPage() {
             </div>
           </div>
 
-          <div className="flex space-x-3">
+          <div className="flex space-x-2 md:space-x-3">
             <Link
               href="/dashboard"
-              className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
+              className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
             >
               <ChevronLeft className="h-4 w-4 mr-2 text-blue-400" />
               Dashboard
@@ -754,30 +754,32 @@ export default function ApplicationsPage() {
 
             <button
               onClick={toggleReorderingMode}
-              className={`inline-flex items-center px-4 py-2 border shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm ${
+              className={`inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm ${
                 isReorderingColumns
                   ? "border-blue-500 bg-blue-500/30 text-white"
                   : "border-[#20253d]/50 text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70"
               }`}
             >
               <Move className="h-4 w-4 mr-2 text-blue-400" />
-              {isReorderingColumns ? "Done Reordering" : "Reorder Columns"}
+              {isReorderingColumns ? "Done" : "Reorder"}
             </button>
 
             <button
               onClick={() => setIsAddingStatus(true)}
-              className="add-status-trigger inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
+              className="add-status-trigger inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
             >
               <Plus className="h-4 w-4 mr-2 text-blue-400" />
-              Add Status
+              <span className="hidden sm:inline">Add Status</span>
+              <span className="sm:hidden">Status</span>
             </button>
 
             <Link
               href="/dashboard/applications/new"
-              className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
+              className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
             >
               <Plus className="h-4 w-4 mr-2 text-blue-400" />
-              New Application
+              <span className="hidden sm:inline">New Application</span>
+              <span className="sm:hidden">New</span>
             </Link>
           </div>
         </div>
@@ -835,15 +837,15 @@ export default function ApplicationsPage() {
             <div className="flex items-center">
               <AlertCircle className="h-5 w-5 mr-2" />
               <p>
-                Drag and drop columns to reorder them. Click "Done Reordering"
-                when finished.
+                Drag and drop columns to reorder them. Click "Done" when
+                finished.
               </p>
             </div>
           </div>
         )}
 
         {/* Board controls - horizontal scroll buttons */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-2">
           <button
             className="p-2 rounded-full bg-[#121a36]/70 border border-[#20253d]/50 text-gray-300 hover:bg-[#121a36] focus:outline-none"
             onClick={() => scrollContainer("left")}
@@ -861,7 +863,7 @@ export default function ApplicationsPage() {
         {/* Trello-like Board */}
         <div
           id="board-container"
-          className="flex overflow-x-auto pb-6 space-x-4 hide-scrollbar"
+          className="flex overflow-x-auto pb-4 space-x-3 md:space-x-4 hide-scrollbar"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {/* Status Columns */}
@@ -871,7 +873,7 @@ export default function ApplicationsPage() {
               <div
                 key={status._id}
                 data-status-id={status._id}
-                className={`status-column flex-shrink-0 w-80 bg-[#121a36]/50 backdrop-blur-sm rounded-lg border overflow-hidden relative ${
+                className={`status-column flex-shrink-0 w-72 sm:w-76 md:w-80 bg-[#121a36]/50 backdrop-blur-sm rounded-lg border overflow-hidden relative ${
                   isReorderingColumns
                     ? "border-dashed border-[#20253d] cursor-move"
                     : "border-[#20253d]/50"
@@ -908,7 +910,7 @@ export default function ApplicationsPage() {
 
                 {/* Column Header */}
                 <div
-                  className={`px-4 py-3 ${status.color}/20 border-b border-[#20253d]/50 flex items-center justify-between relative`}
+                  className={`px-3 py-2.5 sm:px-4 sm:py-3 ${status.color}/20 border-b border-[#20253d]/50 flex items-center justify-between relative`}
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, status._id)}
                 >
@@ -1008,7 +1010,7 @@ export default function ApplicationsPage() {
 
                 {/* Cards */}
                 <div
-                  className="p-2 h-[calc(100vh-15rem)] overflow-y-auto"
+                  className="p-2 h-[calc(100vh-11rem)] sm:h-[calc(100vh-12rem)] md:h-[calc(100vh-13rem)] overflow-y-auto"
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, status._id)}
                 >
@@ -1043,7 +1045,7 @@ export default function ApplicationsPage() {
                           </button>
                         </div>
                         {application.notes && (
-                          <p className="mt-2 text-xs text-gray-400 border-t border-[#20253d]/30 pt-2">
+                          <p className="mt-2 text-xs text-gray-400 border-t border-[#20253d]/30 pt-2 line-clamp-2">
                             {application.notes}
                           </p>
                         )}
