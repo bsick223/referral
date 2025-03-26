@@ -400,8 +400,13 @@ export default function ProfilePage() {
                                     ></div>
                                   </div>
                                   <p className="text-xs text-gray-500 mt-2">
-                                    {achievement.progress} /{" "}
-                                    {achievement.requirement}
+                                    {achievement.earned ? (
+                                      <span className="text-xs opacity-70">
+                                        Completed
+                                      </span>
+                                    ) : (
+                                      `${achievement.progress} / ${achievement.requirement}`
+                                    )}
                                   </p>
                                 </div>
                               </div>
