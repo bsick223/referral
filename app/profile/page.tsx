@@ -15,48 +15,53 @@ import {
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
-// Mock achievements data (replace with actual data from Convex)
-const achievements = [
+// Function to generate achievements based on user data
+const generateAchievements = (
+  referrals: any[] = [],
+  companies: any[] = [],
+  successfulReferrals = 0
+) => [
   {
     id: 1,
     title: "Referral Pioneer",
     description: "Made your first referral",
     icon: <Medal className="h-6 w-6 text-orange-400" />,
-    earned: true,
-    date: "March 15, 2023",
+    earned: referrals.length > 0,
+    date:
+      referrals.length > 0
+        ? new Date(
+            referrals[referrals.length - 1].createdAt
+          ).toLocaleDateString()
+        : null,
   },
   {
     id: 2,
     title: "Network Builder",
     description: "Referred 5 different people",
     icon: <Users className="h-6 w-6 text-blue-400" />,
-    earned: true,
-    date: "April 2, 2023",
+    earned: referrals.length >= 5,
+    date:
+      referrals.length >= 5
+        ? new Date(referrals[4].createdAt).toLocaleDateString()
+        : null,
   },
   {
     id: 3,
     title: "Career Catalyst",
     description: "Had 3 successful referrals",
     icon: <Star className="h-6 w-6 text-yellow-400" />,
-    earned: false,
+    earned: successfulReferrals >= 3,
+    date: successfulReferrals >= 3 ? new Date().toLocaleDateString() : null,
   },
   {
     id: 4,
     title: "Industry Connector",
     description: "Made referrals to 3 different companies",
     icon: <Award className="h-6 w-6 text-purple-400" />,
-    earned: true,
-    date: "May 10, 2023",
+    earned: companies.length >= 3,
+    date: companies.length >= 3 ? new Date().toLocaleDateString() : null,
   },
 ];
-
-// Mock metrics data (replace with actual data from Convex)
-const metrics = {
-  totalReferrals: 12,
-  successfulReferrals: 3,
-  totalCompanies: 5,
-  leaderboardRank: 8,
-};
 
 export default function ProfilePage() {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -66,8 +71,72 @@ export default function ProfilePage() {
     redirect("/");
   }
 
-  // In the future, fetch actual user data from Convex
-  // const userData = useQuery(api.users.getUserProfile, { userId: user?.id });
+  // Fetch user's referrals
+  const referrals =
+    useQuery(
+      api.referrals.listByUser,
+      user?.id ? { userId: user.id } : "skip"
+    ) || [];
+
+  // Fetch analytics data
+  const analytics = useQuery(
+    api.referrals.getUserReferralAnalytics,
+    user?.id ? { userId: user.id } : "skip"
+  );
+
+  // Fetch referrals by company
+  const companiesData = useQuery(
+    api.referrals.getUserReferralsByCompany,
+    user?.id ? { userId: user.id } : "skip"
+  );
+
+  // Fetch successful referrals count
+  const successfulReferrals =
+    useQuery(
+      api.referrals.getSuccessfulReferralsCount,
+      user?.id ? { userId: user.id } : "skip"
+    ) || 0;
+
+  // Fetch user's applications
+  const applications =
+    useQuery(
+      api.applications.listByUser,
+      user?.id ? { userId: user.id } : "skip"
+    ) || [];
+
+  // Fetch leaderboard data
+  const leaderboardData = useQuery(api.referrals.getLeaderboard, {});
+
+  // Calculate user's rank in leaderboard
+  const leaderboardRank = leaderboardData
+    ? leaderboardData.findIndex((entry) => entry.userId === user?.id) + 1
+    : 0;
+
+  // Calculate percentile if there are enough users
+  const percentile =
+    leaderboardData && leaderboardData.length > 0
+      ? Math.round(
+          ((leaderboardData.length - leaderboardRank) /
+            leaderboardData.length) *
+            100
+        )
+      : 0;
+
+  // Generate achievements based on real data
+  const achievements = generateAchievements(
+    referrals,
+    companiesData?.companiesData || [],
+    successfulReferrals
+  );
+
+  // Calculate metrics from real data
+  const metrics = {
+    totalReferrals: analytics?.totalReferrals || 0,
+    successfulReferrals: successfulReferrals || 0,
+    totalApplications: applications.length || 0,
+    totalCompanies: companiesData?.companiesData?.length || 0,
+    leaderboardRank: leaderboardRank || 0,
+  };
 
   return (
     <div className="min-h-screen bg-[#090d1b] relative">
@@ -143,18 +212,16 @@ export default function ProfilePage() {
                     <div className="bg-[#0f1326]/70 rounded-lg p-3">
                       <p className="text-sm text-gray-400">Rank</p>
                       <p className="text-xl font-semibold text-white">
-                        #{metrics.leaderboardRank}
+                        #
+                        {metrics.leaderboardRank > 0
+                          ? metrics.leaderboardRank
+                          : "-"}
                       </p>
                     </div>
                     <div className="bg-[#0f1326]/70 rounded-lg p-3">
-                      <p className="text-sm text-gray-400">Success Rate</p>
+                      <p className="text-sm text-gray-400">Applications</p>
                       <p className="text-xl font-semibold text-white">
-                        {(
-                          (metrics.successfulReferrals /
-                            metrics.totalReferrals) *
-                          100
-                        ).toFixed(0)}
-                        %
+                        {metrics.totalApplications}
                       </p>
                     </div>
                     <div className="bg-[#0f1326]/70 rounded-lg p-3">
@@ -177,9 +244,14 @@ export default function ProfilePage() {
               <div className="bg-[#0f1326]/70 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <p className="text-3xl font-bold text-white">
-                    #{metrics.leaderboardRank}
+                    #
+                    {metrics.leaderboardRank > 0
+                      ? metrics.leaderboardRank
+                      : "-"}
                   </p>
-                  <p className="text-sm text-gray-400 mt-1">Top 10%</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    {percentile > 0 ? `Top ${percentile}%` : "Not ranked yet"}
+                  </p>
                 </div>
                 <Link
                   href="/leaderboard"
@@ -240,58 +312,6 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Referral Activity */}
-            <div className="mt-6 bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50">
-              <div className="px-6 py-4 bg-[#0f1326]/70 border-b border-[#20253d]/50">
-                <h3 className="text-xl font-light text-white flex items-center">
-                  <BarChart2 className="h-5 w-5 mr-2 text-blue-400" />
-                  Referral Metrics
-                </h3>
-                <p className="text-gray-400 text-sm">
-                  Detailed statistics of your referral activity
-                </p>
-              </div>
-              <div className="p-6">
-                <div className="bg-[#0f1326]/70 rounded-lg p-5">
-                  <h4 className="text-md font-medium text-white mb-4">
-                    Referral Performance
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 bg-[#121a36]/50 rounded-lg">
-                      <p className="text-sm text-gray-400">Total Referrals</p>
-                      <p className="text-2xl font-semibold text-white">
-                        {metrics.totalReferrals}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-[#121a36]/50 rounded-lg">
-                      <p className="text-sm text-gray-400">Successful</p>
-                      <p className="text-2xl font-semibold text-white">
-                        {metrics.successfulReferrals}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-[#121a36]/50 rounded-lg">
-                      <p className="text-sm text-gray-400">Success Rate</p>
-                      <p className="text-2xl font-semibold text-white">
-                        {(
-                          (metrics.successfulReferrals /
-                            metrics.totalReferrals) *
-                          100
-                        ).toFixed(0)}
-                        %
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Future analytics visualizations would go here */}
-                <div className="mt-6 text-center">
-                  <p className="text-gray-400 text-sm">
-                    More detailed analytics coming soon!
-                  </p>
                 </div>
               </div>
             </div>

@@ -6,9 +6,10 @@ import Header from "./Header";
 export default function HeaderWrapper() {
   const pathname = usePathname();
   const isDashboard = pathname.includes("/dashboard");
+  const isProfile = pathname.includes("/profile");
 
-  // Only render the header if we're not in the dashboard
-  if (isDashboard) {
+  // Only render the header if we're not in the dashboard or profile page
+  if (isDashboard || isProfile) {
     return null;
   }
 
