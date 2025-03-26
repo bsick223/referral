@@ -12,14 +12,14 @@ export const ACHIEVEMENTS = {
     },
     silver: {
       name: "Go-Getter",
-      description: "Applied to 10 jobs",
-      requirement: 10,
+      description: "Applied to 100 jobs",
+      requirement: 100,
       icon: "rocket",
     },
     gold: {
       name: "Application Champion",
-      description: "Applied to 50 jobs",
-      requirement: 50,
+      description: "Applied to 300 jobs",
+      requirement: 300,
       icon: "trophy",
     },
   },
@@ -43,26 +43,26 @@ export const ACHIEVEMENTS = {
       icon: "award",
     },
   },
-  followups: {
-    bronze: {
-      name: "Prompt Professional",
-      description: "Sent 1 follow-up email",
-      requirement: 1,
-      icon: "mail",
-    },
-    silver: {
-      name: "Diligent Diplomat",
-      description: "Sent follow-ups for 5 apps",
-      requirement: 5,
-      icon: "message-square",
-    },
-    gold: {
-      name: "Follow-Up Master",
-      description: "Sent follow-ups for 20 apps",
-      requirement: 20,
-      icon: "send",
-    },
-  },
+  // followups: {
+  //   bronze: {
+  //     name: "Prompt Professional",
+  //     description: "Sent 1 follow-up email",
+  //     requirement: 1,
+  //     icon: "mail",
+  //   },
+  //   silver: {
+  //     name: "Diligent Diplomat",
+  //     description: "Sent follow-ups for 5 apps",
+  //     requirement: 5,
+  //     icon: "message-square",
+  //   },
+  //   gold: {
+  //     name: "Follow-Up Master",
+  //     description: "Sent follow-ups for 20 apps",
+  //     requirement: 20,
+  //     icon: "send",
+  //   },
+  // },
   interviews: {
     bronze: {
       name: "Foot in the Door",
@@ -137,7 +137,6 @@ type CategoryProgress = {
 type ProgressData = {
   applications: CategoryProgress;
   referrals: CategoryProgress;
-  followups: CategoryProgress;
   interviews: CategoryProgress;
   offers: CategoryProgress;
   rejections: CategoryProgress;
@@ -199,24 +198,6 @@ async function calculateUserAchievementProgress(
       bronze: referrals.length >= ACHIEVEMENTS.referrals.bronze.requirement,
       silver: referrals.length >= ACHIEVEMENTS.referrals.silver.requirement,
       gold: referrals.length >= ACHIEVEMENTS.referrals.gold.requirement,
-    },
-    followups: {
-      // Simplified approach - count followup notes in applications
-      count: applications.filter((app: any) =>
-        app.notes?.toLowerCase().includes("follow")
-      ).length,
-      bronze:
-        applications.filter((app: any) =>
-          app.notes?.toLowerCase().includes("follow")
-        ).length >= ACHIEVEMENTS.followups.bronze.requirement,
-      silver:
-        applications.filter((app: any) =>
-          app.notes?.toLowerCase().includes("follow")
-        ).length >= ACHIEVEMENTS.followups.silver.requirement,
-      gold:
-        applications.filter((app: any) =>
-          app.notes?.toLowerCase().includes("follow")
-        ).length >= ACHIEVEMENTS.followups.gold.requirement,
     },
     interviews: {
       // Simplified - count applications in "interview" status
@@ -349,7 +330,10 @@ export const getFormattedUserAchievements = query({
     const progress = await calculateUserAchievementProgress(ctx, userId);
 
     // Format achievements for display
-    const categories = Object.keys(ACHIEVEMENTS);
+    // Filter out the followups category
+    const categories = Object.keys(ACHIEVEMENTS).filter(
+      (category) => category !== "followups"
+    );
     const formattedAchievements = [];
 
     for (const category of categories) {
