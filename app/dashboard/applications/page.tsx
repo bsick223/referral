@@ -1398,6 +1398,32 @@ export default function ApplicationsPage() {
             scrollbar-width: none;
           }
 
+          /* Vertical scrollbar styling */
+          ::-webkit-scrollbar {
+            width: 8px;
+          }
+
+          ::-webkit-scrollbar-track {
+            background-color: #0c1029;
+            border-radius: 8px;
+          }
+
+          ::-webkit-scrollbar-thumb {
+            background-color: #20253d;
+            border-radius: 8px;
+            border: 1px solid #121a36;
+          }
+
+          ::-webkit-scrollbar-thumb:hover {
+            background-color: #2a3152;
+          }
+
+          /* Firefox scrollbar */
+          * {
+            scrollbar-width: thin;
+            scrollbar-color: #20253d #0c1029;
+          }
+
           /* Drop zone indicators */
           .drop-indicator {
             position: absolute;
