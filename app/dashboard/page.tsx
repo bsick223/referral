@@ -74,7 +74,7 @@ export default function DashboardPage() {
     styleTag.innerHTML = `
       .search-container {
         overflow: hidden;
-        transition: width 0.3s ease;
+        transition: all 0.3s ease;
       }
       
       .search-input {
@@ -82,6 +82,10 @@ export default function DashboardPage() {
         padding: 0;
         opacity: 0;
         transition: all 0.3s ease;
+      }
+      
+      .search-expanded {
+        border: 1px solid rgba(32, 37, 61, 0.5);
       }
       
       .search-expanded .search-input {
@@ -173,8 +177,10 @@ export default function DashboardPage() {
 
             {/* Search container */}
             <div
-              className={`search-container flex items-center border border-[#20253d]/50 rounded-md bg-[#121a36]/50 hover:bg-[#121a36]/70 backdrop-blur-sm ml-2 relative ${
-                isSearchExpanded ? "search-expanded" : "w-9"
+              className={`search-container flex items-center rounded-md bg-transparent hover:bg-[#121a36]/30 backdrop-blur-sm ml-2 relative ${
+                isSearchExpanded
+                  ? "search-expanded bg-[#121a36]/50 w-auto"
+                  : "w-9"
               }`}
               ref={searchInputRef}
             >
