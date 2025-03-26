@@ -113,4 +113,40 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user_id", ["userId"]),
+
+  // Applications table to store job applications
+  applications: defineTable({
+    userId: v.string(),
+    companyName: v.string(),
+    companyId: v.optional(v.id("companies")),
+    position: v.string(),
+    statusId: v.id("applicationStatuses"),
+    dateApplied: v.string(),
+    notes: v.optional(v.string()),
+    salary: v.optional(v.string()),
+    location: v.optional(v.string()),
+    url: v.optional(v.string()),
+    contactName: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_company_id", ["companyId"])
+    .index("by_status_id", ["statusId"])
+    .index("by_created_at", ["createdAt"])
+    .index("by_user_and_status", ["userId", "statusId"]),
+
+  // Application statuses table to store custom status columns
+  applicationStatuses: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    color: v.string(),
+    order: v.number(), // for sorting the columns in UI
+    isDefault: v.optional(v.boolean()), // to mark default statuses
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_user_and_order", ["userId", "order"]),
 });
