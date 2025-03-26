@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import {
-  Building,
   ArrowLeft,
   PlusCircle,
   User,
@@ -41,6 +40,17 @@ const TAG_COLORS = [
 interface Tag {
   name: string;
   color: number; // Index of the color in TAG_COLORS
+}
+
+// Define Referral interface
+interface Referral {
+  _id: Id<"referrals">;
+  name: string;
+  linkedinUrl?: string;
+  email?: string;
+  phoneNumber?: string;
+  notes?: string;
+  tags?: string[];
 }
 
 export default function CompanyDetailPage({
@@ -441,9 +451,9 @@ export default function CompanyDetailPage({
   }, [company, router]);
 
   // Function to organize referrals by tags
-  const organizeReferralsByTags = (referrals: any[]) => {
-    const taggedReferrals: Record<string, any[]> = {};
-    const untaggedReferrals: any[] = [];
+  const organizeReferralsByTags = (referrals: Referral[]) => {
+    const taggedReferrals: Record<string, Referral[]> = {};
+    const untaggedReferrals: Referral[] = [];
 
     // First pass: organize by tags
     referrals.forEach((referral) => {

@@ -154,7 +154,7 @@ export default function MessagesPage() {
     }
   };
 
-  const handleDragEnd = async (e: React.DragEvent) => {
+  const handleDragEnd = async () => {
     if (draggedItemId) {
       // Remove the dragging class
       const messageElements = document.querySelectorAll("li.dragging");

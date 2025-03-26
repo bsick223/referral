@@ -42,26 +42,6 @@ export default function DashboardPage() {
     });
   }
 
-  // Function to get color based on referral count (0-5)
-  const getReferralProgressColor = (count: number) => {
-    if (count >= 5) return "bg-blue-500";
-    if (count >= 3) return "bg-green-500";
-    return "bg-orange-500";
-  };
-
-  // Function to get glow effect for the progress bar when full
-  const getProgressBarGlow = (count: number) => {
-    if (count >= 5) return "shadow-[0_0_15px_rgba(59,130,246,1.0)] z-10";
-    return "";
-  };
-
-  // Function to get width percentage based on referral count (0-5)
-  const getReferralProgressWidth = (count: number) => {
-    // Cap at 5 referrals for 100% width
-    const percentage = Math.min((count / 5) * 100, 100);
-    return `${percentage}%`;
-  };
-
   // Initialize seed data
   const ensureDefaultTemplate = useMutation(
     api.seedMessages.ensureDefaultTemplate
@@ -355,7 +335,7 @@ export default function DashboardPage() {
               No matches found
             </h3>
             <p className="mt-1 text-sm text-gray-400">
-              No companies match your search query "{searchQuery}"
+              No companies match your search query &ldquo;{searchQuery}&rdquo;
             </p>
             <div className="mt-6">
               <button
