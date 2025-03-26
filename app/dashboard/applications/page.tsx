@@ -83,6 +83,10 @@ export default function ApplicationsPage() {
   const [isReorderingColumns, setIsReorderingColumns] = useState(false);
   const [draggedStatusId, setDraggedStatusId] =
     useState<Id<"applicationStatuses"> | null>(null);
+  const [dropZone, setDropZone] = useState<{
+    statusId: Id<"applicationStatuses">;
+    position: "before" | "after";
+  } | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [selectedApplication, setSelectedApplication] =
     useState<Application | null>(null);
@@ -216,31 +220,82 @@ export default function ApplicationsPage() {
       e.currentTarget.classList.remove("opacity-50");
     }
     setDraggedStatusId(null);
+    setDropZone(null);
   };
 
   const handleStatusDragOver = (e: React.DragEvent) => {
     if (!isReorderingColumns) return;
     e.preventDefault();
+
+    // Only proceed if we're dragging over a status column
+    if (!(e.currentTarget instanceof HTMLElement)) return;
+
+    const columnElement = e.currentTarget.closest(".status-column");
+    if (!columnElement) return;
+
+    const statusId = columnElement.getAttribute(
+      "data-status-id"
+    ) as Id<"applicationStatuses">;
+    if (!statusId || statusId === draggedStatusId) {
+      setDropZone(null);
+      return;
+    }
+
+    // Determine if we're on the left or right half of the column
+    const columnRect = columnElement.getBoundingClientRect();
+    const cursorX = e.clientX;
+    const columnCenterX = columnRect.left + columnRect.width / 2;
+
+    // Set the drop position based on cursor position
+    const position = cursorX < columnCenterX ? "before" : "after";
+    setDropZone({ statusId, position });
   };
 
-  const handleStatusDrop = async (
-    e: React.DragEvent,
-    targetStatusId: Id<"applicationStatuses">
-  ) => {
+  const clearAllDropZoneStyles = () => {
+    // Remove all drop zone indicators
+    document
+      .querySelectorAll(".drop-zone-left, .drop-zone-right")
+      .forEach((el) => {
+        el.classList.remove("drop-zone-left", "drop-zone-right");
+      });
+  };
+
+  const handleStatusDrop = async (e: React.DragEvent) => {
     if (!isReorderingColumns) return;
     e.preventDefault();
 
     const sourceStatusId = draggedStatusId;
-    if (!sourceStatusId || sourceStatusId === targetStatusId) return;
+    if (!sourceStatusId || !dropZone) {
+      clearAllDropZoneStyles();
+      setDropZone(null);
+      return;
+    }
 
+    const { statusId: targetStatusId, position } = dropZone;
     const sourceStatus = statuses.find((s) => s._id === sourceStatusId);
     const targetStatus = statuses.find((s) => s._id === targetStatusId);
 
-    if (!sourceStatus || !targetStatus) return;
+    if (!sourceStatus || !targetStatus) {
+      clearAllDropZoneStyles();
+      setDropZone(null);
+      return;
+    }
 
     try {
-      // Optimistically update UI
-      const newOrder = targetStatus.order;
+      // Calculate the new order based on drop position
+      let newOrder;
+
+      if (position === "before") {
+        newOrder = targetStatus.order;
+      } else {
+        // 'after'
+        newOrder = targetStatus.order + 1;
+      }
+
+      // If we're moving from left to right and dropping 'after', we need to adjust
+      if (sourceStatus.order < targetStatus.order && position === "after") {
+        newOrder--;
+      }
 
       // Create a new array with the reordered statuses
       const updatedStatuses = [...statuses];
@@ -269,6 +324,10 @@ export default function ApplicationsPage() {
       // Sort by new order
       updatedStatuses.sort((a, b) => a.order - b.order);
       setStatuses(updatedStatuses);
+
+      // Reset dropzone state
+      clearAllDropZoneStyles();
+      setDropZone(null);
 
       // Call Convex to update the order
       await reorderStatus({
@@ -811,16 +870,23 @@ export default function ApplicationsPage() {
             .map((status) => (
               <div
                 key={status._id}
-                className={`flex-shrink-0 w-80 bg-[#121a36]/50 backdrop-blur-sm rounded-lg border overflow-hidden ${
+                data-status-id={status._id}
+                className={`status-column flex-shrink-0 w-80 bg-[#121a36]/50 backdrop-blur-sm rounded-lg border overflow-hidden relative ${
                   isReorderingColumns
                     ? "border-dashed border-[#20253d] cursor-move"
                     : "border-[#20253d]/50"
+                } ${
+                  dropZone?.statusId === status._id
+                    ? dropZone.position === "before"
+                      ? "drop-zone-left"
+                      : "drop-zone-right"
+                    : ""
                 }`}
                 draggable={isReorderingColumns}
                 onDragStart={(e) => handleStatusDragStart(e, status._id)}
                 onDragEnd={handleStatusDragEnd}
                 onDragOver={handleStatusDragOver}
-                onDrop={(e) => handleStatusDrop(e, status._id)}
+                onDrop={handleStatusDrop}
                 onDragEnter={(e) => {
                   if (isReorderingColumns) {
                     e.currentTarget.classList.add("border-blue-500");
@@ -832,6 +898,14 @@ export default function ApplicationsPage() {
                   }
                 }}
               >
+                {/* Drop zone indicators that appear during drag */}
+                {isReorderingColumns && (
+                  <>
+                    <div className="drop-indicator drop-indicator-left"></div>
+                    <div className="drop-indicator drop-indicator-right"></div>
+                  </>
+                )}
+
                 {/* Column Header */}
                 <div
                   className={`px-4 py-3 ${status.color}/20 border-b border-[#20253d]/50 flex items-center justify-between relative`}
@@ -1322,6 +1396,57 @@ export default function ApplicationsPage() {
           .hide-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
+          }
+
+          /* Drop zone indicators */
+          .drop-indicator {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: transparent;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+          }
+
+          .drop-indicator-left {
+            left: 0;
+            border-radius: 4px 0 0 4px;
+          }
+
+          .drop-indicator-right {
+            right: 0;
+            border-radius: 0 4px 4px 0;
+          }
+
+          .drop-zone-left .drop-indicator-left {
+            background-color: rgba(59, 130, 246, 0.7);
+            box-shadow: -2px 0 8px rgba(59, 130, 246, 0.4);
+            opacity: 1;
+          }
+
+          .drop-zone-right .drop-indicator-right {
+            background-color: rgba(59, 130, 246, 0.7);
+            box-shadow: 2px 0 8px rgba(59, 130, 246, 0.4);
+            opacity: 1;
+          }
+
+          .status-column.drop-zone-left {
+            margin-left: 10px;
+            transform: translateX(-5px);
+            transition: transform 0.2s ease;
+          }
+
+          .status-column.drop-zone-right {
+            margin-right: 10px;
+            transform: translateX(5px);
+            transition: transform 0.2s ease;
+          }
+
+          /* Gap effect when dragging */
+          .status-column {
+            transition: margin 0.2s ease, transform 0.2s ease;
           }
         `}</style>
       </main>
