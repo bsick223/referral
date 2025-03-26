@@ -330,11 +330,7 @@ export default function ApplicationsPage() {
       return;
     }
 
-    if (
-      confirm(
-        "Are you sure you want to delete this status? All applications will be moved to another status."
-      )
-    ) {
+    if (confirm("Are you sure, this will delete all items in this column?")) {
       try {
         await removeStatus({
           id: statusId,
@@ -858,18 +854,16 @@ export default function ApplicationsPage() {
                       >
                         <X className="h-4 w-4" />
                       </button>
-                      {!status.isDefault && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteStatus(status._id);
-                          }}
-                          className="p-1 text-red-400 hover:text-red-300"
-                          title="Delete this status"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteStatus(status._id);
+                        }}
+                        className="p-1 text-red-400 hover:text-red-300"
+                        title="Delete this status"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   ) : (
                     <>
