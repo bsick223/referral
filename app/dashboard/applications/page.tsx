@@ -1885,12 +1885,8 @@ export default function ApplicationsPage() {
                           {application.companyName}
                         </p>
                         <div className="flex items-center justify-between mt-2">
-                          <span className="text-xs text-gray-500 group relative">
+                          <span className="text-xs text-gray-500">
                             {formatTimeElapsed(application.createdAt)} ago
-                            <span className="hidden group-hover:block absolute left-0 bottom-full mb-1 px-2 py-1 bg-[#0c1029] border border-[#20253d] rounded text-xs text-white whitespace-nowrap">
-                              Added:{" "}
-                              {new Date(application.createdAt).toLocaleString()}
-                            </span>
                           </span>
                           <button
                             onClick={(e) =>
@@ -2309,8 +2305,9 @@ export default function ApplicationsPage() {
                       onClick={(e) =>
                         handleDeleteApplication(e, selectedApplication!._id)
                       }
-                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center justify-center"
                     >
+                      <Trash2 className="h-5 w-5 mr-2" />
                       Delete
                     </button>
                     <button
