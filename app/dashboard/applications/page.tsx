@@ -508,6 +508,15 @@ export default function ApplicationsPage() {
   const saveApplication = async () => {
     if (!editedApplication) return;
 
+    // Validate required fields
+    if (
+      !editedApplication.companyName.trim() ||
+      !editedApplication.position.trim()
+    ) {
+      showToast("error", "Company and position are required fields");
+      return;
+    }
+
     try {
       // Optimistically update UI
       setApplications((apps) =>
@@ -521,6 +530,7 @@ export default function ApplicationsPage() {
         id: editedApplication._id,
         companyName: editedApplication.companyName,
         position: editedApplication.position,
+        statusId: editedApplication.statusId,
         dateApplied: editedApplication.dateApplied,
         notes: editedApplication.notes,
         location: editedApplication.location,
@@ -937,7 +947,7 @@ export default function ApplicationsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-400 mb-1">
-                          Company
+                          Company <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -945,11 +955,12 @@ export default function ApplicationsPage() {
                           value={editedApplication?.companyName || ""}
                           onChange={handleApplicationInputChange}
                           className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                          required
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-400 mb-1">
-                          Position
+                          Position <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -957,6 +968,7 @@ export default function ApplicationsPage() {
                           value={editedApplication?.position || ""}
                           onChange={handleApplicationInputChange}
                           className="w-full bg-[#0c1029] border border-[#20253d] rounded px-3 py-2 text-white"
+                          required
                         />
                       </div>
                     </div>
