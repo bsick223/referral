@@ -181,10 +181,14 @@ export default function ReferralsPage() {
         <div className="flex items-center gap-3">
           <div className="relative">
             <h2 className="text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300 relative z-10">
-              Referral Tracker
+              Companies & Referrals
             </h2>
             <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-orange-500/80 via-purple-500/60 to-blue-500/40"></div>
           </div>
+
+          <p className="text-xs text-gray-400 mt-1">
+            Click on a company to manage referrals
+          </p>
 
           {/* Search container */}
           <div
@@ -227,7 +231,7 @@ export default function ReferralsPage() {
             className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
           >
             <PlusCircle className="h-4 w-4 sm:mr-2 text-orange-400" />
-            <span className="hidden sm:inline">Add Company</span>
+            <span className="hidden sm:inline">Add New Company</span>
           </Link>
         </div>
       </div>
@@ -248,7 +252,7 @@ export default function ReferralsPage() {
               className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
             >
               <PlusCircle className="h-4 w-4 sm:mr-2 text-orange-400" />
-              <span className="hidden sm:inline">Add Company</span>
+              <span className="hidden sm:inline">Add New Company</span>
             </Link>
           </div>
         </div>

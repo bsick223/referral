@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
-  Building,
   Home,
   MessageSquare,
   Trophy,
@@ -32,7 +31,6 @@ export default function DashboardLayout({
     },
     { name: "Referrals", href: "/dashboard/referrals", icon: UsersRound },
     { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
-    { name: "Companies", href: "/dashboard/companies", icon: Building },
     { name: "Leaderboard", href: "/leaderboard", icon: Trophy },
   ];
 
@@ -148,7 +146,7 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto z-10 relative">{children}</main>
+        <main className="flex-1 relative">{children}</main>
       </div>
     </div>
   );

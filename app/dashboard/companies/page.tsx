@@ -102,7 +102,7 @@ export default function CompaniesPage() {
         <div className="flex items-center gap-3">
           <div className="relative">
             <h2 className="text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-gray-300 relative z-10">
-              Companies
+              Company Details
             </h2>
             <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-purple-500/80 via-indigo-500/60 to-blue-500/40"></div>
           </div>
