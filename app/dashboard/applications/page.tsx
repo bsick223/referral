@@ -858,6 +858,18 @@ export default function ApplicationsPage() {
                       >
                         <X className="h-4 w-4" />
                       </button>
+                      {!status.isDefault && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteStatus(status._id);
+                          }}
+                          className="p-1 text-red-400 hover:text-red-300"
+                          title="Delete this status"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <>
@@ -893,46 +905,13 @@ export default function ApplicationsPage() {
                               startEditingStatus(status);
                             }}
                             className="status-menu-trigger p-1 text-gray-400 hover:text-gray-200"
+                            title="Edit this status"
                           >
                             <MoreVertical className="h-4 w-4" />
                           </button>
                         )}
                       </div>
                     </>
-                  )}
-
-                  {/* Status menu */}
-                  {editingStatusId === status._id && (
-                    <div
-                      ref={statusMenuRef}
-                      className="absolute top-full right-0 mt-1 w-36 bg-[#0c1029] rounded-md shadow-lg border border-[#20253d]/70 z-20"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="py-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            startEditingStatus(status);
-                          }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-[#121a36] hover:text-white"
-                        >
-                          <Edit2 className="h-4 w-4 mr-2" />
-                          Edit
-                        </button>
-                        {!status.isDefault && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteStatus(status._id);
-                            }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-[#121a36] hover:text-red-300"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </button>
-                        )}
-                      </div>
-                    </div>
                   )}
                 </div>
 
