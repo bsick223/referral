@@ -19,6 +19,33 @@ export default function NewCompanyPage() {
     website: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [websiteError, setWebsiteError] = useState("");
+
+  // Function to validate URL format
+  const isValidUrl = (url: string): boolean => {
+    if (!url) return true; // Empty URLs are valid (optional field)
+
+    // Basic domain pattern - allows domains like google.com, sub.domain.co.uk, etc.
+    const domainPattern =
+      /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+
+    // Check if it already has http/https
+    if (url.match(/^https?:\/\//)) {
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    // Check if it's a valid domain pattern (for entries like google.com or www.example.com)
+    if (url.startsWith("www.")) {
+      return domainPattern.test(url.substring(4));
+    }
+
+    return domainPattern.test(url);
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -28,12 +55,33 @@ export default function NewCompanyPage() {
       ...prev,
       [name]: value,
     }));
+
+    // Clear website error when field is empty
+    if (name === "website") {
+      if (!value) {
+        setWebsiteError("");
+      } else if (!isValidUrl(value)) {
+        setWebsiteError(
+          "Please enter a valid website address (e.g., google.com)"
+        );
+      } else {
+        setWebsiteError("");
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!user) return;
+
+    // Validate website URL if provided
+    if (formData.website && !isValidUrl(formData.website)) {
+      setWebsiteError(
+        "Please enter a valid website address (e.g., google.com)"
+      );
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -148,15 +196,26 @@ export default function NewCompanyPage() {
                     name="website"
                     value={formData.website}
                     onChange={handleChange}
-                    className="block w-full sm:text-sm rounded-md px-3 py-2 
+                    className={`block w-full sm:text-sm rounded-md px-3 py-2 
                     bg-[#0c1029] border-[#20253d] text-gray-300
-                    focus:ring-blue-500 focus:border-blue-500"
+                    focus:ring-blue-500 focus:border-blue-500 ${
+                      websiteError ? "border-red-500" : ""
+                    }`}
                     placeholder="e.g. google.com"
                   />
-                  {/* <p className="mt-1 text-xs text-gray-400">
-                    Adding a website URL helps us automatically display the
-                    company logo.
-                  </p> */}
+                  {websiteError && (
+                    <p className="mt-1 text-xs text-red-500">{websiteError}</p>
+                  )}
+                  {!websiteError && formData.website && (
+                    <p className="mt-1 text-xs text-green-500">
+                      Will be saved as:{" "}
+                      {formData.website.match(/^https?:\/\//)
+                        ? formData.website
+                        : formData.website.startsWith("www.")
+                        ? `https://${formData.website}`
+                        : `https://${formData.website}`}
+                    </p>
+                  )}
                 </div>
               </div>
 
