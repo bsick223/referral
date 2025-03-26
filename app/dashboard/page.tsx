@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import {
   PlusCircle,
@@ -14,12 +14,19 @@ import {
   Users,
   Clock,
   ChevronRight,
+  Menu,
 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import useOnboardingTour from "../hooks/useOnboardingTour";
 import OnboardingButton from "../components/OnboardingButton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Mock application data (replace with actual data from Convex)
 const applicationStats = {
@@ -98,6 +105,40 @@ export default function DashboardHomePage() {
     );
   }
 
+  // Navigation links for both mobile dropdown and desktop
+  const navLinks = [
+    {
+      href: "/dashboard/applications",
+      label: "Applications",
+      icon: <ClipboardList className="h-4 w-4 mr-2 text-orange-400" />,
+      tourId: "applications",
+    },
+    {
+      href: "/dashboard/referrals",
+      label: "Referrals",
+      icon: <UsersRound className="h-4 w-4 mr-2 text-orange-400" />,
+      tourId: "referrals",
+    },
+    {
+      href: "/leaderboard",
+      label: "Leaderboard",
+      icon: <Trophy className="h-4 w-4 mr-2 text-orange-400" />,
+      tourId: "leaderboard",
+    },
+    {
+      href: "/dashboard/messages",
+      label: "Messages",
+      icon: <MessageSquare className="h-4 w-4 mr-2 text-orange-400" />,
+      tourId: "messages",
+    },
+    {
+      href: "/dashboard/companies/new",
+      label: "Add Company",
+      icon: <PlusCircle className="h-4 w-4 mr-2 text-orange-400" />,
+      tourId: "add-company",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-[#090d1b] relative overflow-x-hidden">
       {/* Help button to manually start tour */}
@@ -121,6 +162,7 @@ export default function DashboardHomePage() {
 
       {/* Main content */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Mobile-friendly header with navigation */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -131,47 +173,51 @@ export default function DashboardHomePage() {
             </div>
           </div>
 
-          <div className="flex space-x-3">
-            <Link
-              href="/dashboard/applications"
-              className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
-              data-tour="applications"
-            >
-              <ClipboardList className="h-4 w-4 sm:mr-2 text-orange-400" />
-              <span className="hidden sm:inline">Applications</span>
-            </Link>
-            <Link
-              href="/dashboard/referrals"
-              className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
-              data-tour="referrals"
-            >
-              <UsersRound className="h-4 w-4 sm:mr-2 text-orange-400" />
-              <span className="hidden sm:inline">Referrals</span>
-            </Link>
-            <Link
-              href="/leaderboard"
-              className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
-              data-tour="leaderboard"
-            >
-              <Trophy className="h-4 w-4 sm:mr-2 text-orange-400" />
-              <span className="hidden sm:inline">Leaderboard</span>
-            </Link>
-            <Link
-              href="/dashboard/messages"
-              className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
-              data-tour="messages"
-            >
-              <MessageSquare className="h-4 w-4 sm:mr-2 text-orange-400" />
-              <span className="hidden sm:inline">Messages</span>
-            </Link>
-            <Link
-              href="/dashboard/companies/new"
-              className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
-              data-tour="add-company"
-            >
-              <PlusCircle className="h-4 w-4 sm:mr-2 text-orange-400" />
-              <span className="hidden sm:inline">Add Company</span>
-            </Link>
+          {/* Mobile dropdown menu (visible on small screens) */}
+          <div className="block md:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="inline-flex items-center justify-center p-2 rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                <Menu className="h-6 w-6" aria-hidden="true" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="bg-[#121a36] border border-[#20253d]/50 text-gray-300 w-48"
+              >
+                {navLinks.map((link) => (
+                  <DropdownMenuItem
+                    key={link.href}
+                    asChild
+                    className="hover:bg-[#1a2545] hover:text-white focus:bg-[#1a2545] focus:text-white"
+                  >
+                    <Link
+                      href={link.href}
+                      className="flex items-center px-2 py-2 text-sm"
+                      data-tour={link.tourId}
+                    >
+                      {link.icon}
+                      {link.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Desktop navigation (hidden on mobile) */}
+          <div className="hidden md:flex space-x-3">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
+                data-tour={link.tourId}
+              >
+                {React.cloneElement(link.icon, {
+                  className: "h-4 w-4 sm:mr-2 text-orange-400",
+                })}
+                <span className="hidden sm:inline">{link.label}</span>
+              </Link>
+            ))}
           </div>
         </div>
 
