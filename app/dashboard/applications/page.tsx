@@ -1086,9 +1086,9 @@ export default function ApplicationsPage() {
               ? "overflow-x-auto"
               : "overflow-hidden"
           } pb-4 space-x-3 md:space-x-4 ${
-            !isMobile || showingAllColumns ? "hide-scrollbar" : ""
+            isMobile && !showingAllColumns ? "" : "custom-scrollbar"
           } relative`}
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          style={{ scrollbarWidth: "thin", msOverflowStyle: "auto" }}
         >
           {/* Status Columns */}
           {statuses
@@ -1681,14 +1681,36 @@ export default function ApplicationsPage() {
           </div>
         )}
 
-        {/* Add custom CSS for hiding scrollbars */}
+        {/* Add custom CSS for scrollbars */}
         <style jsx global>{`
+          /* Hide scrollbar for mobile view */
           .hide-scrollbar::-webkit-scrollbar {
             display: none;
           }
           .hide-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
+          }
+
+          /* Custom scrollbar for desktop */
+          .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            background-color: rgba(12, 16, 41, 0.3);
+          }
+
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background-color: rgba(12, 16, 41, 0.3);
+            border-radius: 8px;
+          }
+
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(32, 37, 61, 0.8);
+            border-radius: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+          }
+
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(59, 130, 246, 0.6);
           }
 
           /* Vertical scrollbar styling */
