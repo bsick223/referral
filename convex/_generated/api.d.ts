@@ -24,6 +24,7 @@ import type * as reviews from "../reviews.js";
 import type * as seedMessages from "../seedMessages.js";
 import type * as titles from "../titles.js";
 import type * as transcript from "../transcript.js";
+import type * as userActivity from "../userActivity.js";
 import type * as userProfiles from "../userProfiles.js";
 import type * as videos from "../videos.js";
 
@@ -47,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   seedMessages: typeof seedMessages;
   titles: typeof titles;
   transcript: typeof transcript;
+  userActivity: typeof userActivity;
   userProfiles: typeof userProfiles;
   videos: typeof videos;
 }>;

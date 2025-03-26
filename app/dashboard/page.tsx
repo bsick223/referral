@@ -22,41 +22,27 @@ import Link from "next/link";
 import useOnboardingTour from "../hooks/useOnboardingTour";
 import OnboardingButton from "../components/OnboardingButton";
 
-// Mock activity data (replace with actual data from Convex)
-const recentActivity = [
-  {
-    id: "1",
-    type: "application",
-    action: "Applied to",
-    company: "Tech Innovators",
-    position: "Frontend Developer",
-    date: "2 hours ago",
-  },
-  {
-    id: "2",
-    type: "referral",
-    action: "Referred",
-    company: "Global Systems",
-    candidate: "Emily Johnson",
-    date: "1 day ago",
-  },
-  {
-    id: "3",
-    type: "application",
-    action: "Interview scheduled with",
-    company: "Future Solutions",
-    position: "UX Designer",
-    date: "2 days ago",
-  },
-  {
-    id: "4",
-    type: "referral",
-    action: "Referral accepted by",
-    company: "Data Dynamics",
-    candidate: "Alex Smith",
-    date: "3 days ago",
-  },
-];
+// Define types for the activity data
+interface BaseActivity {
+  id: string;
+  type: string;
+  action: string;
+  company: string;
+  timestamp: number;
+  date: string;
+}
+
+interface ApplicationActivity extends BaseActivity {
+  type: "application";
+  position: string;
+}
+
+interface ReferralActivity extends BaseActivity {
+  type: "referral";
+  candidate: string;
+}
+
+type Activity = ApplicationActivity | ReferralActivity;
 
 export default function DashboardHomePage() {
   const { user } = useUser();
@@ -73,6 +59,12 @@ export default function DashboardHomePage() {
       userId: user?.id || "",
     }
   );
+
+  // Fetch recent activity
+  const recentActivity = useQuery(api.userActivity.getRecentActivity, {
+    userId: user?.id || "",
+    limit: 5, // Show only the most recent 5 activities
+  });
 
   // Fetch application stats
   const applicationStatusCounts = useQuery(api.applications.countByStatus, {
@@ -157,7 +149,8 @@ export default function DashboardHomePage() {
     referralCounts === undefined ||
     successfulReferralsCount === undefined ||
     applicationStatusCounts === undefined ||
-    applicationStatuses === undefined
+    applicationStatuses === undefined ||
+    recentActivity === undefined
   ) {
     return (
       <div className="min-h-screen bg-[#090d1b] flex items-center justify-center">
@@ -364,48 +357,63 @@ export default function DashboardHomePage() {
           </div>
 
           <div className="space-y-3">
-            {recentActivity.slice(0, 3).map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start p-3 rounded-md bg-[#0c1029]/50 hover:bg-[#0c1029]/70 transition-colors"
-              >
-                <div
-                  className={`rounded-full p-2 flex-shrink-0 mr-3 ${
-                    activity.type === "application"
-                      ? "bg-blue-500/20"
-                      : "bg-orange-500/20"
-                  }`}
-                >
-                  {activity.type === "application" ? (
-                    <Briefcase
-                      className="h-5 w-5 text-blue-400"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <Users
-                      className="h-5 w-5 text-orange-400"
-                      aria-hidden="true"
-                    />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-200">
-                    {activity.action}{" "}
-                    <span className="font-semibold text-white">
-                      {activity.company}
-                    </span>
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {activity.type === "application"
-                      ? `Position: ${activity.position}`
-                      : `Candidate: ${activity.candidate}`}
-                  </p>
-                </div>
-                <div className="flex-shrink-0 self-center">
-                  <p className="text-xs text-gray-500">{activity.date}</p>
-                </div>
+            {recentActivity.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-gray-400">No recent activity found</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Start by adding applications or referrals
+                </p>
               </div>
-            ))}
+            ) : (
+              (recentActivity as Activity[])
+                .slice(0, 3)
+                .map((activity: Activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-start p-3 rounded-md bg-[#0c1029]/50 hover:bg-[#0c1029]/70 transition-colors"
+                  >
+                    <div
+                      className={`rounded-full p-2 flex-shrink-0 mr-3 ${
+                        activity.type === "application"
+                          ? "bg-blue-500/20"
+                          : "bg-orange-500/20"
+                      }`}
+                    >
+                      {activity.type === "application" ? (
+                        <Briefcase
+                          className="h-5 w-5 text-blue-400"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <Users
+                          className="h-5 w-5 text-orange-400"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-200">
+                        {activity.action}{" "}
+                        <span className="font-semibold text-white">
+                          {activity.company}
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {activity.type === "application"
+                          ? `Position: ${
+                              (activity as ApplicationActivity).position
+                            }`
+                          : `Candidate: ${
+                              (activity as ReferralActivity).candidate
+                            }`}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0 self-center">
+                      <p className="text-xs text-gray-500">{activity.date}</p>
+                    </div>
+                  </div>
+                ))
+            )}
           </div>
 
           <div className="mt-4 text-center">
