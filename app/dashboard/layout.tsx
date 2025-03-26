@@ -194,9 +194,14 @@ export default function DashboardLayout({
             <div className="mt-4 flex items-center px-3 py-2">
               <UserButton afterSignOutUrl="/" />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-300">
-                  Your Account
-                </p>
+                <Link
+                  href="/profile"
+                  className="hover:text-orange-300 transition-colors"
+                >
+                  <p className="text-sm font-medium text-gray-300 hover:text-orange-300">
+                    Your Account
+                  </p>
+                </Link>
               </div>
             </div>
           </div>
