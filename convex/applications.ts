@@ -5,10 +5,27 @@ import { v } from "convex/values";
 export const listByUser = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const applications = await ctx.db
       .query("applications")
       .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
       .collect();
+
+    // Sort applications by orderIndex (if present) or by dateApplied (descending)
+    return applications.sort((a, b) => {
+      // If both have orderIndex, use that for sorting
+      if (a.orderIndex !== undefined && b.orderIndex !== undefined) {
+        return a.orderIndex - b.orderIndex;
+      }
+
+      // If only one has orderIndex, the one with orderIndex comes first
+      if (a.orderIndex !== undefined) return -1;
+      if (b.orderIndex !== undefined) return 1;
+
+      // If neither has orderIndex, sort by dateApplied (newest first)
+      return (
+        new Date(b.dateApplied).getTime() - new Date(a.dateApplied).getTime()
+      );
+    });
   },
 });
 
@@ -37,11 +54,33 @@ export const create = mutation({
     contactEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Get all applications in this status
+    const existingApps = await ctx.db
+      .query("applications")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("statusId"), args.statusId))
+      .collect();
+
+    // Increment order index for all existing applications in this status
+    const updatePromises = existingApps.map((app) => {
+      const currentOrderIndex = app.orderIndex ?? 0;
+      return ctx.db.patch(app._id, {
+        orderIndex: currentOrderIndex + 1,
+        updatedAt: Date.now(),
+      });
+    });
+
+    // Wait for all updates to complete
+    await Promise.all(updatePromises);
+
+    // Create the new application with orderIndex 0 (top position)
     const applicationId = await ctx.db.insert("applications", {
       ...args,
+      orderIndex: 0, // Place at the top
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
+
     return applicationId;
   },
 });
@@ -133,5 +172,33 @@ export const countByStatus = query({
     }, {} as Record<string, number>);
 
     return counts;
+  },
+});
+
+// Update application order (for drag and drop reordering within a column)
+export const updateOrder = mutation({
+  args: {
+    applicationIds: v.array(v.id("applications")),
+    orderIndices: v.array(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { applicationIds, orderIndices } = args;
+
+    if (applicationIds.length !== orderIndices.length) {
+      throw new Error(
+        "Application IDs and order indices must have the same length"
+      );
+    }
+
+    // Update each application with its new order index
+    const updatePromises = applicationIds.map((id, index) => {
+      return ctx.db.patch(id, {
+        orderIndex: orderIndices[index],
+        updatedAt: Date.now(),
+      });
+    });
+
+    await Promise.all(updatePromises);
+    return applicationIds;
   },
 });

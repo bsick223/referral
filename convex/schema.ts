@@ -128,6 +128,7 @@ export default defineSchema({
     url: v.optional(v.string()),
     contactName: v.optional(v.string()),
     contactEmail: v.optional(v.string()),
+    orderIndex: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
