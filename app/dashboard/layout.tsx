@@ -67,7 +67,10 @@ export default function DashboardLayout({
         <div className="h-full flex flex-col justify-between py-6">
           {/* Logo and site name */}
           <div className="px-6">
-            <div className="flex items-center">
+            <Link
+              href="/"
+              className="flex items-center hover:opacity-80 transition-opacity cursor-pointer"
+            >
               <div className="flex-shrink-0">
                 {/* Replace with your logo */}
                 <div className="h-10 w-10 rounded-md bg-gradient-to-br from-orange-500 to-blue-600 flex items-center justify-center text-white font-bold">
@@ -78,7 +81,7 @@ export default function DashboardLayout({
                 <h1 className="text-xl font-medium text-white">Vid2Sum</h1>
                 <p className="text-xs text-gray-400">Job & Referral Tracker</p>
               </div>
-            </div>
+            </Link>
 
             {/* Navigation */}
             <nav className="mt-8 space-y-1">
