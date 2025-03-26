@@ -101,14 +101,16 @@ export default function NewCompanyPage() {
     }
 
     try {
-      await createCompany({
+      const companyId = await createCompany({
         name: formData.name,
         description: formData.description || undefined,
         website: formattedWebsite || undefined,
         userId: user.id,
       });
 
-      router.push("/dashboard");
+      // Redirect to the new company page instead of the dashboard
+      router.push(`/dashboard/companies/${companyId}`);
+      
     } catch (error) {
       console.error("Error creating company:", error);
       setIsSubmitting(false);
@@ -137,13 +139,13 @@ export default function NewCompanyPage() {
       <header className="bg-[#121a36]/50 backdrop-blur-sm shadow border-b border-[#20253d]/50 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center">
           <Link
-            href="/dashboard"
+            href="/dashboard/referrals"
             className="inline-flex items-center mr-4 text-gray-300 hover:text-white cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="relative">
-            <Link href="/dashboard" className="relative">
+            <Link href="/dashboard/referrals" className="relative">
               <h1 className="text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300 relative z-10">
                 Add New Company
               </h1>
@@ -243,7 +245,7 @@ export default function NewCompanyPage() {
 
               <div className="flex justify-end">
                 <Link
-                  href="/dashboard"
+                  href="/dashboard/referrals"
                   className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3 cursor-pointer"
                 >
                   Cancel

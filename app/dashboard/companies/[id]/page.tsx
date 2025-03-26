@@ -446,7 +446,7 @@ export default function CompanyDetailPage({
     // Navigation logic - handle both cases:
     // 1. Company is null (doesn't exist or was deleted)
     if (company === null) {
-      router.push("/dashboard");
+      router.push("/dashboard/referrals");
     }
   }, [company, router]);
 
@@ -520,13 +520,13 @@ export default function CompanyDetailPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center">
             <Link
-              href="/dashboard"
+              href="/dashboard/referrals"
               className="inline-flex items-center mr-4 text-gray-300 hover:text-white cursor-pointer"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div className="flex items-center">
-              <Link href="/dashboard">
+              <Link href="/dashboard/referrals">
                 <h1 className="text-2xl font-light text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300 hover:opacity-80 cursor-pointer">
                   {company.name}
                 </h1>
