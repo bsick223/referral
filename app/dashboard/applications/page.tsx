@@ -357,7 +357,12 @@ export default function ApplicationsPage() {
   // Click outside handlers
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Close color picker when clicking outside
+      // Check if we're clicking on the color picker or one of its buttons
+      const isColorPickerClick =
+        colorPickerRef.current?.contains(event.target as Node) ||
+        (event.target as HTMLElement).closest(".color-picker-trigger");
+
+      // Close color picker when clicking outside (but not if clicking on its trigger)
       if (
         colorPickerRef.current &&
         !colorPickerRef.current.contains(event.target as Node)
@@ -369,14 +374,18 @@ export default function ApplicationsPage() {
           )
         ) {
           colorPickerRef.current.classList.add("hidden");
+          colorPickerRef.current.style.display = "none";
         }
       }
 
-      // Close new status form when clicking outside
+      // Close new status form when clicking outside, but not if clicking on color picker or its buttons
       if (
         newStatusFormRef.current &&
         !newStatusFormRef.current.contains(event.target as Node) &&
-        !(event.target as HTMLElement).classList.contains("add-status-trigger")
+        !(event.target as HTMLElement).classList.contains(
+          "add-status-trigger"
+        ) &&
+        !isColorPickerClick
       ) {
         setIsAddingStatus(false);
       }
@@ -413,7 +422,7 @@ export default function ApplicationsPage() {
   // Show color picker
   const showColorPicker = (
     e: React.MouseEvent,
-    statusId: Id<"applicationStatuses">
+    statusId: Id<"applicationStatuses"> | null
   ) => {
     e.stopPropagation();
     const colorPicker = colorPickerRef.current;
@@ -422,34 +431,59 @@ export default function ApplicationsPage() {
       const button = e.currentTarget;
       const rect = button.getBoundingClientRect();
 
+      // Position the color picker just below the button
+      colorPicker.style.position = "fixed";
       colorPicker.style.top = `${rect.bottom + window.scrollY + 5}px`;
       colorPicker.style.left = `${rect.left + window.scrollX}px`;
 
+      // Make sure it's visible by setting both display and removing hidden class
+      colorPicker.style.display = "block";
       colorPicker.classList.remove("hidden");
 
-      // Set the status ID on the color picker
-      colorPicker.dataset.statusId = statusId;
+      // Store which status we're editing in data attributes
+      if (statusId === null) {
+        // We're adding a new status
+        colorPicker.setAttribute("data-for-new", "true");
+        colorPicker.removeAttribute("data-for-edit");
+        colorPicker.removeAttribute("data-status-id");
+      } else if (statusId === editingStatusId) {
+        // We're editing a status
+        colorPicker.setAttribute("data-for-edit", "true");
+        colorPicker.removeAttribute("data-for-new");
+        colorPicker.setAttribute("data-status-id", statusId);
+      } else {
+        // Direct color change on a status
+        colorPicker.removeAttribute("data-for-new");
+        colorPicker.removeAttribute("data-for-edit");
+        colorPicker.setAttribute("data-status-id", statusId);
+      }
     }
   };
 
   // Select color from picker
   const selectColor = (color: string) => {
-    const statusId = colorPickerRef.current?.dataset.statusId as
-      | Id<"applicationStatuses">
-      | undefined;
+    const colorPicker = colorPickerRef.current;
+    if (!colorPicker) return;
 
-    if (statusId && statusId === editingStatusId) {
-      setEditingStatusColor(color);
-    } else if (!statusId) {
+    const forNewStatus = colorPicker.hasAttribute("data-for-new");
+    const forEditStatus = colorPicker.hasAttribute("data-for-edit");
+    const statusIdAttr = colorPicker.getAttribute("data-status-id");
+
+    if (forNewStatus) {
+      // For new status
       setNewStatusColor(color);
-    } else {
-      // Direct color update without editing mode
+    } else if (forEditStatus && statusIdAttr) {
+      // For editing existing status
+      setEditingStatusColor(color);
+    } else if (statusIdAttr) {
+      // Direct update without editing mode
+      const statusId = statusIdAttr as Id<"applicationStatuses">;
       updateStatus({ id: statusId, color });
     }
 
-    if (colorPickerRef.current) {
-      colorPickerRef.current.classList.add("hidden");
-    }
+    // Hide the color picker, but don't close the add status form
+    colorPicker.style.display = "none";
+    colorPicker.classList.add("hidden");
   };
 
   // Start editing a status
@@ -589,7 +623,8 @@ export default function ApplicationsPage() {
       {/* Color picker (floating) */}
       <div
         ref={colorPickerRef}
-        className="absolute hidden z-50 bg-[#0c1029] border border-[#20253d] rounded-md p-2 shadow-lg"
+        className="fixed hidden z-[100] bg-[#0c1029] border border-[#20253d] rounded-md p-2 shadow-xl"
+        style={{ display: "none" }}
       >
         <div className="grid grid-cols-5 gap-2">
           {STATUS_COLORS.map((color) => (
@@ -690,17 +725,13 @@ export default function ApplicationsPage() {
               />
 
               <button
-                onClick={(e) =>
-                  showColorPicker(e, "" as Id<"applicationStatuses">)
-                }
-                className="color-picker-trigger px-3 py-2 rounded-md border border-[#20253d]/50 focus:outline-none"
+                onClick={(e) => showColorPicker(e, null)}
+                className="color-picker-trigger px-3 py-2 rounded-md border border-[#20253d]/50 focus:outline-none flex items-center"
               >
-                <div className="flex items-center">
-                  <div
-                    className={`w-5 h-5 rounded-full ${newStatusColor} mr-2`}
-                  ></div>
-                  <PaintBucket className="h-4 w-4 text-gray-400" />
-                </div>
+                <div
+                  className={`w-5 h-5 rounded-full ${newStatusColor} mr-2`}
+                ></div>
+                <PaintBucket className="h-4 w-4 text-gray-400" />
               </button>
 
               <button
@@ -800,7 +831,7 @@ export default function ApplicationsPage() {
                       />
                       <button
                         onClick={(e) => showColorPicker(e, status._id)}
-                        className="color-picker-trigger p-1 rounded"
+                        className="color-picker-trigger p-1 rounded hover:bg-[#0c1029]/30"
                       >
                         <div
                           className={`w-4 h-4 rounded-full ${editingStatusColor}`}
@@ -826,7 +857,12 @@ export default function ApplicationsPage() {
                           <GripHorizontal className="h-4 w-4 mr-2 text-gray-400" />
                         )}
                         <div
-                          className={`h-3 w-3 rounded-full ${status.color} mr-2`}
+                          className={`h-3 w-3 rounded-full ${status.color} mr-2 cursor-pointer hover:ring-2 hover:ring-white/30`}
+                          onClick={(e) => {
+                            if (!isReorderingColumns) {
+                              showColorPicker(e, status._id);
+                            }
+                          }}
                         ></div>
                         <h3 className="font-medium text-gray-200">
                           {status.name}
