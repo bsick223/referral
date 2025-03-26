@@ -168,6 +168,61 @@ export default function DashboardPage() {
     }
   }, [user, ensureDefaultTemplate]);
 
+  // Now using a different approach for the glow
+  const renderProgressBar = (count: number) => {
+    const percentage = Math.min((count / 5) * 100, 100);
+    let color = "bg-orange-500";
+    let showGlow = false;
+
+    if (count >= 5) {
+      color = "bg-blue-500";
+      showGlow = true;
+    } else if (count >= 3) {
+      color = "bg-green-500";
+    }
+
+    return (
+      <div className="w-1/3 h-1.5 rounded-full bg-[#0c1029] border border-[#20253d]/50 relative">
+        <div
+          className={`h-full rounded-full ${color}`}
+          style={{
+            width: `${percentage}%`,
+            transition: "width 0.5s ease-in-out",
+          }}
+        ></div>
+        {showGlow && (
+          <div
+            className="absolute inset-0 rounded-full bg-blue-500 opacity-70 blur-sm"
+            style={{
+              width: `${percentage}%`,
+              animation: "glow 1.5s infinite alternate",
+            }}
+          ></div>
+        )}
+      </div>
+    );
+  };
+
+  // Add custom animation for the glow
+  useEffect(() => {
+    const styleTag = document.createElement("style");
+    styleTag.innerHTML = `
+      @keyframes glow {
+        from {
+          box-shadow: 0 0 5px rgba(59, 130, 246, 0.7);
+        }
+        to {
+          box-shadow: 0 0 20px rgba(59, 130, 246, 1.0);
+        }
+      }
+    `;
+    document.head.appendChild(styleTag);
+
+    return () => {
+      document.head.removeChild(styleTag);
+    };
+  }, []);
+
   // Loading state
   if (!user || companies === undefined || referralCounts === undefined) {
     return (
@@ -418,21 +473,9 @@ export default function DashboardPage() {
                     </p>
                   )}
                   <div className="mt-4 pt-4 border-t border-[#20253d]/50 group-hover:border-[#20253d]/70 transition-colors duration-300 flex items-center">
-                    <div className="w-1/3 h-1.5 rounded-full bg-[#0c1029] border border-[#20253d]/50 relative">
-                      <div
-                        className={`h-full rounded-full ${getReferralProgressColor(
-                          companyReferralMap.get(company._id) || 0
-                        )} ${getProgressBarGlow(
-                          companyReferralMap.get(company._id) || 0
-                        )}`}
-                        style={{
-                          width: getReferralProgressWidth(
-                            companyReferralMap.get(company._id) || 0
-                          ),
-                          transition: "width 0.5s ease-in-out",
-                        }}
-                      ></div>
-                    </div>
+                    {renderProgressBar(
+                      companyReferralMap.get(company._id) || 0
+                    )}
                   </div>
                 </div>
               </Link>

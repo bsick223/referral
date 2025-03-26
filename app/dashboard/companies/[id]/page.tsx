@@ -257,6 +257,41 @@ export default function CompanyDetailPage({
     }
   };
 
+  // Render referral progress bar with appropriate colors and glow
+  const renderReferralProgressBar = (count: number) => {
+    const percentage = Math.min((count / 5) * 100, 100);
+    let color = "bg-orange-500";
+    let showGlow = false;
+
+    if (count >= 5) {
+      color = "bg-blue-500";
+      showGlow = true;
+    } else if (count >= 3) {
+      color = "bg-green-500";
+    }
+
+    return (
+      <>
+        <div
+          className={`h-full rounded-full ${color}`}
+          style={{
+            width: `${percentage}%`,
+            transition: "width 0.5s ease-in-out",
+          }}
+        ></div>
+        {showGlow && (
+          <div
+            className="absolute inset-0 rounded-full bg-blue-500 opacity-70 blur-sm"
+            style={{
+              width: `${percentage}%`,
+              boxShadow: "0 0 15px rgba(59, 130, 246, 1.0)",
+            }}
+          ></div>
+        )}
+      </>
+    );
+  };
+
   const startEditingCompany = () => {
     if (company) {
       setCompanyFormData({
@@ -700,12 +735,19 @@ export default function CompanyDetailPage({
               </div>
               <div className="col-span-1">
                 <div className="bg-[#0c1029] p-4 rounded-md border border-[#20253d]/50 relative">
-                  <p className="text-sm text-gray-400">
-                    Added on: {new Date(company.createdAt).toLocaleDateString()}
-                  </p>
+                  <div className="flex flex-col items-end">
+                    <p className="text-sm text-gray-400 mb-2">
+                      Referrals: {referrals?.length || 0}/5
+                    </p>
+                    <div className="w-full h-1.5 rounded-full bg-[#090d1b] border border-[#20253d]/50 relative overflow-visible mb-4">
+                      {renderReferralProgressBar(referrals?.length || 0)}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end mt-2">
                   <button
                     onClick={startEditingCompany}
-                    className="absolute bottom-2 right-2 text-gray-400 hover:text-gray-300 transition p-1"
+                    className="text-gray-400 hover:text-gray-300 transition p-1"
                     title="Edit Company"
                   >
                     <Pencil className="h-4 w-4" />
