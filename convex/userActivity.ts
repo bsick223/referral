@@ -86,7 +86,7 @@ export const getRecentActivity = query({
     const referralActivities = referrals.map((ref) => {
       const action = ref.hasAskedForFinalReferral
         ? "Successfully referred at"
-        : "Referred";
+        : "Referral for";
       const companyName =
         companyMap.get(ref.companyId.toString()) || "Unknown Company";
 
