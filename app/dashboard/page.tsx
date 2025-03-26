@@ -22,14 +22,6 @@ import Link from "next/link";
 import useOnboardingTour from "../hooks/useOnboardingTour";
 import OnboardingButton from "../components/OnboardingButton";
 
-// Mock application data (replace with actual data from Convex)
-const applicationStats = {
-  total: 12,
-  active: 8,
-  interviews: 3,
-  offers: 1,
-};
-
 // Mock activity data (replace with actual data from Convex)
 const recentActivity = [
   {
@@ -74,6 +66,16 @@ export default function DashboardHomePage() {
     userId: user?.id || "",
   });
 
+  // Fetch application stats
+  const applicationStatusCounts = useQuery(api.applications.countByStatus, {
+    userId: user?.id || "",
+  });
+
+  // Fetch application statuses
+  const applicationStatuses = useQuery(api.applicationStatuses.listByUser, {
+    userId: user?.id || "",
+  });
+
   // Initialize the onboarding tour
   const { startTour } = useOnboardingTour({
     userId: user?.id || "",
@@ -90,8 +92,65 @@ export default function DashboardHomePage() {
   const pendingReferrals = 4;
   const successfulReferrals = 2;
 
+  // Calculate application stats from real data
+  const calculateApplicationStats = () => {
+    if (!applicationStatusCounts || !applicationStatuses) {
+      return {
+        total: 0,
+        active: 0,
+        interviews: 0,
+        offers: 0,
+      };
+    }
+
+    const total = Object.values(applicationStatusCounts).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+
+    // For active, get all applications that are not in rejected or offer status
+    const rejectedStatusId = applicationStatuses.find(
+      (status) => status.name === "Rejected"
+    )?._id;
+    const offerStatusId = applicationStatuses.find(
+      (status) => status.name === "Offer"
+    )?._id;
+
+    const active =
+      total -
+      ((rejectedStatusId ? applicationStatusCounts[rejectedStatusId] || 0 : 0) +
+        (offerStatusId ? applicationStatusCounts[offerStatusId] || 0 : 0));
+
+    // For interviews, sum applications in any status containing "interview"
+    const interviews = applicationStatuses
+      .filter((status) => status.name.toLowerCase().includes("interview"))
+      .reduce(
+        (sum, status) => sum + (applicationStatusCounts[status._id] || 0),
+        0
+      );
+
+    // For offers, get count of applications in "Offer" status
+    const offers = offerStatusId
+      ? applicationStatusCounts[offerStatusId] || 0
+      : 0;
+
+    return {
+      total,
+      active,
+      interviews,
+      offers,
+    };
+  };
+
+  const applicationStats = calculateApplicationStats();
+
   // Loading state
-  if (!user || referralCounts === undefined) {
+  if (
+    !user ||
+    referralCounts === undefined ||
+    applicationStatusCounts === undefined ||
+    applicationStatuses === undefined
+  ) {
     return (
       <div className="min-h-screen bg-[#090d1b] flex items-center justify-center">
         <RefreshCw className="h-10 w-10 text-orange-500 animate-spin" />

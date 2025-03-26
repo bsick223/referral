@@ -134,7 +134,7 @@ export default function DashboardLayout({
                 </div>
               </div>
               <div className="ml-3">
-                <h1 className="text-xl font-medium text-white">Vid2Sum</h1>
+                <h1 className="text-xl font-medium text-white">Referral Tracker</h1>
                 <p className="text-xs text-gray-400">Job & Referral Tracker</p>
               </div>
             </Link>
