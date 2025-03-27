@@ -23,6 +23,7 @@ import {
   RefreshCw,
   Target,
   Loader2,
+  Coffee,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -401,6 +402,28 @@ export default function ProfilePage() {
                 >
                   View Leaderboard
                 </Link>
+              </div>
+            </div>
+
+            {/* Buy Me a Coffee */}
+            <div className="mt-6 bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50 p-6">
+              <h3 className="text-md font-medium text-gray-300 mb-4 flex items-center">
+                <Coffee className="h-5 w-5 mr-2 text-amber-400" />
+                Support My Work
+              </h3>
+              <div className="bg-[#0f1326]/70 rounded-lg p-4">
+                <p className="text-sm text-gray-400 mb-3">
+                  If you find this tool helpful, consider buying me a coffee!
+                </p>
+                <a
+                  href="https://www.buymeacoffee.com/bsick"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-md flex items-center justify-center transition-colors"
+                >
+                  <Coffee className="h-4 w-4 mr-2" />
+                  Buy Me a Coffee
+                </a>
               </div>
             </div>
           </div>
