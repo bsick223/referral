@@ -161,3 +161,141 @@ export const getAll = query({
     return profileMap;
   },
 });
+
+// Update profile settings
+export const updateProfileSettings = mutation({
+  args: {
+    userId: v.string(),
+    professionalTitle: v.optional(v.string()),
+    location: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
+    linkedinUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { userId, professionalTitle, location, phoneNumber, linkedinUrl } =
+      args;
+
+    // Check if profile already exists
+    const existingProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+
+    if (existingProfile) {
+      // Update existing profile
+      await ctx.db.patch(existingProfile._id, {
+        professionalTitle,
+        location,
+        phoneNumber,
+        linkedinUrl,
+        updatedAt: Date.now(),
+      });
+      return existingProfile._id;
+    } else {
+      // Create new profile
+      const profileId = await ctx.db.insert("userProfiles", {
+        userId,
+        professionalTitle,
+        location,
+        phoneNumber,
+        linkedinUrl,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      return profileId;
+    }
+  },
+});
+
+// Update privacy settings
+export const updatePrivacySettings = mutation({
+  args: {
+    userId: v.string(),
+    hideFromLeaderboards: v.optional(v.boolean()),
+    profileVisibility: v.optional(v.string()),
+    showApplicationsCount: v.optional(v.boolean()),
+    showReferralsCount: v.optional(v.boolean()),
+    showCompaniesCount: v.optional(v.boolean()),
+    showAuraRank: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const {
+      userId,
+      hideFromLeaderboards,
+      profileVisibility,
+      showApplicationsCount,
+      showReferralsCount,
+      showCompaniesCount,
+      showAuraRank,
+    } = args;
+
+    // Check if profile already exists
+    const existingProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+
+    if (existingProfile) {
+      // Update existing profile
+      await ctx.db.patch(existingProfile._id, {
+        hideFromLeaderboards,
+        profileVisibility,
+        showApplicationsCount,
+        showReferralsCount,
+        showCompaniesCount,
+        showAuraRank,
+        updatedAt: Date.now(),
+      });
+      return existingProfile._id;
+    } else {
+      // Create new profile
+      const profileId = await ctx.db.insert("userProfiles", {
+        userId,
+        hideFromLeaderboards,
+        profileVisibility,
+        showApplicationsCount,
+        showReferralsCount,
+        showCompaniesCount,
+        showAuraRank,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      return profileId;
+    }
+  },
+});
+
+// Get user profile settings
+export const getProfileSettings = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .first();
+
+    if (!profile) {
+      return {
+        profileVisibility: "public",
+        hideFromLeaderboards: false,
+        showApplicationsCount: true,
+        showReferralsCount: true,
+        showCompaniesCount: true,
+        showAuraRank: true,
+      };
+    }
+
+    return {
+      professionalTitle: profile.professionalTitle || "",
+      location: profile.location || "",
+      phoneNumber: profile.phoneNumber || "",
+      linkedinUrl: profile.linkedinUrl || "",
+      profileVisibility: profile.profileVisibility || "public",
+      hideFromLeaderboards: profile.hideFromLeaderboards || false,
+      showApplicationsCount: profile.showApplicationsCount !== false, // default to true
+      showReferralsCount: profile.showReferralsCount !== false, // default to true
+      showCompaniesCount: profile.showCompaniesCount !== false, // default to true
+      showAuraRank: profile.showAuraRank !== false, // default to true
+    };
+  },
+});

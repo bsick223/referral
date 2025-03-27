@@ -45,6 +45,9 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
     LeaderboardEntry[]
   >([]);
 
+  // Fetch all user profiles to check privacy settings
+  const allUserProfiles = useQuery(api.userProfiles.getAll);
+
   // Fetch LinkedIn URLs
   const userProfiles = useQuery(
     api.userProfiles.getByUserIds,
@@ -60,55 +63,86 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
     [userProfiles]
   );
 
+  // Helper function to check if user has opted out of leaderboards
+  const hasOptedOutOfLeaderboards = useCallback(
+    (userId: string) => {
+      if (!allUserProfiles) return false;
+      return allUserProfiles[userId]?.hideFromLeaderboards === true;
+    },
+    [allUserProfiles]
+  );
+
   useEffect(() => {
     if (leaderboard !== undefined) {
+      console.log(
+        "Referrals: Starting leaderboard with",
+        leaderboard?.length || 0,
+        "entries"
+      );
       setIsLoaded(true);
 
-      // Fetch user profile information
-      const fetchUserProfiles = async () => {
-        try {
-          const userIds = leaderboard.map((entry) => entry.userId);
+      // No filtering for now, we'll handle privacy at the presentation layer
+      const filteredLeaderboard = leaderboard || [];
 
-          if (userIds.length === 0) return;
-
-          const response = await fetch("/api/users", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ userIds }),
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to fetch user profiles");
-          }
-
-          const { users } = await response.json();
-
-          // Combine leaderboard data with user profiles
-          const enrichedLeaderboard = leaderboard.map((entry) => ({
-            ...entry,
-            userInfo: users[entry.userId],
-            linkedinUrl: getLinkedinUrl(entry.userId),
-          }));
-
-          setLeaderboardWithProfiles(enrichedLeaderboard);
-        } catch (error) {
-          console.error("Error fetching user profiles:", error);
-
-          // Still include LinkedIn URLs even if other profile info fails
-          const fallbackLeaderboard = leaderboard.map((entry) => ({
-            ...entry,
-            linkedinUrl: getLinkedinUrl(entry.userId),
-          }));
-
-          setLeaderboardWithProfiles(fallbackLeaderboard);
-        }
-      };
-
-      fetchUserProfiles();
+      if (filteredLeaderboard.length > 0) {
+        // Fetch user profile information
+        fetchUserProfiles(filteredLeaderboard);
+      } else {
+        setLeaderboardWithProfiles([]);
+      }
     }
-  }, [leaderboard, userProfiles, getLinkedinUrl]);
+  }, [leaderboard]);
+
+  // Separate function to fetch user profiles
+  const fetchUserProfiles = async (leaderboardData: any[]) => {
+    try {
+      const userIds = leaderboardData.map((entry) => entry.userId);
+      console.log("Referrals: Fetching profiles for", userIds.length, "users");
+
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user profiles");
+      }
+
+      const { users } = await response.json();
+      console.log(
+        "Referrals: Received profiles for",
+        Object.keys(users).length,
+        "users"
+      );
+
+      // Combine leaderboard data with user profiles
+      const enrichedLeaderboard = leaderboardData.map((entry) => ({
+        ...entry,
+        userInfo: users[entry.userId],
+        linkedinUrl: userProfiles
+          ? userProfiles[entry.userId]?.linkedinUrl
+          : undefined,
+      }));
+
+      console.log("Referrals: Updated leaderboard with user details");
+      setLeaderboardWithProfiles(enrichedLeaderboard);
+    } catch (error) {
+      console.error("Error fetching user profiles:", error);
+
+      // Still include LinkedIn URLs even if other profile info fails
+      const fallbackLeaderboard = leaderboardData.map((entry) => ({
+        ...entry,
+        linkedinUrl: userProfiles
+          ? userProfiles[entry.userId]?.linkedinUrl
+          : undefined,
+      }));
+
+      setLeaderboardWithProfiles(fallbackLeaderboard);
+    }
+  };
 
   // Also let's add a console.log to help debug
   useEffect(() => {

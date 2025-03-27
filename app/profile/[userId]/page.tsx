@@ -23,6 +23,7 @@ import {
   RefreshCw,
   Target,
   Loader2,
+  EyeOff,
 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -103,6 +104,16 @@ export default function UserProfilePage() {
   if (isLoaded && !isSignedIn) {
     redirect("/");
   }
+
+  // Fetch user's profile for privacy settings
+  const userProfile = useQuery(
+    api.userProfiles.getByUserId,
+    userId ? { userId } : "skip"
+  );
+
+  // Check if profile is private and not the current user
+  const isPrivateProfile =
+    userProfile?.profileVisibility === "private" && user?.id !== userId;
 
   // Fetch the profile user info
   useEffect(() => {
@@ -308,226 +319,239 @@ export default function UserProfilePage() {
     );
   });
 
-  // Get user details from the userData object
+  // Get user's full name
   const userFullName = userData
-    ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || "User"
+    ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
     : "User";
 
   if (isLoading || !userData) {
     return (
-      <div className="relative min-h-screen bg-gradient-to-b from-[#0c1220] to-[#0c1220]">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-10 z-0"></div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 text-orange-500 animate-spin" />
-        </div>
+      <div className="min-h-screen bg-[#090d1b] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-[#0c1220] to-[#0c1220]">
-      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-10 z-0"></div>
-
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center mb-6">
-          <Link
-            href="/dashboard"
-            className="flex items-center text-gray-300 hover:text-white mr-4 transition-colors group"
-          >
-            <ArrowLeft className="h-5 w-5 mr-1 text-orange-400 group-hover:text-orange-300 transition-colors duration-300" />
-            <span>Back to Dashboard</span>
-          </Link>
-          <div className="relative">
-            <h1 className="text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300 relative z-10">
-              {userFullName}'s Profile & Achievements
-            </h1>
-            <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-orange-500/80 via-purple-500/60 to-blue-500/40"></div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* User Profile Card */}
-          <div className="lg:col-span-1">
-            <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50 p-6">
-              <div className="flex flex-col items-center">
-                {userData?.imageUrl ? (
-                  <Image
-                    src={userData.imageUrl}
-                    alt={userFullName}
-                    width={96}
-                    height={96}
-                    className="h-24 w-24 rounded-full border-2 border-orange-500/30 mb-4"
-                  />
-                ) : (
-                  <div className="h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center mb-4">
-                    <span className="text-2xl text-gray-300">
-                      {userData?.firstName?.charAt(0) || "U"}
-                    </span>
-                  </div>
-                )}
-                <h2 className="text-xl font-medium text-white">
-                  {userFullName}
-                </h2>
-                <div className="w-full h-[1px] my-4 bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
-
-                {/* Stats */}
-                <div className="w-full space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Aura Rank</span>
-                    <span className="text-orange-400 font-medium">
-                      #{auraLeaderboardRank} (Top {100 - percentile}%)
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Referrals Rank</span>
-                    <span className="text-purple-400 font-medium">
-                      #{referralsRank}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Applications Rank</span>
-                    <span className="text-blue-400 font-medium">
-                      #{applicationsRank}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Stats Summary Card */}
-            <div className="mt-6 bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50">
-              <div className="px-6 py-4 bg-[#0f1326]/70 border-b border-[#20253d]/50">
-                <h3 className="text-xl font-light text-white">Stats</h3>
-              </div>
-              <div className="p-6 grid grid-cols-2 gap-4">
-                <div className="bg-[#1d2442]/40 rounded-lg p-3">
-                  <p className="text-gray-400 text-sm">Referrals</p>
-                  <p className="text-lg font-bold text-white">
-                    {metrics.totalReferrals}
-                  </p>
-                </div>
-                <div className="bg-[#1d2442]/40 rounded-lg p-3">
-                  <p className="text-gray-400 text-sm">Applications</p>
-                  <p className="text-lg font-bold text-white">
-                    {metrics.totalApplications}
-                  </p>
-                </div>
-                <div className="bg-[#1d2442]/40 rounded-lg p-3">
-                  <p className="text-gray-400 text-sm">Companies</p>
-                  <p className="text-lg font-bold text-white">
-                    {metrics.totalCompanies}
-                  </p>
-                </div>
-                <div className="bg-[#1d2442]/40 rounded-lg p-3">
-                  <p className="text-gray-400 text-sm">Aura Rank</p>
-                  <p className="text-lg font-bold text-white">
-                    #{metrics.leaderboardRank}
-                  </p>
-                </div>
-              </div>
-            </div>
+    <div className="min-h-screen bg-[#090d1b]">
+      <div className="bg-gradient-to-b from-[#0f1326]/70 to-transparent">
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="mb-6">
+            <Link
+              href="/leaderboard"
+              className="text-gray-300 hover:text-blue-400 transition-colors flex items-center gap-2"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span className="font-medium">Back to Leaderboard</span>
+            </Link>
           </div>
 
-          {/* Achievements Section */}
-          <div className="lg:col-span-3">
-            <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50">
-              <div className="px-6 py-4 bg-[#0f1326]/70 border-b border-[#20253d]/50">
-                <h3 className="text-xl font-light text-white">Achievements</h3>
-              </div>
-              <div className="p-6">
-                {/* Render achievements grouped by category */}
-                {Object.entries(categoryTitles).map(([category, title]) => (
-                  <div key={category} className="mb-8 last:mb-0">
-                    <div className="relative mb-4">
-                      <h4 className="text-lg font-medium text-white">
-                        {title}
-                      </h4>
-                      <div className="absolute -bottom-1 left-0 h-[1px] w-16 bg-gradient-to-r from-orange-500/80 to-transparent"></div>
+          {isPrivateProfile ? (
+            <div className="flex flex-col items-center justify-center bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50 p-10 max-w-2xl mx-auto">
+              <EyeOff className="h-16 w-16 text-gray-400 mb-4" />
+              <h2 className="text-xl font-medium text-white mb-2">
+                Private Profile
+              </h2>
+              <p className="text-gray-400 text-center max-w-md">
+                This user has set their profile to private. Their information is
+                not available for viewing.
+              </p>
+              <Link
+                href="/leaderboard"
+                className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:border-blue-700 focus:shadow-outline-blue active:bg-blue-700 transition ease-in-out duration-150"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Leaderboard
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* User Profile Card */}
+              <div className="lg:col-span-1">
+                <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50 p-6">
+                  <div className="flex flex-col items-center">
+                    {userData?.imageUrl ? (
+                      <Image
+                        src={userData.imageUrl}
+                        alt={userFullName}
+                        width={96}
+                        height={96}
+                        className="h-24 w-24 rounded-full border-2 border-orange-500/30 mb-4 object-cover"
+                      />
+                    ) : (
+                      <div className="h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center mb-4">
+                        <span className="text-2xl text-gray-300">
+                          {userData?.firstName?.charAt(0) || "U"}
+                        </span>
+                      </div>
+                    )}
+                    <h2 className="text-xl font-medium text-white">
+                      {userFullName}
+                    </h2>
+                    <div className="w-full h-[1px] my-4 bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
+
+                    {/* Stats */}
+                    <div className="w-full space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Aura Rank</span>
+                        <span className="text-orange-400 font-medium">
+                          #{auraLeaderboardRank} (Top {100 - percentile}%)
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Referrals Rank</span>
+                        <span className="text-purple-400 font-medium">
+                          #{referralsRank}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Applications Rank</span>
+                        <span className="text-blue-400 font-medium">
+                          #{applicationsRank}
+                        </span>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {achievementsByCategory[category]?.map(
-                        (achievement: Achievement) => {
-                          const tierStyle = tierColors[achievement.tier];
-                          return (
-                            <div
-                              key={achievement.id}
-                              className={`bg-gradient-to-br ${tierStyle.bgColor} p-4 rounded-lg border ${tierStyle.borderColor} relative overflow-hidden`}
-                            >
-                              <div
-                                className={`absolute -top-10 -right-10 h-24 w-24 rounded-full ${
-                                  achievement.earned
-                                    ? "bg-gradient-to-br from-white/5 to-white/10"
-                                    : "bg-transparent"
-                                }`}
-                              ></div>
-                              <div className="flex items-start space-x-3">
+                  </div>
+                </div>
+
+                {/* Stats Summary Card */}
+                <div className="mt-6 bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50">
+                  <div className="px-6 py-4 bg-[#0f1326]/70 border-b border-[#20253d]/50">
+                    <h3 className="text-xl font-light text-white">Stats</h3>
+                  </div>
+                  <div className="p-6 grid grid-cols-2 gap-4">
+                    <div className="bg-[#1d2442]/40 rounded-lg p-3">
+                      <p className="text-gray-400 text-sm">Referrals</p>
+                      <p className="text-lg font-bold text-white">
+                        {metrics.totalReferrals}
+                      </p>
+                    </div>
+                    <div className="bg-[#1d2442]/40 rounded-lg p-3">
+                      <p className="text-gray-400 text-sm">Applications</p>
+                      <p className="text-lg font-bold text-white">
+                        {metrics.totalApplications}
+                      </p>
+                    </div>
+                    <div className="bg-[#1d2442]/40 rounded-lg p-3">
+                      <p className="text-gray-400 text-sm">Companies</p>
+                      <p className="text-lg font-bold text-white">
+                        {metrics.totalCompanies}
+                      </p>
+                    </div>
+                    <div className="bg-[#1d2442]/40 rounded-lg p-3">
+                      <p className="text-gray-400 text-sm">Aura Rank</p>
+                      <p className="text-lg font-bold text-white">
+                        #{metrics.leaderboardRank}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Achievements Section */}
+              <div className="lg:col-span-3">
+                <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50">
+                  <div className="px-6 py-4 bg-[#0f1326]/70 border-b border-[#20253d]/50">
+                    <h3 className="text-xl font-light text-white">
+                      Achievements
+                    </h3>
+                  </div>
+                  <div className="p-6">
+                    {/* Render achievements grouped by category */}
+                    {Object.entries(categoryTitles).map(([category, title]) => (
+                      <div key={category} className="mb-8 last:mb-0">
+                        <div className="relative mb-4">
+                          <h4 className="text-lg font-medium text-white">
+                            {title}
+                          </h4>
+                          <div className="absolute -bottom-1 left-0 h-[1px] w-16 bg-gradient-to-r from-orange-500/80 to-transparent"></div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {achievementsByCategory[category]?.map(
+                            (achievement: Achievement) => {
+                              const tierStyle = tierColors[achievement.tier];
+                              return (
                                 <div
-                                  className={`p-2 rounded-lg bg-[#0f1326]/60 ${
-                                    achievement.earned
-                                      ? tierStyle.textColor
-                                      : "text-gray-500"
-                                  }`}
+                                  key={achievement.id}
+                                  className={`bg-gradient-to-br ${tierStyle.bgColor} p-4 rounded-lg border ${tierStyle.borderColor} relative overflow-hidden`}
                                 >
-                                  {achievementIcons[achievement.icon] || (
-                                    <Trophy className="h-6 w-6" />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <h5
-                                    className={`text-base font-medium ${
+                                  <div
+                                    className={`absolute -top-10 -right-10 h-24 w-24 rounded-full ${
                                       achievement.earned
-                                        ? tierStyle.textColor
-                                        : "text-gray-500"
+                                        ? "bg-gradient-to-br from-white/5 to-white/10"
+                                        : "bg-transparent"
                                     }`}
-                                  >
-                                    {achievement.name}
-                                  </h5>
-                                  <p className="text-xs text-gray-400 mb-2">
-                                    {achievement.description}
-                                  </p>
-                                  <div className="w-full bg-[#0f1326]/70 rounded-full h-2 mt-auto">
+                                  ></div>
+                                  <div className="flex items-start space-x-3">
                                     <div
-                                      className={`${
+                                      className={`p-2 rounded-lg bg-[#0f1326]/60 ${
                                         achievement.earned
-                                          ? achievement.tier === "bronze"
-                                            ? "bg-amber-500"
-                                            : achievement.tier === "silver"
-                                            ? "bg-slate-300"
-                                            : "bg-yellow-400"
-                                          : "bg-gray-600"
-                                      } 
-                                      h-2 rounded-full transition-all duration-500`}
-                                      style={{
-                                        width: `${Math.min(
-                                          100,
-                                          (achievement.progress /
-                                            achievement.requirement) *
-                                            100
-                                        )}%`,
-                                      }}
-                                    ></div>
+                                          ? tierStyle.textColor
+                                          : "text-gray-500"
+                                      }`}
+                                    >
+                                      {achievementIcons[achievement.icon] || (
+                                        <Trophy className="h-6 w-6" />
+                                      )}
+                                    </div>
+                                    <div className="flex-1">
+                                      <h5
+                                        className={`text-base font-medium ${
+                                          achievement.earned
+                                            ? tierStyle.textColor
+                                            : "text-gray-500"
+                                        }`}
+                                      >
+                                        {achievement.name}
+                                      </h5>
+                                      <p className="text-xs text-gray-400 mb-2">
+                                        {achievement.description}
+                                      </p>
+                                      <div className="w-full bg-[#0f1326]/70 rounded-full h-2 mt-auto">
+                                        <div
+                                          className={`${
+                                            achievement.earned
+                                              ? achievement.tier === "bronze"
+                                                ? "bg-amber-500"
+                                                : achievement.tier === "silver"
+                                                ? "bg-slate-300"
+                                                : "bg-yellow-400"
+                                              : "bg-gray-600"
+                                          } 
+                                          h-2 rounded-full transition-all duration-500`}
+                                          style={{
+                                            width: `${Math.min(
+                                              100,
+                                              (achievement.progress /
+                                                achievement.requirement) *
+                                                100
+                                            )}%`,
+                                          }}
+                                        ></div>
+                                      </div>
+                                      <p className="text-xs text-gray-500 mt-2">
+                                        {achievement.earned ? (
+                                          <span className="text-xs opacity-70">
+                                            Completed
+                                          </span>
+                                        ) : (
+                                          `${achievement.progress} / ${achievement.requirement}`
+                                        )}
+                                      </p>
+                                    </div>
                                   </div>
-                                  <p className="text-xs text-gray-500 mt-2">
-                                    {achievement.earned ? (
-                                      <span className="text-xs opacity-70">
-                                        Completed
-                                      </span>
-                                    ) : (
-                                      `${achievement.progress} / ${achievement.requirement}`
-                                    )}
-                                  </p>
                                 </div>
-                              </div>
-                            </div>
-                          );
-                        }
-                      )}
-                    </div>
+                              );
+                            }
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

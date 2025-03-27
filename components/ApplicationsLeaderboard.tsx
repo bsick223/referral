@@ -30,7 +30,7 @@ interface ApplicationsLeaderboardProps {
 }
 
 const ApplicationsLeaderboard = ({
-  limit = 100,
+  limit = 5,
   hideHeader = false,
 }: ApplicationsLeaderboardProps) => {
   const { user } = useUser();
@@ -39,28 +39,33 @@ const ApplicationsLeaderboard = ({
     LeaderboardEntry[]
   >([]);
 
-  // Fetch all user IDs from the database
-  const allUserIds = useQuery(api.users.getAllUserIds);
+  // Fetch all user profiles to check privacy settings
+  const allUserProfiles = useQuery(api.userProfiles.getAll);
 
-  // Fetch applications for all users
+  // Fetch all user IDs and applications
+  const allUserIds = useQuery(api.users.getAllUserIds);
   const allApplications = useQuery(api.applications.getAllApplications);
 
-  // Fetch LinkedIn URLs
-  const userProfiles = useQuery(api.userProfiles.getAll);
-
-  // Helper function to get LinkedIn URL
-  const getLinkedinUrl = useCallback(
+  // Helper function to check if user has opted out of leaderboards
+  const hasOptedOutOfLeaderboards = useCallback(
     (userId: string) => {
-      if (!userProfiles) return undefined;
-      return userProfiles[userId]?.linkedinUrl;
+      if (!allUserProfiles) return false;
+      return allUserProfiles[userId]?.hideFromLeaderboards === true;
     },
-    [userProfiles]
+    [allUserProfiles]
   );
 
   // Calculate application counts and build leaderboard
   useEffect(() => {
     if (allUserIds && allApplications) {
-      // Count applications for each user
+      console.log(
+        "Applications: Starting leaderboard calculation with",
+        allUserIds.length,
+        "users"
+      );
+
+      // Count applications for each user without privacy filtering for now
+      // We'll handle visibility on the leaderboard page level
       const userApplicationCounts = allUserIds.reduce((acc, userId) => {
         const applications = allApplications.filter(
           (app) => app.userId === userId
@@ -80,53 +85,65 @@ const ApplicationsLeaderboard = ({
         .sort((a, b) => b.applicationCount - a.applicationCount)
         .slice(0, limit);
 
+      console.log(
+        "Applications: Generated leaderboard with",
+        sortedLeaderboard.length,
+        "users"
+      );
       setIsLoaded(true);
 
-      // Fetch user profile information
-      const fetchUserProfiles = async () => {
-        try {
-          const userIds = sortedLeaderboard.map((entry) => entry.userId);
-
-          if (userIds.length === 0) return;
-
-          const response = await fetch("/api/users", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ userIds }),
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to fetch user profiles");
-          }
-
-          const { users } = await response.json();
-
-          // Combine leaderboard data with user profiles
-          const enrichedLeaderboard = sortedLeaderboard.map((entry) => ({
-            ...entry,
-            userInfo: users[entry.userId],
-            linkedinUrl: getLinkedinUrl(entry.userId),
-          }));
-
-          setLeaderboardWithProfiles(enrichedLeaderboard);
-        } catch (error) {
-          console.error("Error fetching user profiles:", error);
-
-          // Still include LinkedIn URLs even if other profile info fails
-          const fallbackLeaderboard = sortedLeaderboard.map((entry) => ({
-            ...entry,
-            linkedinUrl: getLinkedinUrl(entry.userId),
-          }));
-
-          setLeaderboardWithProfiles(fallbackLeaderboard);
-        }
-      };
-
-      fetchUserProfiles();
+      if (sortedLeaderboard.length > 0) {
+        // Fetch user profile information
+        fetchUserProfiles(sortedLeaderboard);
+      } else {
+        setLeaderboardWithProfiles([]);
+      }
     }
-  }, [allUserIds, allApplications, getLinkedinUrl, limit]);
+  }, [allUserIds, allApplications, limit]);
+
+  // Separate function to fetch user profiles
+  const fetchUserProfiles = async (leaderboardData: LeaderboardEntry[]) => {
+    try {
+      const userIds = leaderboardData.map((entry) => entry.userId);
+      console.log(
+        "Applications: Fetching profiles for",
+        userIds.length,
+        "users"
+      );
+
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user profiles for applications");
+      }
+
+      const { users } = await response.json();
+      console.log(
+        "Applications: Received profiles for",
+        Object.keys(users).length,
+        "users"
+      );
+
+      // Combine leaderboard data with user profiles
+      const enrichedLeaderboard = leaderboardData.map((entry) => ({
+        ...entry,
+        userInfo: users[entry.userId],
+      }));
+
+      console.log("Applications: Updated leaderboard with user details");
+      setLeaderboardWithProfiles(enrichedLeaderboard);
+    } catch (error) {
+      console.error("Error fetching application user profiles:", error);
+      // Still display the leaderboard even without user details
+      setLeaderboardWithProfiles(leaderboardData);
+    }
+  };
 
   // Return medal component based on position
   const getMedal = (position: number) => {

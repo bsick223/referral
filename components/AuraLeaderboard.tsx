@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Trophy, Medal, Award, Sparkles } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useConvex } from "convex/react";
 
 interface UserInfo {
   id: string;
@@ -37,6 +38,12 @@ const AuraLeaderboard = ({
   const [leaderboardWithProfiles, setLeaderboardWithProfiles] = useState<
     LeaderboardEntry[]
   >([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>(
+    []
+  );
+  const [userRank, setUserRank] = useState<number | null>(null);
+  const convex = useConvex();
 
   // Fetch data for Aura leaderboard calculation
   const allUserIds = useQuery(api.users.getAllUserIds);
@@ -44,122 +51,155 @@ const AuraLeaderboard = ({
   const allApplications = useQuery(api.applications.getAllApplications);
   const allStatuses = useQuery(api.applicationStatuses.getAllStatuses);
 
-  // Create calculated leaderboard for aura
-  const auraLeaderboard = useMemo(() => {
-    if (!allUserIds || !allReferrals || !allApplications || !allStatuses)
-      return [];
-
-    // Build a map of status IDs to their names for each user
-    const statusMap = new Map();
-
-    allStatuses.forEach((status) => {
-      statusMap.set(status._id.toString(), {
-        userId: status.userId,
-        name: status.name.toLowerCase(),
-      });
-    });
-
-    // Calculate points for each user
-    const userPoints = allUserIds.reduce((acc, userId) => {
-      // Count user's referrals - 5 points each
-      const referrals = allReferrals.filter((ref) => ref.userId === userId);
-      const referralCount = referrals.length;
-      const referralPoints = referralCount * 5;
-
-      // Count user's applications - 1 point each
-      const applications = allApplications.filter(
-        (app) => app.userId === userId
-      );
-      const applicationCount = applications.length;
-      const applicationPoints = applicationCount * 1;
-
-      // Count interviews, offers, and rejections
-      let interviewCount = 0;
-      let offerCount = 0;
-      let rejectionCount = 0;
-
-      applications.forEach((app) => {
-        const status = statusMap.get(app.statusId.toString());
-        if (status) {
-          const statusName = status.name;
-          if (statusName.includes("interview")) {
-            interviewCount++;
-          } else if (statusName === "offer") {
-            offerCount++;
-          } else if (statusName === "rejected") {
-            rejectionCount++;
-          }
-        }
-      });
-
-      // Calculate points: interviews (10), offers (500), rejections (2)
-      const interviewPoints = interviewCount * 10;
-      const offerPoints = offerCount * 500;
-      const rejectionPoints = rejectionCount * 2;
-
-      // Total Aura points
-      const totalPoints =
-        referralPoints +
-        applicationPoints +
-        interviewPoints +
-        offerPoints +
-        rejectionPoints;
-
-      acc.push({
-        userId,
-        auraPoints: totalPoints,
-      });
-
-      return acc;
-    }, [] as any[]);
-
-    // Sort by aura points
-    return userPoints
-      .sort((a, b) => b.auraPoints - a.auraPoints)
-      .slice(0, limit);
-  }, [allUserIds, allReferrals, allApplications, allStatuses, limit]);
-
-  // Fetch user profile information
+  // Calculate Aura leaderboard
   useEffect(() => {
-    if (auraLeaderboard.length > 0) {
-      const fetchUserProfiles = async () => {
-        try {
-          const userIds = auraLeaderboard.map((entry) => entry.userId);
+    if (allUserIds && allReferrals && allApplications && allStatuses) {
+      setIsLoading(true);
+      console.log(
+        "Aura: Starting leaderboard calculation with",
+        allUserIds.length,
+        "users"
+      );
 
-          if (userIds.length === 0) return;
+      // Build a map of status IDs to their names for each user
+      const statusMap = new Map();
 
-          const response = await fetch("/api/users", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ userIds }),
-          });
+      allStatuses.forEach((status) => {
+        statusMap.set(status._id.toString(), {
+          userId: status.userId,
+          name: status.name.toLowerCase(),
+        });
+      });
 
-          if (!response.ok) {
-            throw new Error("Failed to fetch user profiles");
+      // Calculate points for each user without privacy filtering for now
+      // We'll handle visibility on the leaderboard page level instead
+      const userPointsArray = allUserIds.reduce((acc, userId) => {
+        // Count user's referrals - 5 points each
+        const referrals = allReferrals.filter((ref) => ref.userId === userId);
+        const referralCount = referrals.length;
+        const referralPoints = referralCount * 5;
+
+        // Count user's applications - 1 point each
+        const applications = allApplications.filter(
+          (app) => app.userId === userId
+        );
+        const applicationCount = applications.length;
+        const applicationPoints = applicationCount * 1;
+
+        // Count interviews, offers, and rejections
+        let interviewCount = 0;
+        let offerCount = 0;
+        let rejectionCount = 0;
+
+        applications.forEach((app) => {
+          const status = statusMap.get(app.statusId.toString());
+          if (status) {
+            const statusName = status.name;
+            if (statusName.includes("interview")) {
+              interviewCount++;
+            } else if (statusName === "offer") {
+              offerCount++;
+            } else if (statusName === "rejected") {
+              rejectionCount++;
+            }
           }
+        });
 
-          const { users } = await response.json();
+        // Calculate points: interviews (10), offers (500), rejections (2)
+        const interviewPoints = interviewCount * 10;
+        const offerPoints = offerCount * 500;
+        const rejectionPoints = rejectionCount * 2;
 
-          // Combine leaderboard data with user profiles
-          const enrichedLeaderboard = auraLeaderboard.map((entry) => ({
-            ...entry,
-            userInfo: users[entry.userId],
-          }));
+        // Total Aura points
+        const totalPoints =
+          referralPoints +
+          applicationPoints +
+          interviewPoints +
+          offerPoints +
+          rejectionPoints;
 
-          setLeaderboardWithProfiles(enrichedLeaderboard);
-          setIsLoaded(true);
-        } catch (error) {
-          console.error("Error fetching user profiles:", error);
-          setLeaderboardWithProfiles(auraLeaderboard);
-          setIsLoaded(true);
-        }
-      };
+        acc.push({
+          userId,
+          auraPoints: totalPoints,
+        });
 
-      fetchUserProfiles();
+        return acc;
+      }, [] as any[]);
+
+      // Sort by aura points
+      const sorted = userPointsArray.sort(
+        (a, b) => b.auraPoints - a.auraPoints
+      );
+
+      // Get current user's rank
+      const currentUserRank = user
+        ? sorted.findIndex((entry) => entry.userId === user.id)
+        : -1;
+
+      // Slice to get the top limit users
+      const topUsers = sorted.slice(0, limit);
+      console.log("Aura: Generated leaderboard with", topUsers.length, "users");
+
+      setLeaderboardData(topUsers);
+      setUserRank(currentUserRank !== -1 ? currentUserRank + 1 : null);
+
+      if (topUsers.length > 0) {
+        // Fetch user profiles for the top users
+        fetchUserProfiles(topUsers);
+      } else {
+        setIsLoaded(true);
+        setIsLoading(false);
+        setLeaderboardWithProfiles([]);
+      }
     }
-  }, [auraLeaderboard]);
+  }, [allUserIds, allReferrals, allApplications, allStatuses, user, limit]);
+
+  // Separate function to fetch user profiles
+  const fetchUserProfiles = async (leaderboardData: LeaderboardEntry[]) => {
+    try {
+      const userIds = leaderboardData.map((entry) => entry.userId);
+      console.log("Aura: Fetching profiles for", userIds.length, "users");
+
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user profiles");
+      }
+
+      const { users } = await response.json();
+      console.log(
+        "Aura: Received profiles for",
+        Object.keys(users).length,
+        "users"
+      );
+
+      // Combine leaderboard data with user profiles
+      const enrichedLeaderboard = leaderboardData.map((entry) => ({
+        ...entry,
+        userInfo: users[entry.userId],
+      }));
+
+      setLeaderboardWithProfiles(enrichedLeaderboard);
+    } catch (error) {
+      console.error("Error fetching user profiles:", error);
+      // Still display the leaderboard even without user details
+      setLeaderboardWithProfiles(
+        leaderboardData.map((entry) => ({
+          ...entry,
+          userInfo: undefined,
+        }))
+      );
+    } finally {
+      setIsLoaded(true);
+      setIsLoading(false);
+    }
+  };
 
   // Return medal component based on position
   const getMedal = (position: number) => {
