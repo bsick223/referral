@@ -115,6 +115,26 @@ export default function UserProfilePage() {
   const isPrivateProfile =
     userProfile?.profileVisibility === "private" && user?.id !== userId;
 
+  // Check individual privacy settings (only applied when profile is public)
+  const canViewApplicationsCount =
+    userProfile?.profileVisibility === "public" &&
+    userProfile?.showApplicationsCount !== false;
+
+  const canViewReferralsCount =
+    userProfile?.profileVisibility === "public" &&
+    userProfile?.showReferralsCount !== false;
+
+  const canViewCompaniesCount =
+    userProfile?.profileVisibility === "public" &&
+    userProfile?.showCompaniesCount !== false;
+
+  // Check if profile is public or viewing own profile
+  const canViewPublicInfo =
+    userProfile?.profileVisibility === "public" || user?.id === userId;
+
+  // Check if viewing own profile (ignore privacy settings for own profile)
+  const isOwnProfile = user?.id === userId;
+
   // Fetch the profile user info
   useEffect(() => {
     const fetchUserData = async () => {
@@ -402,24 +422,40 @@ export default function UserProfilePage() {
 
                     {/* Stats */}
                     <div className="w-full space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Aura Rank</span>
-                        <span className="text-orange-400 font-medium">
-                          #{auraLeaderboardRank} (Top {100 - percentile}%)
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Referrals Rank</span>
-                        <span className="text-purple-400 font-medium">
-                          #{referralsRank}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Applications Rank</span>
-                        <span className="text-blue-400 font-medium">
-                          #{applicationsRank}
-                        </span>
-                      </div>
+                      {canViewPublicInfo && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400">Aura Rank</span>
+                          <span className="text-orange-400 font-medium">
+                            #{auraLeaderboardRank} (Top {100 - percentile}%)
+                          </span>
+                        </div>
+                      )}
+                      {(isOwnProfile || canViewReferralsCount) && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400">Referrals Rank</span>
+                          <span className="text-purple-400 font-medium">
+                            #{referralsRank}
+                          </span>
+                        </div>
+                      )}
+                      {(isOwnProfile || canViewApplicationsCount) && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400">
+                            Applications Rank
+                          </span>
+                          <span className="text-blue-400 font-medium">
+                            #{applicationsRank}
+                          </span>
+                        </div>
+                      )}
+                      {!isOwnProfile &&
+                        !canViewPublicInfo &&
+                        !canViewReferralsCount &&
+                        !canViewApplicationsCount && (
+                          <div className="text-center py-2 text-gray-400 text-sm">
+                            This user has hidden their rank information.
+                          </div>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -430,30 +466,47 @@ export default function UserProfilePage() {
                     <h3 className="text-xl font-light text-white">Stats</h3>
                   </div>
                   <div className="p-6 grid grid-cols-2 gap-4">
-                    <div className="bg-[#1d2442]/40 rounded-lg p-3">
-                      <p className="text-gray-400 text-sm">Referrals</p>
-                      <p className="text-lg font-bold text-white">
-                        {metrics.totalReferrals}
-                      </p>
-                    </div>
-                    <div className="bg-[#1d2442]/40 rounded-lg p-3">
-                      <p className="text-gray-400 text-sm">Applications</p>
-                      <p className="text-lg font-bold text-white">
-                        {metrics.totalApplications}
-                      </p>
-                    </div>
-                    <div className="bg-[#1d2442]/40 rounded-lg p-3">
-                      <p className="text-gray-400 text-sm">Companies</p>
-                      <p className="text-lg font-bold text-white">
-                        {metrics.totalCompanies}
-                      </p>
-                    </div>
-                    <div className="bg-[#1d2442]/40 rounded-lg p-3">
-                      <p className="text-gray-400 text-sm">Aura Rank</p>
-                      <p className="text-lg font-bold text-white">
-                        #{metrics.leaderboardRank}
-                      </p>
-                    </div>
+                    {(isOwnProfile || canViewReferralsCount) && (
+                      <div className="bg-[#1d2442]/40 rounded-lg p-3">
+                        <p className="text-gray-400 text-sm">Referrals</p>
+                        <p className="text-lg font-bold text-white">
+                          {metrics.totalReferrals}
+                        </p>
+                      </div>
+                    )}
+                    {(isOwnProfile || canViewApplicationsCount) && (
+                      <div className="bg-[#1d2442]/40 rounded-lg p-3">
+                        <p className="text-gray-400 text-sm">Applications</p>
+                        <p className="text-lg font-bold text-white">
+                          {metrics.totalApplications}
+                        </p>
+                      </div>
+                    )}
+                    {(isOwnProfile || canViewCompaniesCount) && (
+                      <div className="bg-[#1d2442]/40 rounded-lg p-3">
+                        <p className="text-gray-400 text-sm">Companies</p>
+                        <p className="text-lg font-bold text-white">
+                          {metrics.totalCompanies}
+                        </p>
+                      </div>
+                    )}
+                    {canViewPublicInfo && (
+                      <div className="bg-[#1d2442]/40 rounded-lg p-3">
+                        <p className="text-gray-400 text-sm">Aura Rank</p>
+                        <p className="text-lg font-bold text-white">
+                          #{metrics.leaderboardRank}
+                        </p>
+                      </div>
+                    )}
+                    {!isOwnProfile &&
+                      !canViewReferralsCount &&
+                      !canViewApplicationsCount &&
+                      !canViewCompaniesCount &&
+                      !canViewPublicInfo && (
+                        <div className="col-span-2 text-center py-4 text-gray-400 text-sm">
+                          This user has hidden their stats.
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>

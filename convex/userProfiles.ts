@@ -216,7 +216,6 @@ export const updatePrivacySettings = mutation({
     showApplicationsCount: v.optional(v.boolean()),
     showReferralsCount: v.optional(v.boolean()),
     showCompaniesCount: v.optional(v.boolean()),
-    showAuraRank: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const {
@@ -226,41 +225,38 @@ export const updatePrivacySettings = mutation({
       showApplicationsCount,
       showReferralsCount,
       showCompaniesCount,
-      showAuraRank,
     } = args;
 
-    // Check if profile already exists
-    const existingProfile = await ctx.db
+    // Find existing profile
+    const profile = await ctx.db
       .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("userId"), userId))
       .first();
 
-    if (existingProfile) {
+    if (profile) {
       // Update existing profile
-      await ctx.db.patch(existingProfile._id, {
+      await ctx.db.patch(profile._id, {
         hideFromLeaderboards,
         profileVisibility,
         showApplicationsCount,
         showReferralsCount,
         showCompaniesCount,
-        showAuraRank,
         updatedAt: Date.now(),
       });
-      return existingProfile._id;
+      return profile._id;
     } else {
-      // Create new profile
-      const profileId = await ctx.db.insert("userProfiles", {
+      // Create new profile with privacy settings
+      const id = await ctx.db.insert("userProfiles", {
         userId,
-        hideFromLeaderboards,
-        profileVisibility,
-        showApplicationsCount,
-        showReferralsCount,
-        showCompaniesCount,
-        showAuraRank,
+        hideFromLeaderboards: hideFromLeaderboards || false,
+        profileVisibility: profileVisibility || "public",
+        showApplicationsCount: showApplicationsCount !== false, // default to true
+        showReferralsCount: showReferralsCount !== false, // default to true
+        showCompaniesCount: showCompaniesCount !== false, // default to true
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
-      return profileId;
+      return id;
     }
   },
 });
@@ -281,7 +277,6 @@ export const getProfileSettings = query({
         showApplicationsCount: true,
         showReferralsCount: true,
         showCompaniesCount: true,
-        showAuraRank: true,
       };
     }
 
@@ -295,7 +290,6 @@ export const getProfileSettings = query({
       showApplicationsCount: profile.showApplicationsCount !== false, // default to true
       showReferralsCount: profile.showReferralsCount !== false, // default to true
       showCompaniesCount: profile.showCompaniesCount !== false, // default to true
-      showAuraRank: profile.showAuraRank !== false, // default to true
     };
   },
 });

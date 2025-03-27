@@ -40,7 +40,6 @@ export default function PrivacySettingsPage() {
     showApplicationsCount: true,
     showReferralsCount: true,
     showCompaniesCount: true,
-    showAuraRank: true,
   });
 
   // Update form data when profile settings are loaded
@@ -52,7 +51,6 @@ export default function PrivacySettingsPage() {
         showApplicationsCount: profileSettings.showApplicationsCount !== false,
         showReferralsCount: profileSettings.showReferralsCount !== false,
         showCompaniesCount: profileSettings.showCompaniesCount !== false,
-        showAuraRank: profileSettings.showAuraRank !== false,
       });
       setIsLoading(false);
     }
@@ -88,7 +86,6 @@ export default function PrivacySettingsPage() {
         showApplicationsCount: formData.showApplicationsCount,
         showReferralsCount: formData.showReferralsCount,
         showCompaniesCount: formData.showCompaniesCount,
-        showAuraRank: formData.showAuraRank,
       });
 
       setSuccessMessage("Privacy settings updated successfully!");
@@ -273,12 +270,6 @@ export default function PrivacySettingsPage() {
                     description="Allow others to see how many companies you've applied to"
                     enabled={formData.showCompaniesCount}
                     onChange={() => handleToggleChange("showCompaniesCount")}
-                  />
-                  <ToggleButton
-                    label="Show Aura Rank"
-                    description="Allow others to see your ranking on the Aura leaderboard"
-                    enabled={formData.showAuraRank}
-                    onChange={() => handleToggleChange("showAuraRank")}
                   />
                 </div>
 
