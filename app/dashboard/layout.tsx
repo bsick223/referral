@@ -180,7 +180,7 @@ export default function DashboardLayout({
               })}
 
               {/* Admin link - only visible to admins */}
-              {user && ADMIN_IDS.includes(user.id) && (
+              {/* {user && ADMIN_IDS.includes(user.id) && (
                 <Link
                   href="/dashboard/admin"
                   className={`group flex items-center px-3 py-2 rounded-md relative ${
@@ -203,8 +203,8 @@ export default function DashboardLayout({
                   {isActive("/dashboard/admin") && (
                     <ChevronRight className="ml-auto h-4 w-4 text-gray-500" />
                   )}
-                </Link>
-              )}
+                </Link> 
+               )} */}
             </nav>
           </div>
 
