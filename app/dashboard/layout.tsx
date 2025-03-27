@@ -13,9 +13,16 @@ import {
   Settings,
   Menu,
   X,
+  ShieldAlert,
+  HomeIcon,
+  Briefcase,
+  Building,
 } from "lucide-react";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
+
+// Admin user IDs
+const ADMIN_IDS = ["user_2ujlj0HGikJI9X8fvZSRWSHVtgw"];
 
 export default function DashboardLayout({
   children,
@@ -24,6 +31,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useUser();
 
   // Close sidebar when route changes on mobile
   useEffect(() => {
@@ -43,15 +51,16 @@ export default function DashboardLayout({
   }, []);
 
   const navigation = [
-    { name: "Home", href: "/dashboard", icon: Home },
-    {
-      name: "Applications",
-      href: "/dashboard/applications",
-      icon: ClipboardList,
-    },
+    { name: "Dashboard", href: "/dashboard", icon: Home },
+    { name: "Applications", href: "/dashboard/applications", icon: Briefcase },
     { name: "Referrals", href: "/dashboard/referrals", icon: UsersRound },
+    { name: "Companies", href: "/dashboard/companies", icon: Building },
+    {
+      name: "Leaderboard",
+      href: "/leaderboard",
+      icon: Trophy,
+    },
     { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
-    { name: "Leaderboard", href: "/leaderboard", icon: Trophy },
   ];
 
   // Helper function to check if a path is active
@@ -169,6 +178,33 @@ export default function DashboardLayout({
                   </Link>
                 );
               })}
+
+              {/* Admin link - only visible to admins */}
+              {user && ADMIN_IDS.includes(user.id) && (
+                <Link
+                  href="/dashboard/admin"
+                  className={`group flex items-center px-3 py-2 rounded-md relative ${
+                    isActive("/dashboard/admin")
+                      ? "bg-[#121a36] text-orange-400"
+                      : "text-gray-400 hover:text-gray-200 hover:bg-[#121a36]/50"
+                  }`}
+                >
+                  {isActive("/dashboard/admin") && (
+                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-orange-400 to-blue-500 rounded-full"></div>
+                  )}
+                  <ShieldAlert
+                    className={`mr-3 h-5 w-5 ${
+                      isActive("/dashboard/admin")
+                        ? "text-orange-400"
+                        : "text-gray-400 group-hover:text-gray-300"
+                    }`}
+                  />
+                  <span>Admin</span>
+                  {isActive("/dashboard/admin") && (
+                    <ChevronRight className="ml-auto h-4 w-4 text-gray-500" />
+                  )}
+                </Link>
+              )}
             </nav>
           </div>
 

@@ -81,6 +81,19 @@ export const create = mutation({
       updatedAt: Date.now(),
     });
 
+    // Get status name for history
+    const status = await ctx.db.get(args.statusId);
+    if (status) {
+      // Record initial status in history
+      await ctx.db.insert("applicationStatusHistory", {
+        userId: args.userId,
+        applicationId,
+        statusId: args.statusId,
+        statusName: status.name.toLowerCase(),
+        createdAt: Date.now(),
+      });
+    }
+
     return applicationId;
   },
 });
@@ -107,6 +120,25 @@ export const update = mutation({
 
     if (!existing) {
       throw new Error("Application not found");
+    }
+
+    // Check if status is being updated
+    if (
+      fields.statusId &&
+      existing.statusId.toString() !== fields.statusId.toString()
+    ) {
+      // Get status name for history
+      const status = await ctx.db.get(fields.statusId);
+      if (status) {
+        // Record status change in history
+        await ctx.db.insert("applicationStatusHistory", {
+          userId: existing.userId,
+          applicationId: id,
+          statusId: fields.statusId,
+          statusName: status.name.toLowerCase(),
+          createdAt: Date.now(),
+        });
+      }
     }
 
     await ctx.db.patch(id, {
@@ -144,6 +176,22 @@ export const updateStatus = mutation({
 
     if (!existing) {
       throw new Error("Application not found");
+    }
+
+    // Only record history if status actually changed
+    if (existing.statusId.toString() !== args.statusId.toString()) {
+      // Get status name for history
+      const status = await ctx.db.get(args.statusId);
+      if (status) {
+        // Record status change in history
+        await ctx.db.insert("applicationStatusHistory", {
+          userId: existing.userId,
+          applicationId: args.id,
+          statusId: args.statusId,
+          statusName: status.name.toLowerCase(),
+          createdAt: Date.now(),
+        });
+      }
     }
 
     await ctx.db.patch(args.id, {
@@ -207,7 +255,48 @@ export const updateOrder = mutation({
 export const getAllApplications = query({
   args: {},
   handler: async (ctx) => {
-    const applications = await ctx.db.query("applications").collect();
-    return applications;
+    return await ctx.db.query("applications").collect();
+  },
+});
+
+// Get application status history for a user
+export const getStatusHistory = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("applicationStatusHistory")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .collect();
+  },
+});
+
+// Count unique applications that have entered each status for a user
+export const countUniqueStatusEntries = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const history = await ctx.db
+      .query("applicationStatusHistory")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    // Group by application ID and status name
+    const statusEntries: Record<string, Set<string>> = {};
+
+    // For each status, track unique application IDs
+    history.forEach((entry) => {
+      const statusName = entry.statusName.toLowerCase();
+      if (!statusEntries[statusName]) {
+        statusEntries[statusName] = new Set();
+      }
+      statusEntries[statusName].add(entry.applicationId.toString());
+    });
+
+    // Convert sets to counts
+    const counts: Record<string, number> = {};
+    for (const [status, appIds] of Object.entries(statusEntries)) {
+      counts[status] = appIds.size;
+    }
+
+    return counts;
   },
 });

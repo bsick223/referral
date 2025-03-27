@@ -159,6 +159,18 @@ export default defineSchema({
     .index("by_user_id", ["userId"])
     .index("by_user_and_order", ["userId", "order"]),
 
+  // Application status history to track when applications change status
+  applicationStatusHistory: defineTable({
+    userId: v.string(),
+    applicationId: v.id("applications"),
+    statusId: v.id("applicationStatuses"),
+    statusName: v.string(), // Store the name at the time of recording for easier queries
+    createdAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_application_id", ["applicationId"])
+    .index("by_user_and_status", ["userId", "statusName"]),
+
   // Achievements table to track user achievements
   achievements: defineTable({
     userId: v.string(),

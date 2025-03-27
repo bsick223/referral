@@ -20,6 +20,7 @@ import type * as companies from "../companies.js";
 import type * as contact from "../contact.js";
 import type * as images from "../images.js";
 import type * as messages from "../messages.js";
+import type * as migrations from "../migrations.js";
 import type * as referrals from "../referrals.js";
 import type * as reviews from "../reviews.js";
 import type * as seedMessages from "../seedMessages.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   contact: typeof contact;
   images: typeof images;
   messages: typeof messages;
+  migrations: typeof migrations;
   referrals: typeof referrals;
   reviews: typeof reviews;
   seedMessages: typeof seedMessages;

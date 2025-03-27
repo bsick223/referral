@@ -159,27 +159,36 @@ async function calculateUserAchievementProgress(
     .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
     .collect();
 
-  // Get application statuses to identify interviews, offers, rejections
-  const applicationStatuses = await ctx.db
-    .query("applicationStatuses")
+  // Get application status history to determine which applications reached each status
+  const statusHistory = await ctx.db
+    .query("applicationStatusHistory")
     .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
     .collect();
 
-  // Map status names to IDs
-  const statusMap: Record<string, string> = {};
-  applicationStatuses.forEach((status: any) => {
-    statusMap[status.name.toLowerCase()] = status._id;
-  });
+  // Track unique application IDs for each status type
+  const statusCounts: Record<string, Set<string>> = {
+    interview: new Set(),
+    offer: new Set(),
+    rejected: new Set(),
+  };
 
-  // Count applications by status
-  const appCounts: Record<string, number> = {};
-  applications.forEach((app: any) => {
-    const statusInfo = applicationStatuses.find(
-      (s: any) => s._id === app.statusId
-    );
-    if (statusInfo) {
-      const statusName = statusInfo.name.toLowerCase();
-      appCounts[statusName] = (appCounts[statusName] || 0) + 1;
+  // Process status history to count unique applications that reached each status
+  statusHistory.forEach((entry: any) => {
+    const statusName = entry.statusName.toLowerCase();
+
+    // Check for interview status
+    if (statusName.includes("interview")) {
+      statusCounts["interview"].add(entry.applicationId.toString());
+    }
+
+    // Check for offer status
+    if (statusName === "offer") {
+      statusCounts["offer"].add(entry.applicationId.toString());
+    }
+
+    // Check for rejected status
+    if (statusName === "rejected") {
+      statusCounts["rejected"].add(entry.applicationId.toString());
     }
   });
 
@@ -200,38 +209,38 @@ async function calculateUserAchievementProgress(
       gold: referrals.length >= ACHIEVEMENTS.referrals.gold.requirement,
     },
     interviews: {
-      // Simplified - count applications in "interview" status
-      count: appCounts["interview"] || 0,
+      // Count unique applications that have been in interview status
+      count: statusCounts["interview"].size,
       bronze:
-        (appCounts["interview"] || 0) >=
+        statusCounts["interview"].size >=
         ACHIEVEMENTS.interviews.bronze.requirement,
       silver:
-        (appCounts["interview"] || 0) >=
+        statusCounts["interview"].size >=
         ACHIEVEMENTS.interviews.silver.requirement,
       gold:
-        (appCounts["interview"] || 0) >=
+        statusCounts["interview"].size >=
         ACHIEVEMENTS.interviews.gold.requirement,
     },
     offers: {
-      // Count applications in "offer" status
-      count: appCounts["offer"] || 0,
+      // Count unique applications that have been in offer status
+      count: statusCounts["offer"].size,
       bronze:
-        (appCounts["offer"] || 0) >= ACHIEVEMENTS.offers.bronze.requirement,
+        statusCounts["offer"].size >= ACHIEVEMENTS.offers.bronze.requirement,
       silver:
-        (appCounts["offer"] || 0) >= ACHIEVEMENTS.offers.silver.requirement,
-      gold: (appCounts["offer"] || 0) >= ACHIEVEMENTS.offers.gold.requirement,
+        statusCounts["offer"].size >= ACHIEVEMENTS.offers.silver.requirement,
+      gold: statusCounts["offer"].size >= ACHIEVEMENTS.offers.gold.requirement,
     },
     rejections: {
-      // Count applications in "rejected" status
-      count: appCounts["rejected"] || 0,
+      // Count unique applications that have been in rejected status
+      count: statusCounts["rejected"].size,
       bronze:
-        (appCounts["rejected"] || 0) >=
+        statusCounts["rejected"].size >=
         ACHIEVEMENTS.rejections.bronze.requirement,
       silver:
-        (appCounts["rejected"] || 0) >=
+        statusCounts["rejected"].size >=
         ACHIEVEMENTS.rejections.silver.requirement,
       gold:
-        (appCounts["rejected"] || 0) >=
+        statusCounts["rejected"].size >=
         ACHIEVEMENTS.rejections.gold.requirement,
     },
   };

@@ -131,19 +131,49 @@ export default function ProfilePage() {
   // Fetch all user profiles to check privacy settings
   const allUserProfiles = useQuery(api.userProfiles.getAll);
 
-  // Calculate Aura leaderboard
+  // Create calculated leaderboards for aura
   const auraLeaderboard = useMemo(() => {
     if (!allUserIds || !allReferrals || !allApplications || !allStatuses)
       return [];
 
-    // Build a map of status IDs to their names for each user
-    const statusMap = new Map();
+    // Get all application status history for counting
+    const statusHistoryByUser: Record<string, Record<string, Set<string>>> = {};
 
+    // Process all users
+    allUserIds.forEach((userId) => {
+      statusHistoryByUser[userId] = {
+        interview: new Set(),
+        offer: new Set(),
+        rejected: new Set(),
+      };
+    });
+
+    // Get application status by ID for efficient lookup
+    const statusById: Record<string, any> = {};
     allStatuses.forEach((status) => {
-      statusMap.set(status._id.toString(), {
+      statusById[status._id.toString()] = {
         userId: status.userId,
         name: status.name.toLowerCase(),
-      });
+      };
+    });
+
+    // Count applications for each status and user
+    allApplications.forEach((app) => {
+      const userId = app.userId;
+      const statusInfo = statusById[app.statusId.toString()];
+
+      if (statusInfo) {
+        const statusName = statusInfo.name;
+
+        // Count each application once in its current status
+        if (statusName.includes("interview")) {
+          statusHistoryByUser[userId]["interview"].add(app._id.toString());
+        } else if (statusName === "offer") {
+          statusHistoryByUser[userId]["offer"].add(app._id.toString());
+        } else if (statusName === "rejected") {
+          statusHistoryByUser[userId]["rejected"].add(app._id.toString());
+        }
+      }
     });
 
     // Filter users who have opted out of leaderboards
@@ -166,26 +196,12 @@ export default function ProfilePage() {
       const applicationCount = applications.length;
       const applicationPoints = applicationCount * 1;
 
-      // Count interviews, offers, and rejections
-      let interviewCount = 0;
-      let offerCount = 0;
-      let rejectionCount = 0;
+      // Use the status counts from our history tracking
+      const interviewCount = statusHistoryByUser[userId]["interview"].size;
+      const offerCount = statusHistoryByUser[userId]["offer"].size;
+      const rejectionCount = statusHistoryByUser[userId]["rejected"].size;
 
-      applications.forEach((app) => {
-        const status = statusMap.get(app.statusId.toString());
-        if (status) {
-          const statusName = status.name;
-          if (statusName.includes("interview")) {
-            interviewCount++;
-          } else if (statusName === "offer") {
-            offerCount++;
-          } else if (statusName === "rejected") {
-            rejectionCount++;
-          }
-        }
-      });
-
-      // Calculate points: interviews (100), offers (100), rejections (2)
+      // Calculate points: offers (100), rejections (2)
       const offerPoints = offerCount * 100;
       const rejectionPoints = rejectionCount * 2;
 
