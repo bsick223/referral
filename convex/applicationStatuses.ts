@@ -71,6 +71,11 @@ export const update = mutation({
       throw new Error("Status not found");
     }
 
+    // Prevent renaming default statuses
+    if (existing.isDefault && fields.name && fields.name !== existing.name) {
+      throw new Error("Cannot rename default status");
+    }
+
     await ctx.db.patch(id, {
       ...fields,
       updatedAt: Date.now(),
@@ -90,6 +95,11 @@ export const remove = mutation({
 
     if (!existing) {
       throw new Error("Status not found");
+    }
+
+    // Prevent deletion of default statuses
+    if (existing.isDefault) {
+      throw new Error("Cannot delete default status");
     }
 
     // Get all applications with this status
@@ -200,10 +210,8 @@ export const initializeDefaultStatuses = mutation({
     // Define default statuses
     const defaultStatuses = [
       { name: "Applied", color: "bg-blue-500" },
-      { name: "Screening", color: "bg-purple-500" },
+      { name: "Follow-up", color: "bg-purple-500" },
       { name: "Interview", color: "bg-indigo-500" },
-      { name: "Assessment", color: "bg-cyan-500" },
-      { name: "Final Round", color: "bg-emerald-500" },
       { name: "Offer", color: "bg-green-500" },
       { name: "Rejected", color: "bg-red-500" },
     ];
@@ -229,5 +237,90 @@ export const getAllStatuses = query({
   handler: async (ctx) => {
     const statuses = await ctx.db.query("applicationStatuses").collect();
     return statuses;
+  },
+});
+
+// Migrate all users to have the standard default statuses
+export const migrateToDefaultStatuses = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Define the expected default statuses with their standardized names
+    const defaultStatusNames = [
+      "Applied",
+      "Follow-up",
+      "Interview",
+      "Offer",
+      "Rejected",
+    ];
+
+    // Get all users with their statuses
+    const allStatuses = await ctx.db.query("applicationStatuses").collect();
+
+    // Group statuses by user
+    const userStatusesMap = new Map();
+    for (const status of allStatuses) {
+      if (!userStatusesMap.has(status.userId)) {
+        userStatusesMap.set(status.userId, []);
+      }
+      userStatusesMap.get(status.userId).push(status);
+    }
+
+    // Process each user
+    const results = {
+      processed: 0,
+      updated: 0,
+      created: 0,
+    };
+
+    for (const [userId, userStatuses] of userStatusesMap.entries()) {
+      results.processed++;
+
+      // Check if user has any statuses marked as default
+      const hasDefaultStatuses = userStatuses.some(
+        (s: any) => s.isDefault === true
+      );
+
+      // If user has no default statuses, mark existing ones with matching names as default
+      // or create new ones if they don't exist
+      for (let i = 0; i < defaultStatusNames.length; i++) {
+        const defaultName = defaultStatusNames[i];
+        const existingStatus = userStatuses.find(
+          (s: any) => s.name.toLowerCase() === defaultName.toLowerCase()
+        );
+
+        if (existingStatus) {
+          // Update existing status with matching name to be default
+          if (!existingStatus.isDefault) {
+            await ctx.db.patch(existingStatus._id, {
+              isDefault: true,
+              order: i, // ensure correct ordering
+            });
+            results.updated++;
+          }
+        } else {
+          // Create missing default status
+          const defaultColors = [
+            "bg-blue-500",
+            "bg-purple-500",
+            "bg-indigo-500",
+            "bg-green-500",
+            "bg-red-500",
+          ];
+
+          await ctx.db.insert("applicationStatuses", {
+            userId,
+            name: defaultName,
+            color: defaultColors[i] || "bg-gray-500",
+            order: i,
+            isDefault: true,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          });
+          results.created++;
+        }
+      }
+    }
+
+    return results;
   },
 });

@@ -681,6 +681,9 @@ export default function ApplicationsPage() {
   const handleUpdateStatus = async (statusId: Id<"applicationStatuses">) => {
     if (!editingStatusName.trim()) return;
 
+    // Find the status to know if it's a default one
+    const statusToUpdate = statuses.find((s) => s._id === statusId);
+
     try {
       await updateStatus({
         id: statusId,
@@ -692,11 +695,29 @@ export default function ApplicationsPage() {
       showToast("success", "Status column updated");
     } catch (error) {
       console.error("Error updating status:", error);
-      showToast("error", "Failed to update status column");
+
+      // Handle specific error for default status renaming
+      if (
+        error instanceof Error &&
+        error.message === "Cannot rename default status"
+      ) {
+        showToast("error", "Default statuses cannot be renamed");
+      } else {
+        showToast("error", "Failed to update status column");
+      }
     }
   };
 
   const handleDeleteStatus = async (statusId: Id<"applicationStatuses">) => {
+    // Find the status in our list
+    const statusToDelete = statuses.find((s) => s._id === statusId);
+
+    // Check if it's a default status
+    if (statusToDelete?.isDefault) {
+      showToast("error", "Default statuses cannot be deleted");
+      return;
+    }
+
     // Find a fallback status that isn't this one
     const fallbackStatus = statuses.find((s) => s._id !== statusId);
 
@@ -714,7 +735,15 @@ export default function ApplicationsPage() {
         showToast("success", "Status column deleted");
       } catch (error) {
         console.error("Error deleting status:", error);
-        showToast("error", "Failed to delete status column");
+        // Check if error is about deleting a default status
+        if (
+          error instanceof Error &&
+          error.message === "Cannot delete default status"
+        ) {
+          showToast("error", "Default statuses cannot be deleted");
+        } else {
+          showToast("error", "Failed to delete status column");
+        }
       }
     }
   };
@@ -1753,9 +1782,19 @@ export default function ApplicationsPage() {
                         type="text"
                         value={editingStatusName}
                         onChange={(e) => setEditingStatusName(e.target.value)}
-                        className="bg-[#0c1029]/50 border border-[#20253d]/70 px-2 py-1 rounded text-white text-sm flex-1"
+                        className={`bg-[#0c1029]/50 border border-[#20253d]/70 px-2 py-1 rounded text-white text-sm flex-1 ${
+                          status.isDefault
+                            ? "opacity-70 cursor-not-allowed"
+                            : ""
+                        }`}
                         autoFocus
+                        disabled={status.isDefault}
                         onClick={(e) => e.stopPropagation()}
+                        title={
+                          status.isDefault
+                            ? "Default status names cannot be changed"
+                            : ""
+                        }
                       />
                       <button
                         onClick={(e) => {
@@ -1791,8 +1830,17 @@ export default function ApplicationsPage() {
                           e.stopPropagation();
                           handleDeleteStatus(status._id);
                         }}
-                        className="p-1 text-red-400 hover:text-red-300"
-                        title="Delete this status"
+                        className={`p-1 ${
+                          status.isDefault
+                            ? "text-gray-500 cursor-not-allowed"
+                            : "text-red-400 hover:text-red-300"
+                        }`}
+                        title={
+                          status.isDefault
+                            ? "Default statuses cannot be deleted"
+                            : "Delete this status"
+                        }
+                        disabled={status.isDefault}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -1812,7 +1860,7 @@ export default function ApplicationsPage() {
                             }
                           }}
                         ></div>
-                        <h3 className="font-medium text-gray-200">
+                        <h3 className="font-medium text-gray-200 flex items-center">
                           {status.name}
                         </h3>
                       </div>
