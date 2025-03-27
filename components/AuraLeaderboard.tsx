@@ -9,14 +9,6 @@ import { Trophy, Medal, Award, Sparkles } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useConvex } from "convex/react";
 
-// Define ApplicationStatus enum
-enum ApplicationStatus {
-  SUBMITTED = "submitted",
-  INTERVIEW_SCHEDULED = "interview_scheduled",
-  OFFER_SENT = "offer_sent",
-  REJECTED = "rejected",
-}
-
 interface UserInfo {
   id: string;
   username: string;
@@ -91,6 +83,17 @@ const AuraLeaderboard = ({
           // Build a map of status IDs to name for each user
           const statusMap = {} as Record<string, Record<string, number>>;
 
+          // Create a map of status IDs to names
+          const applicationStatusMap = new Map();
+          if (allStatuses) {
+            allStatuses.forEach((status) => {
+              applicationStatusMap.set(
+                status._id.toString(),
+                status.name.toLowerCase()
+              );
+            });
+          }
+
           // Process referrals to calculate points
           allReferrals.forEach((referral) => {
             const { userId, status } = referral;
@@ -111,7 +114,7 @@ const AuraLeaderboard = ({
 
           // Process applications to calculate points
           allApplications.forEach((application) => {
-            const { userId, status } = application;
+            const { userId, statusId } = application;
             if (!filteredUserIds.includes(userId)) return;
 
             if (!statusMap[userId]) {
@@ -126,12 +129,16 @@ const AuraLeaderboard = ({
 
             statusMap[userId].applications++;
 
-            if (status === ApplicationStatus.INTERVIEW_SCHEDULED) {
-              statusMap[userId].interviews++;
-            } else if (status === ApplicationStatus.OFFER_SENT) {
-              statusMap[userId].offers++;
-            } else if (status === ApplicationStatus.REJECTED) {
-              statusMap[userId].rejections++;
+            // Look up the status name from the statusId
+            const statusName = applicationStatusMap.get(statusId.toString());
+            if (statusName) {
+              if (statusName.includes("interview")) {
+                statusMap[userId].interviews++;
+              } else if (statusName === "offer") {
+                statusMap[userId].offers++;
+              } else if (statusName === "rejected") {
+                statusMap[userId].rejections++;
+              }
             }
           });
 
@@ -196,7 +203,14 @@ const AuraLeaderboard = ({
 
       buildLeaderboardWithPrivacy();
     }
-  }, [allUserIds, allReferrals, allApplications, limit, allUserProfiles]);
+  }, [
+    allUserIds,
+    allReferrals,
+    allApplications,
+    limit,
+    allUserProfiles,
+    allStatuses,
+  ]);
 
   // Helper function to create a basic leaderboard without privacy filtering
   const createBasicLeaderboard = () => {
@@ -212,6 +226,17 @@ const AuraLeaderboard = ({
 
     // Build a map of status IDs to name for each user
     const statusMap = {} as Record<string, Record<string, number>>;
+
+    // Create a map of status IDs to names
+    const applicationStatusMap = new Map();
+    if (allStatuses) {
+      allStatuses.forEach((status) => {
+        applicationStatusMap.set(
+          status._id.toString(),
+          status.name.toLowerCase()
+        );
+      });
+    }
 
     // Process referrals to calculate points
     allReferrals.forEach((referral) => {
@@ -235,7 +260,7 @@ const AuraLeaderboard = ({
 
     // Process applications to calculate points
     allApplications.forEach((application) => {
-      const { userId, status } = application;
+      const { userId, statusId } = application;
 
       // Skip users who opted out of leaderboards
       if (!filteredUserIds.includes(userId)) return;
@@ -252,12 +277,16 @@ const AuraLeaderboard = ({
 
       statusMap[userId].applications++;
 
-      if (status === ApplicationStatus.INTERVIEW_SCHEDULED) {
-        statusMap[userId].interviews++;
-      } else if (status === ApplicationStatus.OFFER_SENT) {
-        statusMap[userId].offers++;
-      } else if (status === ApplicationStatus.REJECTED) {
-        statusMap[userId].rejections++;
+      // Look up the status name from the statusId
+      const statusName = applicationStatusMap.get(statusId.toString());
+      if (statusName) {
+        if (statusName.includes("interview")) {
+          statusMap[userId].interviews++;
+        } else if (statusName === "offer") {
+          statusMap[userId].offers++;
+        } else if (statusName === "rejected") {
+          statusMap[userId].rejections++;
+        }
       }
     });
 
