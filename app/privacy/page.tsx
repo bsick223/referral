@@ -86,8 +86,8 @@ export default function PrivacyPolicy() {
             <ul className="list-disc pl-6 mb-4 space-y-2">
               <li>
                 Clerk: Provides authentication and user management services.
-                Please refer to Clerk's Privacy Policy for details on their data
-                practices.
+                Please refer to Clerk&apos;s Privacy Policy for details on their
+                data practices.
               </li>
             </ul>
           </section>
@@ -247,17 +247,17 @@ export default function PrivacyPolicy() {
             <p className="mb-4">
               If you are a California resident, the California Consumer Privacy
               Act, as amended by the California Privacy Rights Act of 2020
-              ("CCPA"), requires us to provide some additional information to
-              California residents. This section only applies to you if you are
-              a California resident, although please note that this information
-              and the rights afforded herein are the same as offered to our
-              other users in our main Privacy Policy.
+              (&quot;CCPA&quot;), requires us to provide some additional
+              information to California residents. This section only applies to
+              you if you are a California resident, although please note that
+              this information and the rights afforded herein are the same as
+              offered to our other users in our main Privacy Policy.
             </p>
             <p className="mb-4">
-              Please see the "Your Rights and Choices" section of our Policy
-              above for information about the additional rights you have with
-              respect to your personal information under California law and how
-              to exercise them.
+              Please see the &quot;Your Rights and Choices&quot; section of our
+              Policy above for information about the additional rights you have
+              with respect to your personal information under California law and
+              how to exercise them.
             </p>
           </section>
 
@@ -283,7 +283,8 @@ export default function PrivacyPolicy() {
               Have any questions, comments, or concerns about this privacy
               policy, your data, or your rights with respect to your
               information? Please get in touch by emailing us at
-              apptrackedbrendan@gmail.com and we'll be happy to try to answer them!
+              apptrackedbrendan@gmail.com and we&apos;ll be happy to try to
+              answer them!
             </p>
           </section>
 
@@ -294,8 +295,8 @@ export default function PrivacyPolicy() {
             <p className="mb-4">
               If you are located in the European Economic Area (EEA), you have
               certain rights under the General Data Protection Regulation
-              (GDPR). The data controller of your personal information is
-              App Tracked.
+              (GDPR). The data controller of your personal information is App
+              Tracked.
             </p>
             <p className="mb-4">
               The legal bases we rely on for processing your information
