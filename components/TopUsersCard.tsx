@@ -171,12 +171,14 @@ const TopUsersCard = ({ className }: TopUsersCardProps) => {
                     <Image
                       src={topReferralUser.imageUrl}
                       alt={getDisplayName(topReferralUser)}
-                      width={32}
-                      height={32}
-                      className="h-8 w-8 rounded-full border border-purple-500/30 mr-2"
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 rounded-full border border-purple-500/30 mr-2 object-cover"
+                      priority
+                      quality={90}
                     />
                   ) : (
-                    <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center mr-2">
+                    <div className="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center mr-2">
                       <span className="text-sm text-gray-300">
                         {getDisplayName(topReferralUser)?.charAt(0) || "U"}
                       </span>
@@ -213,12 +215,14 @@ const TopUsersCard = ({ className }: TopUsersCardProps) => {
                     <Image
                       src={topApplicationUser.imageUrl}
                       alt={getDisplayName(topApplicationUser)}
-                      width={32}
-                      height={32}
-                      className="h-8 w-8 rounded-full border border-blue-500/30 mr-2"
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 rounded-full border border-blue-500/30 mr-2 object-cover"
+                      priority
+                      quality={90}
                     />
                   ) : (
-                    <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center mr-2">
+                    <div className="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center mr-2">
                       <span className="text-sm text-gray-300">
                         {getDisplayName(topApplicationUser)?.charAt(0) || "U"}
                       </span>

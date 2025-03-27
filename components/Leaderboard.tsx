@@ -277,8 +277,8 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
                       <Image
                         src={entry.userInfo.imageUrl}
                         alt={getDisplayName(entry)}
-                        width={64}
-                        height={64}
+                        width={40}
+                        height={40}
                         className="w-full h-full object-cover"
                         priority={index < 3}
                         loading={index < 3 ? "eager" : "lazy"}
