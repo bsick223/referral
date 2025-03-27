@@ -72,6 +72,11 @@ export default function DashboardHomePage() {
     userId: user?.id || "",
   });
 
+  // Fetch status history to track interviews properly
+  const statusHistory = useQuery(api.applications.getStatusHistory, {
+    userId: user?.id || "",
+  });
+
   // Initialize the onboarding tour
   const { startTour } = useOnboardingTour({
     userId: user?.id || "",
@@ -89,7 +94,7 @@ export default function DashboardHomePage() {
 
   // Calculate application stats from real data
   const calculateApplicationStats = () => {
-    if (!applicationStatusCounts || !applicationStatuses) {
+    if (!applicationStatusCounts || !applicationStatuses || !statusHistory) {
       return {
         total: 0,
         active: 0,
@@ -116,13 +121,16 @@ export default function DashboardHomePage() {
       ((rejectedStatusId ? applicationStatusCounts[rejectedStatusId] || 0 : 0) +
         (offerStatusId ? applicationStatusCounts[offerStatusId] || 0 : 0));
 
-    // For interviews, sum applications in any status containing "interview"
-    const interviews = applicationStatuses
-      .filter((status) => status.name.toLowerCase().includes("interview"))
-      .reduce(
-        (sum, status) => sum + (applicationStatusCounts[status._id] || 0),
-        0
-      );
+    // For interviews, count unique applications that have EVER been in interview status
+    // This follows the same logic used for interview achievements
+    const interviewApplicationIds = new Set();
+    statusHistory.forEach((entry) => {
+      const statusName = entry.statusName.toLowerCase();
+      if (statusName.includes("interview")) {
+        interviewApplicationIds.add(entry.applicationId.toString());
+      }
+    });
+    const interviews = interviewApplicationIds.size;
 
     // For offers, get count of applications in "Offer" status
     const offers = offerStatusId
@@ -146,7 +154,8 @@ export default function DashboardHomePage() {
     successfulReferralsCount === undefined ||
     applicationStatusCounts === undefined ||
     applicationStatuses === undefined ||
-    recentActivity === undefined
+    recentActivity === undefined ||
+    statusHistory === undefined
   ) {
     return (
       <div className="min-h-screen bg-[#090d1b] flex items-center justify-center">
