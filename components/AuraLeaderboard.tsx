@@ -9,6 +9,14 @@ import { Trophy, Medal, Award, Sparkles } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useConvex } from "convex/react";
 
+// Define ApplicationStatus enum
+enum ApplicationStatus {
+  SUBMITTED = "submitted",
+  INTERVIEW_SCHEDULED = "interview_scheduled",
+  OFFER_SENT = "offer_sent",
+  REJECTED = "rejected",
+}
+
 interface UserInfo {
   id: string;
   username: string;
@@ -51,108 +59,243 @@ const AuraLeaderboard = ({
   const allApplications = useQuery(api.applications.getAllApplications);
   const allStatuses = useQuery(api.applicationStatuses.getAllStatuses);
 
+  // Fetch all user profiles to check privacy settings
+  const allUserProfiles = useQuery(api.userProfiles.getAll);
+
   // Calculate Aura leaderboard
   useEffect(() => {
-    if (allUserIds && allReferrals && allApplications && allStatuses) {
-      setIsLoading(true);
+    if (allUserIds && allReferrals && allApplications) {
       console.log(
         "Aura: Starting leaderboard calculation with",
         allUserIds.length,
         "users"
       );
 
-      // Build a map of status IDs to their names for each user
-      const statusMap = new Map();
+      const buildLeaderboardWithPrivacy = async () => {
+        try {
+          // Fetch user profiles for privacy settings
+          const profiles = await allUserProfiles;
 
-      allStatuses.forEach((status) => {
-        statusMap.set(status._id.toString(), {
-          userId: status.userId,
-          name: status.name.toLowerCase(),
-        });
-      });
+          // Filter users who have opted out of leaderboards
+          const filteredUserIds = allUserIds.filter((userId) => {
+            const userProfile = profiles ? profiles[userId] : null;
+            return !userProfile?.hideFromLeaderboards;
+          });
 
-      // Calculate points for each user without privacy filtering for now
-      // We'll handle visibility on the leaderboard page level instead
-      const userPointsArray = allUserIds.reduce((acc, userId) => {
-        // Count user's referrals - 5 points each
-        const referrals = allReferrals.filter((ref) => ref.userId === userId);
-        const referralCount = referrals.length;
-        const referralPoints = referralCount * 5;
+          console.log(
+            `Aura: Filtered out ${
+              allUserIds.length - filteredUserIds.length
+            } users who opted out`
+          );
 
-        // Count user's applications - 1 point each
-        const applications = allApplications.filter(
-          (app) => app.userId === userId
-        );
-        const applicationCount = applications.length;
-        const applicationPoints = applicationCount * 1;
+          // Build a map of status IDs to name for each user
+          const statusMap = {} as Record<string, Record<string, number>>;
 
-        // Count interviews, offers, and rejections
-        let interviewCount = 0;
-        let offerCount = 0;
-        let rejectionCount = 0;
+          // Process referrals to calculate points
+          allReferrals.forEach((referral) => {
+            const { userId, status } = referral;
+            if (!filteredUserIds.includes(userId)) return;
 
-        applications.forEach((app) => {
-          const status = statusMap.get(app.statusId.toString());
-          if (status) {
-            const statusName = status.name;
-            if (statusName.includes("interview")) {
-              interviewCount++;
-            } else if (statusName === "offer") {
-              offerCount++;
-            } else if (statusName === "rejected") {
-              rejectionCount++;
+            if (!statusMap[userId]) {
+              statusMap[userId] = {
+                referrals: 0,
+                applications: 0,
+                interviews: 0,
+                offers: 0,
+                rejections: 0,
+              };
             }
+
+            statusMap[userId].referrals++;
+          });
+
+          // Process applications to calculate points
+          allApplications.forEach((application) => {
+            const { userId, status } = application;
+            if (!filteredUserIds.includes(userId)) return;
+
+            if (!statusMap[userId]) {
+              statusMap[userId] = {
+                referrals: 0,
+                applications: 0,
+                interviews: 0,
+                offers: 0,
+                rejections: 0,
+              };
+            }
+
+            statusMap[userId].applications++;
+
+            if (status === ApplicationStatus.INTERVIEW_SCHEDULED) {
+              statusMap[userId].interviews++;
+            } else if (status === ApplicationStatus.OFFER_SENT) {
+              statusMap[userId].offers++;
+            } else if (status === ApplicationStatus.REJECTED) {
+              statusMap[userId].rejections++;
+            }
+          });
+
+          // Calculate aura points and build leaderboard
+          const userAuraPoints = filteredUserIds.map((userId) => {
+            const userStats = statusMap[userId] || {
+              referrals: 0,
+              applications: 0,
+              interviews: 0,
+              offers: 0,
+              rejections: 0,
+            };
+
+            const auraPoints =
+              userStats.referrals * 10 +
+              userStats.applications * 5 +
+              userStats.interviews * 100 +
+              userStats.offers * 50 +
+              userStats.rejections * 2;
+
+            return {
+              userId,
+              auraPoints,
+              name: "User", // Will be updated with profile info later
+            };
+          });
+
+          // Filter out users with 0 aura points
+          const filteredAuraPoints = userAuraPoints.filter(
+            (user) => user.auraPoints > 0
+          );
+
+          // Sort by aura points and limit
+          const sortedLeaderboard = filteredAuraPoints
+            .sort((a, b) => b.auraPoints - a.auraPoints)
+            .slice(0, limit);
+
+          console.log(
+            "Aura: Generated leaderboard with",
+            sortedLeaderboard.length,
+            "users"
+          );
+          setIsLoaded(true);
+
+          if (sortedLeaderboard.length > 0) {
+            // Fetch user profile information
+            fetchUserProfiles(sortedLeaderboard);
+          } else {
+            setLeaderboardWithProfiles([]);
           }
-        });
+        } catch (error) {
+          console.error("Error building aura leaderboard with privacy:", error);
+          // Fallback to simple leaderboard without privacy filtering
+          const fallbackLeaderboard = createBasicLeaderboard();
+          if (fallbackLeaderboard.length > 0) {
+            fetchUserProfiles(fallbackLeaderboard);
+          } else {
+            setLeaderboardWithProfiles([]);
+            setIsLoaded(true);
+          }
+        }
+      };
 
-        // Calculate points: interviews (10), offers (500), rejections (2)
-        const interviewPoints = interviewCount * 10;
-        const offerPoints = offerCount * 500;
-        const rejectionPoints = rejectionCount * 2;
-
-        // Total Aura points
-        const totalPoints =
-          referralPoints +
-          applicationPoints +
-          interviewPoints +
-          offerPoints +
-          rejectionPoints;
-
-        acc.push({
-          userId,
-          auraPoints: totalPoints,
-        });
-
-        return acc;
-      }, [] as any[]);
-
-      // Sort by aura points
-      const sorted = userPointsArray.sort(
-        (a, b) => b.auraPoints - a.auraPoints
-      );
-
-      // Get current user's rank
-      const currentUserRank = user
-        ? sorted.findIndex((entry) => entry.userId === user.id)
-        : -1;
-
-      // Slice to get the top limit users
-      const topUsers = sorted.slice(0, limit);
-      console.log("Aura: Generated leaderboard with", topUsers.length, "users");
-
-      setLeaderboardData(topUsers);
-      setUserRank(currentUserRank !== -1 ? currentUserRank + 1 : null);
-
-      if (topUsers.length > 0) {
-        // Fetch user profiles for the top users
-        fetchUserProfiles(topUsers);
-      } else {
-        setIsLoaded(true);
-        setIsLoading(false);
-        setLeaderboardWithProfiles([]);
-      }
+      buildLeaderboardWithPrivacy();
     }
-  }, [allUserIds, allReferrals, allApplications, allStatuses, user, limit]);
+  }, [allUserIds, allReferrals, allApplications, limit, allUserProfiles]);
+
+  // Helper function to create a basic leaderboard without privacy filtering
+  const createBasicLeaderboard = () => {
+    if (!allUserIds || !allReferrals || !allApplications) return [];
+
+    // First filter out users who opted out of leaderboards
+    const filteredUserIds = allUserProfiles
+      ? allUserIds.filter((userId) => {
+          const userProfile = allUserProfiles[userId] || null;
+          return !userProfile?.hideFromLeaderboards;
+        })
+      : allUserIds;
+
+    // Build a map of status IDs to name for each user
+    const statusMap = {} as Record<string, Record<string, number>>;
+
+    // Process referrals to calculate points
+    allReferrals.forEach((referral) => {
+      const { userId, status } = referral;
+
+      // Skip users who opted out of leaderboards
+      if (!filteredUserIds.includes(userId)) return;
+
+      if (!statusMap[userId]) {
+        statusMap[userId] = {
+          referrals: 0,
+          applications: 0,
+          interviews: 0,
+          offers: 0,
+          rejections: 0,
+        };
+      }
+
+      statusMap[userId].referrals++;
+    });
+
+    // Process applications to calculate points
+    allApplications.forEach((application) => {
+      const { userId, status } = application;
+
+      // Skip users who opted out of leaderboards
+      if (!filteredUserIds.includes(userId)) return;
+
+      if (!statusMap[userId]) {
+        statusMap[userId] = {
+          referrals: 0,
+          applications: 0,
+          interviews: 0,
+          offers: 0,
+          rejections: 0,
+        };
+      }
+
+      statusMap[userId].applications++;
+
+      if (status === ApplicationStatus.INTERVIEW_SCHEDULED) {
+        statusMap[userId].interviews++;
+      } else if (status === ApplicationStatus.OFFER_SENT) {
+        statusMap[userId].offers++;
+      } else if (status === ApplicationStatus.REJECTED) {
+        statusMap[userId].rejections++;
+      }
+    });
+
+    // Calculate aura points and build leaderboard
+    const userAuraPoints = filteredUserIds.map((userId) => {
+      const userStats = statusMap[userId] || {
+        referrals: 0,
+        applications: 0,
+        interviews: 0,
+        offers: 0,
+        rejections: 0,
+      };
+
+      const auraPoints =
+        userStats.referrals * 10 +
+        userStats.applications * 5 +
+        userStats.interviews * 100 +
+        userStats.offers * 50 +
+        userStats.rejections * 2;
+
+      return {
+        userId,
+        auraPoints,
+        name: "User", // Will be updated with profile info later
+      };
+    });
+
+    // Filter out users with 0 aura points
+    const filteredAuraPoints = userAuraPoints.filter(
+      (user) => user.auraPoints > 0
+    );
+
+    // Sort by aura points and limit
+    return filteredAuraPoints
+      .sort((a, b) => b.auraPoints - a.auraPoints)
+      .slice(0, limit);
+  };
 
   // Separate function to fetch user profiles
   const fetchUserProfiles = async (leaderboardData: LeaderboardEntry[]) => {

@@ -128,6 +128,9 @@ export default function ProfilePage() {
   const allApplications = useQuery(api.applications.getAllApplications);
   const allStatuses = useQuery(api.applicationStatuses.getAllStatuses);
 
+  // Fetch all user profiles to check privacy settings
+  const allUserProfiles = useQuery(api.userProfiles.getAll);
+
   // Calculate Aura leaderboard
   const auraLeaderboard = useMemo(() => {
     if (!allUserIds || !allReferrals || !allApplications || !allStatuses)
@@ -143,8 +146,14 @@ export default function ProfilePage() {
       });
     });
 
+    // Filter users who have opted out of leaderboards
+    const filteredUserIds = allUserIds.filter((userId) => {
+      const userProfile = allUserProfiles ? allUserProfiles[userId] : null;
+      return !userProfile?.hideFromLeaderboards;
+    });
+
     // Calculate points for each user
-    const userPoints = allUserIds.reduce((acc, userId) => {
+    const userPoints = filteredUserIds.reduce((acc, userId) => {
       // Count user's referrals - 5 points each
       const referrals = allReferrals.filter((ref) => ref.userId === userId);
       const referralCount = referrals.length;
@@ -177,7 +186,7 @@ export default function ProfilePage() {
       });
 
       // Calculate points: interviews (10), offers (500), rejections (2)
-      const interviewPoints = interviewCount * 10;
+      const interviewPoints = interviewCount * 100;
       const offerPoints = offerCount * 500;
       const rejectionPoints = rejectionCount * 2;
 
@@ -199,7 +208,7 @@ export default function ProfilePage() {
 
     // Sort by aura points
     return userPoints.sort((a, b) => b.auraPoints - a.auraPoints);
-  }, [allUserIds, allReferrals, allApplications, allStatuses]);
+  }, [allUserIds, allReferrals, allApplications, allStatuses, allUserProfiles]);
 
   // Fetch formatted achievements
   const achievements =

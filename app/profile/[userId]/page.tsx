@@ -165,6 +165,9 @@ export default function UserProfilePage() {
   const allApplications = useQuery(api.applications.getAllApplications);
   const allStatuses = useQuery(api.applicationStatuses.getAllStatuses);
 
+  // Fetch all user profiles to check privacy settings
+  const allUserProfiles = useQuery(api.userProfiles.getAll);
+
   // Create calculated leaderboards for aura
   const auraLeaderboard = useMemo(() => {
     if (!allUserIds || !allReferrals || !allApplications || !allStatuses)
@@ -180,8 +183,14 @@ export default function UserProfilePage() {
       });
     });
 
+    // Filter users who have opted out of leaderboards
+    const filteredUserIds = allUserIds.filter((userId) => {
+      const userProfile = allUserProfiles ? allUserProfiles[userId] : null;
+      return !userProfile?.hideFromLeaderboards;
+    });
+
     // Calculate points for each user
-    const userPoints = allUserIds.reduce((acc, userId) => {
+    const userPoints = filteredUserIds.reduce((acc, userId) => {
       // Count user's referrals - 5 points each
       const referrals = allReferrals.filter((ref) => ref.userId === userId);
       const referralCount = referrals.length;
@@ -214,7 +223,7 @@ export default function UserProfilePage() {
       });
 
       // Calculate points: interviews (10), offers (500), rejections (2)
-      const interviewPoints = interviewCount * 10;
+      const interviewPoints = interviewCount * 100;
       const offerPoints = offerCount * 500;
       const rejectionPoints = rejectionCount * 2;
 
@@ -241,7 +250,7 @@ export default function UserProfilePage() {
 
     // Sort by aura points
     return userPoints.sort((a, b) => b.auraPoints - a.auraPoints);
-  }, [allUserIds, allReferrals, allApplications, allStatuses]);
+  }, [allUserIds, allReferrals, allApplications, allStatuses, allUserProfiles]);
 
   // Fetch formatted achievements
   const achievements =
@@ -273,8 +282,14 @@ export default function UserProfilePage() {
   const applicationsLeaderboard = useMemo(() => {
     if (!allUserIds || !allApplications) return [];
 
+    // Filter users who have opted out of leaderboards
+    const filteredUserIds = allUserIds.filter((userId) => {
+      const userProfile = allUserProfiles ? allUserProfiles[userId] : null;
+      return !userProfile?.hideFromLeaderboards;
+    });
+
     // Count applications for each user
-    const userApplicationCounts = allUserIds.reduce((acc, userId) => {
+    const userApplicationCounts = filteredUserIds.reduce((acc, userId) => {
       const applications = allApplications.filter(
         (app) => app.userId === userId
       );
@@ -291,7 +306,7 @@ export default function UserProfilePage() {
     return userApplicationCounts.sort(
       (a, b) => b.applicationCount - a.applicationCount
     );
-  }, [allUserIds, allApplications]);
+  }, [allUserIds, allApplications, allUserProfiles]);
 
   const applicationsRank =
     applicationsLeaderboard.length > 0

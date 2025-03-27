@@ -29,6 +29,14 @@ interface ApplicationsLeaderboardProps {
   hideHeader?: boolean;
 }
 
+// Define ApplicationStatus enum if used in the component
+enum ApplicationStatus {
+  SUBMITTED = "submitted",
+  INTERVIEW_SCHEDULED = "interview_scheduled",
+  OFFER_SENT = "offer_sent",
+  REJECTED = "rejected",
+}
+
 const ApplicationsLeaderboard = ({
   limit = 5,
   hideHeader = false,
@@ -55,51 +63,116 @@ const ApplicationsLeaderboard = ({
     [allUserProfiles]
   );
 
-  // Calculate application counts and build leaderboard
+  // Calculate Applications leaderboard
   useEffect(() => {
     if (allUserIds && allApplications) {
-      console.log(
-        "Applications: Starting leaderboard calculation with",
-        allUserIds.length,
-        "users"
-      );
+      const buildLeaderboardWithPrivacy = async () => {
+        try {
+          // Fetch user profiles for privacy settings
+          const profiles = await allUserProfiles;
 
-      // Count applications for each user without privacy filtering for now
-      // We'll handle visibility on the leaderboard page level
-      const userApplicationCounts = allUserIds.reduce((acc, userId) => {
-        const applications = allApplications.filter(
-          (app) => app.userId === userId
-        );
-        if (applications.length > 0) {
-          acc[userId] = {
-            userId,
-            applicationCount: applications.length,
-            name: "User", // This will be updated with profile info later
-          };
+          // Filter users who have opted out of leaderboards
+          const filteredUserIds = allUserIds.filter((userId) => {
+            const userProfile = profiles ? profiles[userId] : null;
+            return !userProfile?.hideFromLeaderboards;
+          });
+
+          console.log(
+            `Applications: Filtered out ${
+              allUserIds.length - filteredUserIds.length
+            } users who opted out`
+          );
+
+          // Count applications for each user
+          const userApplicationCounts = filteredUserIds.reduce(
+            (acc, userId) => {
+              const applications = allApplications.filter(
+                (app) => app.userId === userId
+              );
+
+              if (applications.length > 0) {
+                acc.push({
+                  userId,
+                  applicationCount: applications.length,
+                });
+              }
+              return acc;
+            },
+            [] as any[]
+          );
+
+          // Sort by application count
+          const sortedLeaderboard = userApplicationCounts
+            .sort((a, b) => b.applicationCount - a.applicationCount)
+            .slice(0, limit);
+
+          console.log(
+            "Applications: Generated leaderboard with",
+            sortedLeaderboard.length,
+            "users"
+          );
+
+          setIsLoaded(true);
+
+          if (sortedLeaderboard.length > 0) {
+            // Fetch user profile information
+            fetchUserProfiles(sortedLeaderboard);
+          } else {
+            setLeaderboardWithProfiles([]);
+          }
+        } catch (error) {
+          console.error(
+            "Error building applications leaderboard with privacy:",
+            error
+          );
+
+          // Fallback to simple leaderboard without privacy filtering
+          const fallbackLeaderboard = createBasicLeaderboard();
+          if (fallbackLeaderboard.length > 0) {
+            fetchUserProfiles(fallbackLeaderboard);
+          } else {
+            setLeaderboardWithProfiles([]);
+            setIsLoaded(true);
+          }
         }
-        return acc;
-      }, {} as Record<string, LeaderboardEntry>);
+      };
 
-      // Convert to array and sort by application count
-      const sortedLeaderboard = Object.values(userApplicationCounts)
-        .sort((a, b) => b.applicationCount - a.applicationCount)
-        .slice(0, limit);
-
-      console.log(
-        "Applications: Generated leaderboard with",
-        sortedLeaderboard.length,
-        "users"
-      );
-      setIsLoaded(true);
-
-      if (sortedLeaderboard.length > 0) {
-        // Fetch user profile information
-        fetchUserProfiles(sortedLeaderboard);
-      } else {
-        setLeaderboardWithProfiles([]);
-      }
+      buildLeaderboardWithPrivacy();
     }
-  }, [allUserIds, allApplications, limit]);
+  }, [allUserIds, allApplications, limit, allUserProfiles]);
+
+  // Helper function to create a basic leaderboard without privacy filtering
+  const createBasicLeaderboard = () => {
+    if (!allUserIds || !allApplications) return [];
+
+    // First filter out users who opted out of leaderboards
+    const filteredUserIds = allUserProfiles
+      ? allUserIds.filter((userId) => {
+          const userProfile = allUserProfiles[userId] || null;
+          return !userProfile?.hideFromLeaderboards;
+        })
+      : allUserIds;
+
+    // Count applications for each user
+    const userApplicationCounts = filteredUserIds.reduce((acc, userId) => {
+      const applications = allApplications.filter(
+        (app) => app.userId === userId
+      );
+
+      if (applications.length > 0) {
+        acc.push({
+          userId,
+          applicationCount: applications.length,
+        });
+      }
+      return acc;
+    }, [] as any[]);
+
+    // Sort by application count
+    return userApplicationCounts
+      .sort((a, b) => b.applicationCount - a.applicationCount)
+      .slice(0, limit);
+  };
 
   // Separate function to fetch user profiles
   const fetchUserProfiles = async (leaderboardData: LeaderboardEntry[]) => {

@@ -73,25 +73,60 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
   );
 
   useEffect(() => {
-    if (leaderboard !== undefined) {
-      console.log(
-        "Referrals: Starting leaderboard with",
-        leaderboard?.length || 0,
-        "entries"
-      );
-      setIsLoaded(true);
+    if (leaderboard) {
+      console.log("Referrals: Starting with", leaderboard.length, "entries");
 
-      // No filtering for now, we'll handle privacy at the presentation layer
-      const filteredLeaderboard = leaderboard || [];
+      const buildLeaderboardWithPrivacy = async () => {
+        try {
+          // Fetch user profiles for privacy settings
+          const profiles = await allUserProfiles;
 
-      if (filteredLeaderboard.length > 0) {
-        // Fetch user profile information
-        fetchUserProfiles(filteredLeaderboard);
-      } else {
-        setLeaderboardWithProfiles([]);
-      }
+          // Get all user IDs in the leaderboard
+          const leaderboardUserIds = leaderboard.map((entry) => entry.userId);
+          console.log(
+            "Referrals: Processing",
+            leaderboardUserIds.length,
+            "users in leaderboard"
+          );
+
+          // Get list of users who opted out of leaderboards
+          const optedOutUsers = leaderboardUserIds.filter((userId) => {
+            return profiles[userId]?.hideFromLeaderboards === true;
+          });
+
+          console.log(
+            `Filtered out ${optedOutUsers.length} users who opted out`
+          );
+
+          // Filter out users who have opted out of leaderboards
+          const filteredLeaderboard = leaderboard.filter(
+            (entry) => !optedOutUsers.includes(entry.userId)
+          );
+
+          // Add ranking info with only visible users
+          const leaderboardWithRanks = filteredLeaderboard.map(
+            (entry, index) => ({
+              ...entry,
+              rank: index + 1, // Rank now reflects only visible users
+            })
+          );
+
+          // Fetch profile information for each user
+          fetchUserProfiles(leaderboardWithRanks.slice(0, limit));
+        } catch (error) {
+          console.error("Error building leaderboard with privacy:", error);
+          // Fallback to displaying the full leaderboard
+          const leaderboardWithRanks = leaderboard.map((entry, index) => ({
+            ...entry,
+            rank: index + 1,
+          }));
+          fetchUserProfiles(leaderboardWithRanks.slice(0, limit));
+        }
+      };
+
+      buildLeaderboardWithPrivacy();
     }
-  }, [leaderboard]);
+  }, [leaderboard, allUserProfiles, limit]);
 
   // Separate function to fetch user profiles
   const fetchUserProfiles = async (leaderboardData: any[]) => {
