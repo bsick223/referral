@@ -302,14 +302,14 @@ export default function DashboardHomePage() {
             className="flex items-center justify-between bg-[#121a36]/50 backdrop-blur-sm rounded-lg border border-[#20253d]/50 p-4 hover:bg-[#121a36]/70 transition-colors"
           >
             <div className="flex items-center">
-              <div className="bg-yellow-500/20 rounded-full p-2 mr-3">
-                <Trophy className="h-5 w-5 text-yellow-400" />
+              <div className="bg-orange-500/20 rounded-full p-2 mr-3">
+                <Trophy className="h-5 w-5 text-orange-400" />
               </div>
               <span className="text-sm font-medium text-gray-200">
                 Leaderboard
               </span>
             </div>
-            <ChevronRight className="h-4 w-4 text-yellow-400" />
+            <ChevronRight className="h-4 w-4 text-orange-400" />
           </Link>
 
           <Link
