@@ -24,6 +24,9 @@ import {
   Target,
   Loader2,
   EyeOff,
+  MapPin,
+  Linkedin,
+  Phone,
 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -110,6 +113,23 @@ export default function UserProfilePage() {
     api.userProfiles.getByUserId,
     userId ? { userId } : "skip"
   );
+
+  // For viewing user's achievements
+  const viewerAchievements =
+    useQuery(
+      api.achievements.getFormattedUserAchievements,
+      user?.id ? { userId: user.id } : "skip"
+    ) || [];
+
+  // Create a set of achievement IDs the viewing user has completed
+  const viewerCompletedAchievementIds = useMemo(() => {
+    if (!viewerAchievements) return new Set<string>();
+    return new Set(
+      viewerAchievements
+        .filter((achievement) => achievement.earned)
+        .map((achievement) => `${achievement.category}-${achievement.tier}`)
+    );
+  }, [viewerAchievements]);
 
   // Check if profile is private and not the current user
   const isPrivateProfile =
@@ -418,6 +438,61 @@ export default function UserProfilePage() {
                     <h2 className="text-xl font-medium text-white">
                       {userFullName}
                     </h2>
+
+                    {/* Show professional info if available */}
+                    {userProfile &&
+                      "professionalTitle" in userProfile &&
+                      (userProfile.professionalTitle as string) &&
+                      canViewPublicInfo && (
+                        <p className="text-orange-400 text-sm mt-1">
+                          {userProfile.professionalTitle as string}
+                        </p>
+                      )}
+
+                    {/* Display location if available */}
+                    {userProfile &&
+                      "location" in userProfile &&
+                      (userProfile.location as string) &&
+                      canViewPublicInfo && (
+                        <div className="flex items-center justify-center gap-1 text-gray-400 text-xs mt-2">
+                          <MapPin className="h-3 w-3" />
+                          <span>{userProfile.location as string}</span>
+                        </div>
+                      )}
+
+                    {/* Display phone number if available */}
+                    {userProfile &&
+                      "phoneNumber" in userProfile &&
+                      (userProfile.phoneNumber as string) &&
+                      canViewPublicInfo && (
+                        <div className="flex items-center justify-center gap-1 text-gray-400 text-xs mt-2">
+                          <Phone className="h-3 w-3" />
+                          <span>{userProfile.phoneNumber as string}</span>
+                        </div>
+                      )}
+
+                    {/* LinkedIn link if available */}
+                    {userProfile &&
+                      "linkedinUrl" in userProfile &&
+                      (userProfile.linkedinUrl as string) &&
+                      canViewPublicInfo && (
+                        <a
+                          href={
+                            (userProfile.linkedinUrl as string).startsWith(
+                              "http"
+                            )
+                              ? (userProfile.linkedinUrl as string)
+                              : `https://${userProfile.linkedinUrl as string}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1 text-blue-400 hover:text-blue-300 text-xs mt-2 transition-colors"
+                        >
+                          <Linkedin className="h-3 w-3" />
+                          <span>LinkedIn Profile</span>
+                        </a>
+                      )}
+
                     <div className="w-full h-[1px] my-4 bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
 
                     {/* Stats */}
@@ -533,6 +608,18 @@ export default function UserProfilePage() {
                           {achievementsByCategory[category]?.map(
                             (achievement: Achievement) => {
                               const tierStyle = tierColors[achievement.tier];
+                              const achievementId = `${achievement.category}-${achievement.tier}`;
+
+                              // Only show achievement if viewer has completed it OR it's their own profile
+                              if (
+                                !isOwnProfile &&
+                                !viewerCompletedAchievementIds.has(
+                                  achievementId
+                                )
+                              ) {
+                                return null;
+                              }
+
                               return (
                                 <div
                                   key={achievement.id}
