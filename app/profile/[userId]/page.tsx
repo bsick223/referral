@@ -95,10 +95,36 @@ interface Achievement {
   requirement: number;
 }
 
+interface UserData {
+  firstName?: string;
+  lastName?: string;
+  imageUrl?: string;
+}
+
+interface StatusInfo {
+  userId: string;
+  name: string;
+}
+
+interface UserPointsData {
+  userId: string;
+  auraPoints: number;
+  referralCount: number;
+  applicationCount: number;
+  interviewCount: number;
+  offerCount: number;
+  rejectionCount: number;
+}
+
+interface ApplicationCountData {
+  userId: string;
+  applicationCount: number;
+}
+
 export default function UserProfilePage() {
   const { isLoaded, isSignedIn, user } = useUser();
   const params = useParams();
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const userId = params.userId as string;
@@ -115,17 +141,17 @@ export default function UserProfilePage() {
   );
 
   // For viewing user's achievements
-  const viewerAchievements =
-    useQuery(
-      api.achievements.getFormattedUserAchievements,
-      user?.id ? { userId: user.id } : "skip"
-    ) || [];
+  const viewerAchievements = useQuery(
+    api.achievements.getFormattedUserAchievements,
+    user?.id ? { userId: user.id } : "skip"
+  );
 
   // Create a set of achievement IDs the viewing user has completed
   const viewerCompletedAchievementIds = useMemo(() => {
-    if (!viewerAchievements) return new Set<string>();
+    const achievements = viewerAchievements || [];
+    if (!achievements.length) return new Set<string>();
     return new Set(
-      viewerAchievements
+      achievements
         .filter((achievement) => achievement.earned)
         .map((achievement) => `${achievement.category}-${achievement.tier}`)
     );
@@ -208,6 +234,17 @@ export default function UserProfilePage() {
   // Fetch all user profiles to check privacy settings
   const allUserProfiles = useQuery(api.userProfiles.getAll);
 
+  // Fetch formatted achievements
+  const rawAchievements = useQuery(
+    api.achievements.getFormattedUserAchievements,
+    { userId }
+  );
+
+  // Memoize achievements with fallback to empty array
+  const achievements = useMemo(() => {
+    return rawAchievements || [];
+  }, [rawAchievements]);
+
   // Create calculated leaderboards for aura
   const auraLeaderboard = useMemo(() => {
     if (!allUserIds || !allReferrals || !allApplications || !allStatuses)
@@ -226,7 +263,7 @@ export default function UserProfilePage() {
     });
 
     // Get application status by ID for efficient lookup
-    const statusById: Record<string, any> = {};
+    const statusById: Record<string, StatusInfo> = {};
     allStatuses.forEach((status) => {
       statusById[status._id.toString()] = {
         userId: status.userId,
@@ -297,15 +334,11 @@ export default function UserProfilePage() {
       });
 
       return acc;
-    }, [] as any[]);
+    }, [] as UserPointsData[]);
 
     // Sort by aura points
     return userPoints.sort((a, b) => b.auraPoints - a.auraPoints);
   }, [allUserIds, allReferrals, allApplications, allStatuses, allUserProfiles]);
-
-  // Fetch formatted achievements
-  const achievements =
-    useQuery(api.achievements.getFormattedUserAchievements, { userId }) || [];
 
   // Calculate user's rank in Aura leaderboard
   const auraLeaderboardRank =
@@ -351,7 +384,7 @@ export default function UserProfilePage() {
         });
       }
       return acc;
-    }, [] as any[]);
+    }, [] as ApplicationCountData[]);
 
     // Sort by application count
     return userApplicationCounts.sort(

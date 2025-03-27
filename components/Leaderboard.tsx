@@ -5,7 +5,7 @@ import { api } from "../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
-import { Medal, Trophy, Award, Link as LinkIcon } from "lucide-react";
+import { Medal, Trophy, Link as LinkIcon } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
 interface UserInfo {
@@ -30,6 +30,7 @@ interface LeaderboardEntry {
   referralCount: number;
   userInfo?: UserInfo;
   linkedinUrl?: string;
+  rank?: number;
 }
 
 interface LeaderboardProps {
@@ -54,22 +55,64 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
     leaderboard ? { userIds: leaderboard.map((entry) => entry.userId) } : "skip"
   );
 
-  // Helper function to get LinkedIn URL
-  const getLinkedinUrl = useCallback(
-    (userId: string) => {
-      if (!userProfiles) return undefined;
-      return userProfiles[userId]?.linkedinUrl;
+  // Separate function to fetch user profiles
+  const fetchUserProfiles = useCallback(
+    async (leaderboardData: LeaderboardEntry[]) => {
+      try {
+        const userIds = leaderboardData.map((entry) => entry.userId);
+        console.log(
+          "Referrals: Fetching profiles for",
+          userIds.length,
+          "users"
+        );
+
+        const response = await fetch("/api/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userIds }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch user profiles");
+        }
+
+        const { users } = await response.json();
+        console.log(
+          "Referrals: Received profiles for",
+          Object.keys(users).length,
+          "users"
+        );
+
+        // Combine leaderboard data with user profiles
+        const enrichedLeaderboard = leaderboardData.map((entry) => ({
+          ...entry,
+          userInfo: users[entry.userId],
+          linkedinUrl: userProfiles
+            ? userProfiles[entry.userId]?.linkedinUrl
+            : undefined,
+        }));
+
+        console.log("Referrals: Updated leaderboard with user details");
+        setLeaderboardWithProfiles(enrichedLeaderboard);
+        setIsLoaded(true);
+      } catch (error) {
+        console.error("Error fetching user profiles:", error);
+
+        // Still include LinkedIn URLs even if other profile info fails
+        const fallbackLeaderboard = leaderboardData.map((entry) => ({
+          ...entry,
+          linkedinUrl: userProfiles
+            ? userProfiles[entry.userId]?.linkedinUrl
+            : undefined,
+        }));
+
+        setLeaderboardWithProfiles(fallbackLeaderboard);
+        setIsLoaded(true);
+      }
     },
     [userProfiles]
-  );
-
-  // Helper function to check if user has opted out of leaderboards
-  const hasOptedOutOfLeaderboards = useCallback(
-    (userId: string) => {
-      if (!allUserProfiles) return false;
-      return allUserProfiles[userId]?.hideFromLeaderboards === true;
-    },
-    [allUserProfiles]
   );
 
   useEffect(() => {
@@ -91,7 +134,7 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
 
           // Get list of users who opted out of leaderboards or hid referral counts
           const excludedUsers = leaderboardUserIds.filter((userId) => {
-            const profile = profiles[userId];
+            const profile = profiles ? profiles[userId] : null;
             return (
               profile?.hideFromLeaderboards === true ||
               profile?.showReferralsCount === false
@@ -130,60 +173,7 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
 
       buildLeaderboardWithPrivacy();
     }
-  }, [leaderboard, allUserProfiles, limit]);
-
-  // Separate function to fetch user profiles
-  const fetchUserProfiles = async (leaderboardData: any[]) => {
-    try {
-      const userIds = leaderboardData.map((entry) => entry.userId);
-      console.log("Referrals: Fetching profiles for", userIds.length, "users");
-
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userIds }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch user profiles");
-      }
-
-      const { users } = await response.json();
-      console.log(
-        "Referrals: Received profiles for",
-        Object.keys(users).length,
-        "users"
-      );
-
-      // Combine leaderboard data with user profiles
-      const enrichedLeaderboard = leaderboardData.map((entry) => ({
-        ...entry,
-        userInfo: users[entry.userId],
-        linkedinUrl: userProfiles
-          ? userProfiles[entry.userId]?.linkedinUrl
-          : undefined,
-      }));
-
-      console.log("Referrals: Updated leaderboard with user details");
-      setLeaderboardWithProfiles(enrichedLeaderboard);
-      setIsLoaded(true);
-    } catch (error) {
-      console.error("Error fetching user profiles:", error);
-
-      // Still include LinkedIn URLs even if other profile info fails
-      const fallbackLeaderboard = leaderboardData.map((entry) => ({
-        ...entry,
-        linkedinUrl: userProfiles
-          ? userProfiles[entry.userId]?.linkedinUrl
-          : undefined,
-      }));
-
-      setLeaderboardWithProfiles(fallbackLeaderboard);
-      setIsLoaded(true);
-    }
-  };
+  }, [leaderboard, allUserProfiles, limit, fetchUserProfiles]);
 
   // Also let's add a console.log to help debug
   useEffect(() => {

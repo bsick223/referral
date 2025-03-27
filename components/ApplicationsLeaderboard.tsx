@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
-import { Trophy, Medal, Award } from "lucide-react";
+import { Trophy, Medal } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 
@@ -29,12 +29,9 @@ interface ApplicationsLeaderboardProps {
   hideHeader?: boolean;
 }
 
-// Define ApplicationStatus enum if used in the component
-enum ApplicationStatus {
-  SUBMITTED = "submitted",
-  INTERVIEW_SCHEDULED = "interview_scheduled",
-  OFFER_SENT = "offer_sent",
-  REJECTED = "rejected",
+interface UserApplicationCount {
+  userId: string;
+  applicationCount: number;
 }
 
 const ApplicationsLeaderboard = ({
@@ -54,14 +51,41 @@ const ApplicationsLeaderboard = ({
   const allUserIds = useQuery(api.users.getAllUserIds);
   const allApplications = useQuery(api.applications.getAllApplications);
 
-  // Helper function to check if user has opted out of leaderboards
-  const hasOptedOutOfLeaderboards = useCallback(
-    (userId: string) => {
-      if (!allUserProfiles) return false;
-      return allUserProfiles[userId]?.hideFromLeaderboards === true;
-    },
-    [allUserProfiles]
-  );
+  // Helper function to create a basic leaderboard without privacy filtering
+  const createBasicLeaderboard = useCallback(() => {
+    if (!allUserIds || !allApplications) return [];
+
+    // Filter out users who opted out of leaderboards or hid application counts
+    const filteredUserIds = allUserProfiles
+      ? allUserIds.filter((userId) => {
+          const userProfile = allUserProfiles[userId] || null;
+          return (
+            !userProfile?.hideFromLeaderboards &&
+            userProfile?.showApplicationsCount !== false
+          );
+        })
+      : allUserIds;
+
+    // Count applications for each user
+    const userApplicationCounts = filteredUserIds.reduce((acc, userId) => {
+      const applications = allApplications.filter(
+        (app) => app.userId === userId
+      );
+
+      if (applications.length > 0) {
+        acc.push({
+          userId,
+          applicationCount: applications.length,
+        });
+      }
+      return acc;
+    }, [] as UserApplicationCount[]);
+
+    // Sort by application count
+    return userApplicationCounts
+      .sort((a, b) => b.applicationCount - a.applicationCount)
+      .slice(0, limit);
+  }, [allUserIds, allApplications, allUserProfiles, limit]);
 
   // Calculate Applications leaderboard
   useEffect(() => {
@@ -101,7 +125,7 @@ const ApplicationsLeaderboard = ({
               }
               return acc;
             },
-            [] as any[]
+            [] as UserApplicationCount[]
           );
 
           // Sort by application count
@@ -142,43 +166,13 @@ const ApplicationsLeaderboard = ({
 
       buildLeaderboardWithPrivacy();
     }
-  }, [allUserIds, allApplications, limit, allUserProfiles]);
-
-  // Helper function to create a basic leaderboard without privacy filtering
-  const createBasicLeaderboard = () => {
-    if (!allUserIds || !allApplications) return [];
-
-    // Filter out users who opted out of leaderboards or hid application counts
-    const filteredUserIds = allUserProfiles
-      ? allUserIds.filter((userId) => {
-          const userProfile = allUserProfiles[userId] || null;
-          return (
-            !userProfile?.hideFromLeaderboards &&
-            userProfile?.showApplicationsCount !== false
-          );
-        })
-      : allUserIds;
-
-    // Count applications for each user
-    const userApplicationCounts = filteredUserIds.reduce((acc, userId) => {
-      const applications = allApplications.filter(
-        (app) => app.userId === userId
-      );
-
-      if (applications.length > 0) {
-        acc.push({
-          userId,
-          applicationCount: applications.length,
-        });
-      }
-      return acc;
-    }, [] as any[]);
-
-    // Sort by application count
-    return userApplicationCounts
-      .sort((a, b) => b.applicationCount - a.applicationCount)
-      .slice(0, limit);
-  };
+  }, [
+    allUserIds,
+    allApplications,
+    limit,
+    allUserProfiles,
+    createBasicLeaderboard,
+  ]);
 
   // Separate function to fetch user profiles
   const fetchUserProfiles = async (leaderboardData: LeaderboardEntry[]) => {

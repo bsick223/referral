@@ -37,7 +37,7 @@ export default function LeaderboardSection() {
             Community Leaders
           </h2>
           <p className="mt-2 text-gray-400 text-sm md:text-base">
-            See who's leading in referrals, applications, and overall Aura
+            See who&apos;s leading in referrals, applications, and overall Aura
           </p>
         </div>
 

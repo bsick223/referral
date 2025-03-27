@@ -6,23 +6,16 @@ import {
   Home,
   MessageSquare,
   Trophy,
-  ClipboardList,
   UsersRound,
   ChevronRight,
   LogOut,
   Settings,
   Menu,
   X,
-  ShieldAlert,
-  HomeIcon,
   Briefcase,
-  Building,
 } from "lucide-react";
-import { UserButton, useUser, useClerk } from "@clerk/nextjs";
+import { UserButton, useClerk } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
-
-// Admin user IDs
-const ADMIN_IDS = ["user_2ujlj0HGikJI9X8fvZSRWSHVtgw"];
 
 export default function DashboardLayout({
   children,
@@ -31,7 +24,6 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useUser();
   const { signOut } = useClerk();
 
   // Close sidebar when route changes on mobile

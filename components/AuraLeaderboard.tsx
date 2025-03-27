@@ -5,9 +5,8 @@ import { api } from "../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
-import { Trophy, Medal, Award, Sparkles } from "lucide-react";
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { useConvex } from "convex/react";
+import { Trophy, Medal, Sparkles } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 
 interface UserInfo {
   id: string;
@@ -38,12 +37,6 @@ const AuraLeaderboard = ({
   const [leaderboardWithProfiles, setLeaderboardWithProfiles] = useState<
     LeaderboardEntry[]
   >([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>(
-    []
-  );
-  const [userRank, setUserRank] = useState<number | null>(null);
-  const convex = useConvex();
 
   // Fetch data for Aura leaderboard calculation
   const allUserIds = useQuery(api.users.getAllUserIds);
@@ -53,6 +46,125 @@ const AuraLeaderboard = ({
 
   // Fetch all user profiles to check privacy settings
   const allUserProfiles = useQuery(api.userProfiles.getAll);
+
+  // Helper function to create a basic leaderboard without privacy filtering
+  const createBasicLeaderboard = useCallback(() => {
+    if (!allUserIds || !allReferrals || !allApplications) return [];
+
+    // First filter out users who opted out of leaderboards
+    const filteredUserIds = allUserProfiles
+      ? allUserIds.filter((userId) => {
+          const userProfile = allUserProfiles[userId] || null;
+          return !userProfile?.hideFromLeaderboards;
+        })
+      : allUserIds;
+
+    // Build a map of status IDs to name for each user
+    const statusMap = {} as Record<string, Record<string, number>>;
+
+    // Create a map of status IDs to names
+    const applicationStatusMap = new Map();
+    if (allStatuses) {
+      allStatuses.forEach((status) => {
+        applicationStatusMap.set(
+          status._id.toString(),
+          status.name.toLowerCase()
+        );
+      });
+    }
+
+    // Process referrals to calculate points
+    allReferrals.forEach((referral) => {
+      const { userId } = referral;
+
+      // Skip users who opted out of leaderboards
+      if (!filteredUserIds.includes(userId)) return;
+
+      if (!statusMap[userId]) {
+        statusMap[userId] = {
+          referrals: 0,
+          applications: 0,
+          interviews: 0,
+          offers: 0,
+          rejections: 0,
+        };
+      }
+
+      statusMap[userId].referrals++;
+    });
+
+    // Process applications to calculate points
+    allApplications.forEach((application) => {
+      const { userId, statusId } = application;
+
+      // Skip users who opted out of leaderboards
+      if (!filteredUserIds.includes(userId)) return;
+
+      if (!statusMap[userId]) {
+        statusMap[userId] = {
+          referrals: 0,
+          applications: 0,
+          interviews: 0,
+          offers: 0,
+          rejections: 0,
+        };
+      }
+
+      statusMap[userId].applications++;
+
+      // Look up the status name from the statusId
+      const statusName = applicationStatusMap.get(statusId.toString());
+      if (statusName) {
+        if (statusName.includes("interview")) {
+          statusMap[userId].interviews++;
+        } else if (statusName === "offer") {
+          statusMap[userId].offers++;
+        } else if (statusName === "rejected") {
+          statusMap[userId].rejections++;
+        }
+      }
+    });
+
+    // Calculate aura points and build leaderboard
+    const userAuraPoints = filteredUserIds.map((userId) => {
+      const userStats = statusMap[userId] || {
+        referrals: 0,
+        applications: 0,
+        interviews: 0,
+        offers: 0,
+        rejections: 0,
+      };
+
+      const auraPoints =
+        userStats.referrals * 5 +
+        userStats.applications * 1 +
+        userStats.offers * 100 +
+        userStats.rejections * 2;
+
+      return {
+        userId,
+        auraPoints,
+        name: "User", // Will be updated with profile info later
+      };
+    });
+
+    // Filter out users with 0 aura points
+    const filteredAuraPoints = userAuraPoints.filter(
+      (user) => user.auraPoints > 0
+    );
+
+    // Sort by aura points and limit
+    return filteredAuraPoints
+      .sort((a, b) => b.auraPoints - a.auraPoints)
+      .slice(0, limit);
+  }, [
+    allUserIds,
+    allReferrals,
+    allApplications,
+    allStatuses,
+    allUserProfiles,
+    limit,
+  ]);
 
   // Calculate Aura leaderboard
   useEffect(() => {
@@ -96,7 +208,7 @@ const AuraLeaderboard = ({
 
           // Process referrals to calculate points
           allReferrals.forEach((referral) => {
-            const { userId, status } = referral;
+            const { userId } = referral;
             if (!filteredUserIds.includes(userId)) return;
 
             if (!statusMap[userId]) {
@@ -210,119 +322,8 @@ const AuraLeaderboard = ({
     limit,
     allUserProfiles,
     allStatuses,
+    createBasicLeaderboard,
   ]);
-
-  // Helper function to create a basic leaderboard without privacy filtering
-  const createBasicLeaderboard = () => {
-    if (!allUserIds || !allReferrals || !allApplications) return [];
-
-    // First filter out users who opted out of leaderboards
-    const filteredUserIds = allUserProfiles
-      ? allUserIds.filter((userId) => {
-          const userProfile = allUserProfiles[userId] || null;
-          return !userProfile?.hideFromLeaderboards;
-        })
-      : allUserIds;
-
-    // Build a map of status IDs to name for each user
-    const statusMap = {} as Record<string, Record<string, number>>;
-
-    // Create a map of status IDs to names
-    const applicationStatusMap = new Map();
-    if (allStatuses) {
-      allStatuses.forEach((status) => {
-        applicationStatusMap.set(
-          status._id.toString(),
-          status.name.toLowerCase()
-        );
-      });
-    }
-
-    // Process referrals to calculate points
-    allReferrals.forEach((referral) => {
-      const { userId, status } = referral;
-
-      // Skip users who opted out of leaderboards
-      if (!filteredUserIds.includes(userId)) return;
-
-      if (!statusMap[userId]) {
-        statusMap[userId] = {
-          referrals: 0,
-          applications: 0,
-          interviews: 0,
-          offers: 0,
-          rejections: 0,
-        };
-      }
-
-      statusMap[userId].referrals++;
-    });
-
-    // Process applications to calculate points
-    allApplications.forEach((application) => {
-      const { userId, statusId } = application;
-
-      // Skip users who opted out of leaderboards
-      if (!filteredUserIds.includes(userId)) return;
-
-      if (!statusMap[userId]) {
-        statusMap[userId] = {
-          referrals: 0,
-          applications: 0,
-          interviews: 0,
-          offers: 0,
-          rejections: 0,
-        };
-      }
-
-      statusMap[userId].applications++;
-
-      // Look up the status name from the statusId
-      const statusName = applicationStatusMap.get(statusId.toString());
-      if (statusName) {
-        if (statusName.includes("interview")) {
-          statusMap[userId].interviews++;
-        } else if (statusName === "offer") {
-          statusMap[userId].offers++;
-        } else if (statusName === "rejected") {
-          statusMap[userId].rejections++;
-        }
-      }
-    });
-
-    // Calculate aura points and build leaderboard
-    const userAuraPoints = filteredUserIds.map((userId) => {
-      const userStats = statusMap[userId] || {
-        referrals: 0,
-        applications: 0,
-        interviews: 0,
-        offers: 0,
-        rejections: 0,
-      };
-
-      const auraPoints =
-        userStats.referrals * 5 +
-        userStats.applications * 1 +
-        userStats.offers * 100 +
-        userStats.rejections * 2;
-
-      return {
-        userId,
-        auraPoints,
-        name: "User", // Will be updated with profile info later
-      };
-    });
-
-    // Filter out users with 0 aura points
-    const filteredAuraPoints = userAuraPoints.filter(
-      (user) => user.auraPoints > 0
-    );
-
-    // Sort by aura points and limit
-    return filteredAuraPoints
-      .sort((a, b) => b.auraPoints - a.auraPoints)
-      .slice(0, limit);
-  };
 
   // Separate function to fetch user profiles
   const fetchUserProfiles = async (leaderboardData: LeaderboardEntry[]) => {
@@ -367,7 +368,6 @@ const AuraLeaderboard = ({
       );
     } finally {
       setIsLoaded(true);
-      setIsLoading(false);
     }
   };
 

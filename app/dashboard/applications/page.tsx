@@ -16,7 +16,6 @@ import {
   PaintBucket,
   GripHorizontal,
   Move,
-  ArrowLeft,
   Columns,
   GripVertical,
   Briefcase,
@@ -681,9 +680,6 @@ export default function ApplicationsPage() {
 
   const handleUpdateStatus = async (statusId: Id<"applicationStatuses">) => {
     if (!editingStatusName.trim()) return;
-
-    // Find the status to know if it's a default one
-    const statusToUpdate = statuses.find((s) => s._id === statusId);
 
     try {
       await updateStatus({

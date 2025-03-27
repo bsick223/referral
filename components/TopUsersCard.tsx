@@ -20,6 +20,11 @@ interface TopUserInfo {
   applicationCount?: number;
 }
 
+interface ApplicationCountData {
+  userId: string;
+  applicationCount: number;
+}
+
 const TopUsersCard = ({ className }: TopUsersCardProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [topReferralUser, setTopReferralUser] = useState<TopUserInfo | null>(
@@ -51,7 +56,7 @@ const TopUsersCard = ({ className }: TopUsersCardProps) => {
         });
       }
       return acc;
-    }, [] as any[]);
+    }, [] as ApplicationCountData[]);
 
     // Sort by application count
     return userApplicationCounts.sort(

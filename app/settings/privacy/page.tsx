@@ -17,7 +17,7 @@ import Link from "next/link";
 import SettingsTabs from "@/components/SettingsTabs";
 
 export default function PrivacySettingsPage() {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { user } = useUser();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");

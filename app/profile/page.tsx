@@ -93,6 +93,16 @@ interface Achievement {
   requirement: number;
 }
 
+interface StatusInfo {
+  userId: string;
+  name: string;
+}
+
+interface UserPointsData {
+  userId: string;
+  auraPoints: number;
+}
+
 export default function ProfilePage() {
   const { isLoaded, isSignedIn, user } = useUser();
 
@@ -119,9 +129,6 @@ export default function ProfilePage() {
     api.referrals.getUserReferralsByCompany,
     user?.id ? { userId: user.id } : "skip"
   );
-
-  // Fetch leaderboard data
-  const leaderboardData = useQuery(api.referrals.getLeaderboard, {});
 
   // Fetch data for Aura leaderboard calculation
   const allUserIds = useQuery(api.users.getAllUserIds);
@@ -150,7 +157,7 @@ export default function ProfilePage() {
     });
 
     // Get application status by ID for efficient lookup
-    const statusById: Record<string, any> = {};
+    const statusById: Record<string, StatusInfo> = {};
     allStatuses.forEach((status) => {
       statusById[status._id.toString()] = {
         userId: status.userId,
@@ -198,7 +205,6 @@ export default function ProfilePage() {
       const applicationPoints = applicationCount * 1;
 
       // Use the status counts from our history tracking
-      const interviewCount = statusHistoryByUser[userId]["interview"].size;
       const offerCount = statusHistoryByUser[userId]["offer"].size;
       const rejectionCount = statusHistoryByUser[userId]["rejected"].size;
 
@@ -216,7 +222,7 @@ export default function ProfilePage() {
       });
 
       return acc;
-    }, [] as any[]);
+    }, [] as UserPointsData[]);
 
     // Sort by aura points
     return userPoints.sort((a, b) => b.auraPoints - a.auraPoints);

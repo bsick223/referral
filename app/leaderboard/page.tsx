@@ -156,7 +156,7 @@ export default function LeaderboardPage() {
               ) : activeTab === "applications" ? (
                 <p className="text-sm text-gray-400">
                   This leaderboard ranks users based on the total number of job
-                  applications they've submitted. More applications means a
+                  applications they&apos;ve submitted. More applications means a
                   higher position!
                 </p>
               ) : (

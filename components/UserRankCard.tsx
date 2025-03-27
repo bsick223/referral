@@ -3,20 +3,27 @@
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useState, useEffect, useMemo } from "react";
-import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
-import {
-  RefreshCw,
-  Trophy,
-  Medal,
-  Award,
-  Sparkles,
-  Briefcase,
-} from "lucide-react";
+import { RefreshCw, Trophy, Medal, Briefcase, Sparkles } from "lucide-react";
 
 interface UserRankCardProps {
   userId?: string;
   activeTab?: "aura" | "applications" | "referrals";
+}
+
+interface UserPointsData {
+  userId: string;
+  auraPoints: number;
+  referralCount: number;
+  applicationCount: number;
+  interviewCount: number;
+  offerCount: number;
+  rejectionCount: number;
+}
+
+interface ApplicationCountData {
+  userId: string;
+  applicationCount: number;
 }
 
 const UserRankCard = ({
@@ -36,7 +43,7 @@ const UserRankCard = ({
   const allStatuses = useQuery(api.applicationStatuses.getAllStatuses);
   const allUserProfiles = useQuery(api.userProfiles.getAll);
 
-  // Create calculated leaderboards for aura and applications
+  // Create calculated leaderboards for aura
   const auraLeaderboard = useMemo(() => {
     if (!allUserIds || !allReferrals || !allApplications || !allStatuses)
       return [];
@@ -112,7 +119,7 @@ const UserRankCard = ({
       });
 
       return acc;
-    }, [] as any[]);
+    }, [] as UserPointsData[]);
 
     // Sort by aura points
     return userPoints.sort((a, b) => b.auraPoints - a.auraPoints);
@@ -143,7 +150,7 @@ const UserRankCard = ({
         });
       }
       return acc;
-    }, [] as any[]);
+    }, [] as ApplicationCountData[]);
 
     // Sort by application count
     return userApplicationCounts.sort(
