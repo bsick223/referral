@@ -6,6 +6,7 @@ import AuraLeaderboard from "@/components/AuraLeaderboard";
 import ApplicationsLeaderboard from "@/components/ApplicationsLeaderboard";
 import LeaderboardTabs from "@/components/LeaderboardTabs";
 import UserRankCard from "@/components/UserRankCard";
+import TopUsersCard from "@/components/TopUsersCard";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -108,6 +109,10 @@ export default function LeaderboardPage() {
           {/* Left sidebar with user's position */}
           <div className="w-full md:w-1/3 lg:w-1/4">
             <UserRankCard userId={user?.id} activeTab={activeTab} />
+
+            <div className="mt-6">
+              <TopUsersCard />
+            </div>
 
             <div className="mt-6 bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden p-6 border border-[#20253d]/50">
               <h3 className="text-lg font-light text-white mb-4">
