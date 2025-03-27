@@ -3,7 +3,7 @@
 import { useUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   ArrowLeft,
   Medal,
@@ -122,6 +122,85 @@ export default function ProfilePage() {
   // Fetch leaderboard data
   const leaderboardData = useQuery(api.referrals.getLeaderboard, {});
 
+  // Fetch data for Aura leaderboard calculation
+  const allUserIds = useQuery(api.users.getAllUserIds);
+  const allReferrals = useQuery(api.referrals.getAllReferrals);
+  const allApplications = useQuery(api.applications.getAllApplications);
+  const allStatuses = useQuery(api.applicationStatuses.getAllStatuses);
+
+  // Calculate Aura leaderboard
+  const auraLeaderboard = useMemo(() => {
+    if (!allUserIds || !allReferrals || !allApplications || !allStatuses)
+      return [];
+
+    // Build a map of status IDs to their names for each user
+    const statusMap = new Map();
+
+    allStatuses.forEach((status) => {
+      statusMap.set(status._id.toString(), {
+        userId: status.userId,
+        name: status.name.toLowerCase(),
+      });
+    });
+
+    // Calculate points for each user
+    const userPoints = allUserIds.reduce((acc, userId) => {
+      // Count user's referrals - 5 points each
+      const referrals = allReferrals.filter((ref) => ref.userId === userId);
+      const referralCount = referrals.length;
+      const referralPoints = referralCount * 5;
+
+      // Count user's applications - 1 point each
+      const applications = allApplications.filter(
+        (app) => app.userId === userId
+      );
+      const applicationCount = applications.length;
+      const applicationPoints = applicationCount * 1;
+
+      // Count interviews, offers, and rejections
+      let interviewCount = 0;
+      let offerCount = 0;
+      let rejectionCount = 0;
+
+      applications.forEach((app) => {
+        const status = statusMap.get(app.statusId.toString());
+        if (status) {
+          const statusName = status.name;
+          if (statusName.includes("interview")) {
+            interviewCount++;
+          } else if (statusName === "offer") {
+            offerCount++;
+          } else if (statusName === "rejected") {
+            rejectionCount++;
+          }
+        }
+      });
+
+      // Calculate points: interviews (10), offers (500), rejections (2)
+      const interviewPoints = interviewCount * 10;
+      const offerPoints = offerCount * 500;
+      const rejectionPoints = rejectionCount * 2;
+
+      // Total Aura points
+      const totalPoints =
+        referralPoints +
+        applicationPoints +
+        interviewPoints +
+        offerPoints +
+        rejectionPoints;
+
+      acc.push({
+        userId,
+        auraPoints: totalPoints,
+      });
+
+      return acc;
+    }, [] as any[]);
+
+    // Sort by aura points
+    return userPoints.sort((a, b) => b.auraPoints - a.auraPoints);
+  }, [allUserIds, allReferrals, allApplications, allStatuses]);
+
   // Fetch formatted achievements
   const achievements =
     useQuery(
@@ -134,17 +213,18 @@ export default function ProfilePage() {
     api.achievements.checkAndUpdateAchievements
   );
 
-  // Calculate user's rank in leaderboard
-  const leaderboardRank = leaderboardData
-    ? leaderboardData.findIndex((entry) => entry.userId === user?.id) + 1
-    : 0;
+  // Calculate user's rank in Aura leaderboard
+  const auraLeaderboardRank =
+    auraLeaderboard.length > 0
+      ? auraLeaderboard.findIndex((entry) => entry.userId === user?.id) + 1
+      : 0;
 
   // Calculate percentile if there are enough users
   const percentile =
-    leaderboardData && leaderboardData.length > 0
+    auraLeaderboard.length > 0
       ? Math.round(
-          ((leaderboardData.length - leaderboardRank) /
-            leaderboardData.length) *
+          ((auraLeaderboard.length - auraLeaderboardRank) /
+            auraLeaderboard.length) *
             100
         )
       : 0;
@@ -154,7 +234,7 @@ export default function ProfilePage() {
     totalReferrals: referrals.length || 0,
     totalApplications: applications.length || 0,
     totalCompanies: companiesData?.companiesData?.length || 0,
-    leaderboardRank: leaderboardRank || 0,
+    leaderboardRank: auraLeaderboardRank || 0,
   };
 
   // Trigger achievement check when user data is loaded
@@ -250,7 +330,7 @@ export default function ProfilePage() {
                       </p>
                     </div>
                     <div className="bg-[#0f1326]/70 rounded-lg p-3">
-                      <p className="text-sm text-gray-400">Rank</p>
+                      <p className="text-sm text-gray-400">Aura Rank</p>
                       <p className="text-xl font-semibold text-white">
                         #
                         {metrics.leaderboardRank > 0
@@ -279,7 +359,7 @@ export default function ProfilePage() {
             <div className="mt-6 bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50 p-6">
               <h3 className="text-md font-medium text-gray-300 mb-4 flex items-center">
                 <Trophy className="h-5 w-5 mr-2 text-yellow-400" />
-                Leaderboard Position
+                Aura Leaderboard Position
               </h3>
               <div className="bg-[#0f1326]/70 rounded-lg p-4 flex items-center justify-between">
                 <div>

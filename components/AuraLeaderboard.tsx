@@ -306,7 +306,7 @@ const AuraLeaderboard = ({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xs font-medium text-white truncate">
+                  <div className="text-xs font-medium text-white truncate text-left">
                     {getDisplayName(entry)}
                     {user && entry.userId === user.id && " (You)"}
                   </div>
@@ -320,6 +320,12 @@ const AuraLeaderboard = ({
                     </span>
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-purple-900/20 text-purple-300 border border-purple-800/30">
                       {entry.interviewCount} ints
+                    </span>
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-green-900/20 text-green-300 border border-green-800/30">
+                      {entry.offerCount} offers
+                    </span>
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-red-900/20 text-red-300 border border-red-800/30">
+                      {entry.rejectionCount} rejs
                     </span>
                   </div>
                 </div>
