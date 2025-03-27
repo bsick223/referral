@@ -15,7 +15,6 @@ import {
   X,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 
 export default function DashboardLayout({
@@ -134,7 +133,7 @@ export default function DashboardLayout({
                 </div>
               </div>
               <div className="ml-3">
-                <h1 className="text-xl font-medium text-white">Referral Tracker</h1>
+                <h1 className="text-xl font-medium text-white">App Tracked</h1>
                 <p className="text-xs text-gray-400">Job & Referral Tracker</p>
               </div>
             </Link>

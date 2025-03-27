@@ -8,7 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
-  Edit2,
   Trash2,
   MoreVertical,
   X,
@@ -18,7 +17,6 @@ import {
   GripHorizontal,
   Move,
   ArrowLeft,
-  Menu,
   Columns,
   GripVertical,
 } from "lucide-react";
@@ -163,7 +161,6 @@ export default function ApplicationsPage() {
 
   // Add these below the existing state variables
   const [touchDragging, setTouchDragging] = useState(false);
-  const [touchStartY, setTouchStartY] = useState(0);
   const [touchCurrentTarget, setTouchCurrentTarget] =
     useState<HTMLElement | null>(null);
   const [ghostElement, setGhostElement] = useState<HTMLElement | null>(null);
@@ -300,7 +297,7 @@ export default function ApplicationsPage() {
     setDraggedApplicationId(applicationId);
   };
 
-  const handleDragEnd = (e: React.DragEvent) => {
+  const handleDragEnd = () => {
     setIsDraggingApplication(false);
     setDraggedApplicationId(null);
     setDropTargetId(null);
@@ -1028,7 +1025,7 @@ export default function ApplicationsPage() {
     if (isReorderingColumns || (isMobile && !showingAllColumns)) return;
 
     // Store the time when touch started to differentiate between tap and drag
-    const touchStartTime = Date.now();
+    // const touchStartTime = Date.now();
 
     const application = applications.find((app) => app._id === applicationId);
     if (!application) return;
@@ -1070,8 +1067,6 @@ export default function ApplicationsPage() {
       // Add a visual feedback for long press
       target.classList.add("touch-dragging");
 
-      setTouchStartY(e.touches[0].clientY);
-      setTouchCurrentTarget(target);
       setTouchDragging(true);
       setIsDraggingApplication(true);
       setDraggedApplicationId(applicationId);
@@ -1083,14 +1078,18 @@ export default function ApplicationsPage() {
     }, 150);
 
     // Store the timer so we can clear it if needed
-    (e.currentTarget as any).longPressTimer = startLongPressTimer;
+    (
+      e.currentTarget as HTMLElement & { longPressTimer: NodeJS.Timeout | null }
+    ).longPressTimer = startLongPressTimer;
   };
 
   // Update the touch move handler to handle drag cancellation if moved too quickly
   const handleTouchMove = (e: React.TouchEvent) => {
     // If we haven't started dragging properly yet, but user moved finger,
     // clear the timer and prevent starting drag
-    const target = e.currentTarget as any;
+    const target = e.currentTarget as HTMLElement & {
+      longPressTimer: NodeJS.Timeout | null;
+    };
     if (target.longPressTimer && !touchDragging) {
       clearTimeout(target.longPressTimer);
       target.longPressTimer = null;
@@ -1111,7 +1110,10 @@ export default function ApplicationsPage() {
     // Find what's under the touch point using elementFromPoint
     // We need to temporarily hide the ghost to find elements under it
     ghostElement.style.display = "none";
-    const elemBelow = document.elementFromPoint(touchX, touchY) as HTMLElement;
+    const elemBelow = document.elementFromPoint(
+      touchX,
+      touchY
+    ) as HTMLElement | null;
     ghostElement.style.display = "block";
 
     if (!elemBelow) return;
@@ -1151,7 +1153,9 @@ export default function ApplicationsPage() {
   // Update the touch end handler
   const handleTouchEnd = async (e: React.TouchEvent) => {
     // Clear the timer if touch ended before dragging started
-    const target = e.currentTarget as any;
+    const target = e.currentTarget as HTMLElement & {
+      longPressTimer: NodeJS.Timeout | null;
+    };
     if (target.longPressTimer) {
       clearTimeout(target.longPressTimer);
       target.longPressTimer = null;
@@ -1642,7 +1646,8 @@ export default function ApplicationsPage() {
             <div className="flex items-center">
               <AlertCircle className="h-5 w-5 mr-2" />
               <p>
-                Drag and drop lists to reorder them. Click "Done" when finished.
+                Drag and drop lists to reorder them. Click &quot;Done&quot; when
+                finished.
               </p>
             </div>
           </div>

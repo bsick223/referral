@@ -18,7 +18,7 @@ function Header() {
             <Link href="/" className="flex items-center gap-2">
               <Building className="h-6 w-6 text-orange-500" />
               <span className="text-xl font-bold bg-gradient-to-r text-white bg-clip-text">
-                ReferralTracker
+                App Tracked
               </span>
             </Link>
           </div>

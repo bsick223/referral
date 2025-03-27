@@ -1,15 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import {
   PlusCircle,
   Building,
   RefreshCw,
-  MessageSquare,
-  Trophy,
-  ClipboardList,
-  UsersRound,
   Briefcase,
   Users,
   Clock,

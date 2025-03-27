@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import Image from "next/image";
 
 // Map for achievement icons
 const achievementIcons: Record<string, React.ReactNode> = {
@@ -111,12 +112,6 @@ export default function ProfilePage() {
       api.applications.listByUser,
       user?.id ? { userId: user.id } : "skip"
     ) || [];
-
-  // Fetch analytics data
-  const analytics = useQuery(
-    api.referrals.getUserReferralAnalytics,
-    user?.id ? { userId: user.id } : "skip"
-  );
 
   // Fetch user's company data
   const companiesData = useQuery(
@@ -222,9 +217,11 @@ export default function ProfilePage() {
             <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50 p-6">
               <div className="flex flex-col items-center">
                 {user?.imageUrl ? (
-                  <img
+                  <Image
                     src={user.imageUrl}
                     alt={user.fullName || "Profile"}
+                    width={96}
+                    height={96}
                     className="h-24 w-24 rounded-full border-2 border-orange-500/30 mb-4"
                   />
                 ) : (
