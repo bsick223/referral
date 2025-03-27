@@ -145,3 +145,19 @@ export const hasCompletedOnboarding = query({
     return profile?.onboardingCompleted === true;
   },
 });
+
+// Get all user profiles for leaderboards
+export const getAll = query({
+  args: {},
+  handler: async (ctx) => {
+    const profiles = await ctx.db.query("userProfiles").collect();
+
+    // Convert to a map for easier lookup
+    const profileMap: Record<string, any> = {};
+    for (const profile of profiles) {
+      profileMap[profile.userId] = profile;
+    }
+
+    return profileMap;
+  },
+});

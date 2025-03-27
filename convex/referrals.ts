@@ -405,3 +405,12 @@ export const getSuccessfulReferralsCount = query({
     return successfulCount;
   },
 });
+
+// Get all referrals for leaderboards
+export const getAllReferrals = query({
+  args: {},
+  handler: async (ctx) => {
+    const referrals = await ctx.db.query("referrals").collect();
+    return referrals;
+  },
+});

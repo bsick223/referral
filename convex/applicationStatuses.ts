@@ -222,3 +222,12 @@ export const initializeDefaultStatuses = mutation({
     }
   },
 });
+
+// Get all application statuses for leaderboards
+export const getAllStatuses = query({
+  args: {},
+  handler: async (ctx) => {
+    const statuses = await ctx.db.query("applicationStatuses").collect();
+    return statuses;
+  },
+});

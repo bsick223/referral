@@ -202,3 +202,12 @@ export const updateOrder = mutation({
     return applicationIds;
   },
 });
+
+// Get all applications for the leaderboards
+export const getAllApplications = query({
+  args: {},
+  handler: async (ctx) => {
+    const applications = await ctx.db.query("applications").collect();
+    return applications;
+  },
+});
