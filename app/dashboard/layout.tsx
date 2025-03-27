@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { UserButton, useClerk } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 export default function DashboardLayout({
   children,
@@ -85,10 +86,14 @@ export default function DashboardLayout({
 
       {/* Mobile Header with Logo and Menu Button */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#0c1029]/90 border-b border-[#20253d]/50 z-20 backdrop-blur-sm flex items-center justify-between px-4">
-        <Link href="/" className="flex items-center">
-          <div className="h-8 w-8 rounded-md bg-gradient-to-br from-orange-500 to-blue-600 flex items-center justify-center text-white font-bold">
-            RT
-          </div>
+        <Link href="/dashboard" className="flex items-center">
+          <Image
+            src="/AppTrackedLogo-removebg-preview.png"
+            alt="App Tracked Logo"
+            width={60}
+            height={60}
+            className="h-14 w-auto"
+          />
           <div className="ml-2">
             <h1 className="text-lg font-medium text-white">App Tracked</h1>
           </div>
@@ -128,10 +133,14 @@ export default function DashboardLayout({
               className="hidden md:flex items-center hover:opacity-80 transition-opacity cursor-pointer"
             >
               <div className="flex-shrink-0">
-                {/* Replace with your logo */}
-                <div className="h-10 w-10 rounded-md bg-gradient-to-br from-orange-500 to-blue-600 flex items-center justify-center text-white font-bold">
-                  RT
-                </div>
+                {/* Your logo */}
+                <Image
+                  src="/AppTrackedLogo-removebg-preview.png"
+                  alt="App Tracked Logo"
+                  width={60}
+                  height={60}
+                  className="h-14 w-auto"
+                />
               </div>
               <div className="ml-3">
                 <h1 className="text-xl font-medium text-white">App Tracked</h1>

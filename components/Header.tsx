@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Button } from "./ui/button";
-import { Building } from "lucide-react";
+import Image from "next/image";
 
 function Header() {
   return (
@@ -16,10 +16,13 @@ function Header() {
           {/* Left */}
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
-              <Building className="h-6 w-6 text-orange-500" />
-              <span className="text-xl font-bold bg-gradient-to-r text-white bg-clip-text">
-                App Tracked
-              </span>
+              <Image
+                src="/AppTrackedLogo-removebg-preview.png"
+                alt="App Tracked Logo"
+                width={175}
+                height={40}
+                className=""
+              />
             </Link>
           </div>
 
