@@ -175,7 +175,7 @@ const ApplicationsLeaderboard = ({
   ]);
 
   // Separate function to fetch user profiles
-  const fetchUserProfiles = async (leaderboardData: LeaderboardEntry[]) => {
+  const fetchUserProfiles = async (leaderboardData: UserApplicationCount[]) => {
     try {
       const userIds = leaderboardData.map((entry) => entry.userId);
       console.log(
@@ -205,7 +205,9 @@ const ApplicationsLeaderboard = ({
 
       // Combine leaderboard data with user profiles
       const enrichedLeaderboard = leaderboardData.map((entry) => ({
-        ...entry,
+        userId: entry.userId,
+        name: "User", // Default name that will be replaced by user info
+        applicationCount: entry.applicationCount,
         userInfo: users[entry.userId],
       }));
 
@@ -214,7 +216,12 @@ const ApplicationsLeaderboard = ({
     } catch (error) {
       console.error("Error fetching application user profiles:", error);
       // Still display the leaderboard even without user details
-      setLeaderboardWithProfiles(leaderboardData);
+      const fallbackLeaderboard = leaderboardData.map((entry) => ({
+        userId: entry.userId,
+        name: "User",
+        applicationCount: entry.applicationCount,
+      }));
+      setLeaderboardWithProfiles(fallbackLeaderboard);
     }
   };
 
