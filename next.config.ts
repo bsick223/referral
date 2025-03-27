@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
         protocol: "https",
       },
       {
-        hostname: "rugged-fox-602.convex.cloud",
+        hostname: "dazzling-setter-717.convex.cloud",
         protocol: "https",
       },
       {
