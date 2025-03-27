@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Save,
   GripVertical,
+  Search,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -71,6 +72,10 @@ export default function MessagesPage() {
   const [orderedMessages, setOrderedMessages] = useState<Array<MessageType>>(
     []
   );
+  const [filteredMessages, setFilteredMessages] = useState<Array<MessageType>>(
+    []
+  );
+  const [searchQuery, setSearchQuery] = useState("");
   const [draggedItemId, setDraggedItemId] = useState<Id<"messages"> | null>(
     null
   );
@@ -90,8 +95,42 @@ export default function MessagesPage() {
   useEffect(() => {
     if (messages && Array.isArray(messages) && !isReordering) {
       setOrderedMessages([...messages]);
+      setFilteredMessages([...messages]);
     }
   }, [messages, isReordering]);
+
+  // Filter messages based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredMessages(orderedMessages);
+      return;
+    }
+
+    const lowerQuery = searchQuery.toLowerCase();
+    const filtered = orderedMessages.filter((message) => {
+      // Search in title
+      if (message.title.toLowerCase().includes(lowerQuery)) {
+        return true;
+      }
+
+      // Search in content
+      if (message.content.toLowerCase().includes(lowerQuery)) {
+        return true;
+      }
+
+      // Search in tags
+      if (message.tags && message.tags.length > 0) {
+        const parsedTags = parseTagsForDisplay(message.tags);
+        return parsedTags.some((tag) =>
+          tag.name.toLowerCase().includes(lowerQuery)
+        );
+      }
+
+      return false;
+    });
+
+    setFilteredMessages(filtered);
+  }, [searchQuery, orderedMessages]);
 
   // Add CSS for dragging
   useEffect(() => {
@@ -509,16 +548,43 @@ export default function MessagesPage() {
 
       {/* Main content */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <p className="text-gray-400">
             Create and manage message templates for quick copying
           </p>
+
+          {/* Search Bar */}
+          <div className="relative flex-grow max-w-md order-3 md:order-2">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                className="bg-[#121a36]/70 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-[#20253d]/50 rounded-md px-3 py-2 text-white"
+                placeholder="Search templates by title, content, or tags..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
           <button
             onClick={() => {
               setShowNewMessageForm((prev) => !prev);
               if (editingMessageId) cancelEditing();
             }}
-            className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 rounded-md shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/60 focus:outline-none backdrop-blur-sm cursor-pointer relative group overflow-hidden transition-all duration-300"
+            className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 rounded-md shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/60 focus:outline-none backdrop-blur-sm cursor-pointer relative group overflow-hidden transition-all duration-300 order-2 md:order-3"
           >
             {/* Gradient border hover effect */}
             <span className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 bg-gradient-to-r from-orange-500/20 via-purple-500/20 to-blue-500/20 transition-opacity duration-300"></span>
@@ -742,92 +808,104 @@ export default function MessagesPage() {
           </div>
         ) : (
           <div className="bg-[#121a36]/50 backdrop-blur-sm shadow-md rounded-lg overflow-hidden border border-[#20253d]/50">
-            <ul className="divide-y divide-[#20253d]/50">
-              {orderedMessages.map((message) => (
-                <li
-                  key={message._id}
-                  className={`p-6 relative ${
-                    draggedItemId === message._id
-                      ? "opacity-50 bg-[#1d2442]/30"
-                      : ""
-                  }`}
-                  onDragStart={(e) => handleDragStart(e, message._id)}
-                  onDragOver={(e) => handleDragOver(e, message._id)}
-                  onDragEnd={handleDragEnd}
-                >
-                  <div
-                    className="absolute top-6 left-2 cursor-move"
-                    data-drag-handle="true"
-                    draggable={true}
+            {filteredMessages.length === 0 && searchQuery ? (
+              <div className="text-center py-12">
+                <Search className="mx-auto h-10 w-10 text-gray-400 mb-2" />
+                <h3 className="text-lg font-light text-white">
+                  No matching templates found
+                </h3>
+                <p className="mt-1 text-sm text-gray-400">
+                  Try adjusting your search query
+                </p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-[#20253d]/50">
+                {filteredMessages.map((message) => (
+                  <li
+                    key={message._id}
+                    className={`p-6 relative ${
+                      draggedItemId === message._id
+                        ? "opacity-50 bg-[#1d2442]/30"
+                        : ""
+                    }`}
+                    onDragStart={(e) => handleDragStart(e, message._id)}
+                    onDragOver={(e) => handleDragOver(e, message._id)}
+                    onDragEnd={handleDragEnd}
                   >
-                    <GripVertical className="h-5 w-5 text-gray-500 hover:text-gray-300" />
-                  </div>
-                  <div className="flex items-center justify-between mb-2 pl-8">
-                    <div className="flex items-center flex-wrap gap-2">
-                      <h3 className="text-lg font-light text-white">
-                        {message.title}
-                      </h3>
-                      {message.isDefault && (
-                        <span className="px-2 py-0.5 text-xs bg-blue-900/50 text-blue-300 rounded-full border border-blue-700/30">
-                          Default
-                        </span>
-                      )}
-                      {message.tags &&
-                        message.tags.length > 0 &&
-                        parseTagsForDisplay(message.tags).map((tag) => (
-                          <span
-                            key={tag.name}
-                            className={`px-2 py-0.5 text-xs ${
-                              TAG_COLORS[tag.color].bg
-                            } ${
-                              TAG_COLORS[tag.color].text
-                            } rounded-full border border-[#20253d]/70`}
-                          >
-                            {tag.name}
+                    <div
+                      className="absolute top-6 left-2 cursor-move"
+                      data-drag-handle="true"
+                      draggable={true}
+                    >
+                      <GripVertical className="h-5 w-5 text-gray-500 hover:text-gray-300" />
+                    </div>
+                    <div className="flex items-center justify-between mb-2 pl-8">
+                      <div className="flex items-center flex-wrap gap-2">
+                        <h3 className="text-lg font-light text-white">
+                          {message.title}
+                        </h3>
+                        {message.isDefault && (
+                          <span className="px-2 py-0.5 text-xs bg-blue-900/50 text-blue-300 rounded-full border border-blue-700/30">
+                            Default
                           </span>
-                        ))}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() =>
-                          copyMessageToClipboard(message.content, message._id)
-                        }
-                        className="inline-flex items-center p-1.5 border border-[#20253d]/50 rounded-md text-gray-400 hover:text-orange-400 focus:outline-none cursor-pointer transition-colors"
-                        title="Copy to clipboard"
-                      >
-                        {copiedMessageId === message._id ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
                         )}
-                      </button>
-                      <button
-                        onClick={() => startEditing(message)}
-                        className="inline-flex items-center p-1.5 border border-[#20253d]/50 rounded-md text-gray-400 hover:text-orange-400 focus:outline-none cursor-pointer transition-colors"
-                        title="Edit message"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteMessage(message._id)}
-                        className="inline-flex items-center p-1.5 border border-[#20253d]/50 rounded-md text-gray-400 hover:text-red-400 focus:outline-none cursor-pointer transition-colors"
-                        title="Delete message"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </button>
+                        {message.tags &&
+                          message.tags.length > 0 &&
+                          parseTagsForDisplay(message.tags).map((tag) => (
+                            <span
+                              key={tag.name}
+                              className={`px-2 py-0.5 text-xs ${
+                                TAG_COLORS[tag.color].bg
+                              } ${
+                                TAG_COLORS[tag.color].text
+                              } rounded-full border border-[#20253d]/70`}
+                            >
+                              {tag.name}
+                            </span>
+                          ))}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() =>
+                            copyMessageToClipboard(message.content, message._id)
+                          }
+                          className="inline-flex items-center p-1.5 border border-[#20253d]/50 rounded-md text-gray-400 hover:text-orange-400 focus:outline-none cursor-pointer transition-colors"
+                          title="Copy to clipboard"
+                        >
+                          {copiedMessageId === message._id ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => startEditing(message)}
+                          className="inline-flex items-center p-1.5 border border-[#20253d]/50 rounded-md text-gray-400 hover:text-orange-400 focus:outline-none cursor-pointer transition-colors"
+                          title="Edit message"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteMessage(message._id)}
+                          className="inline-flex items-center p-1.5 border border-[#20253d]/50 rounded-md text-gray-400 hover:text-red-400 focus:outline-none cursor-pointer transition-colors"
+                          title="Delete message"
+                        >
+                          <Trash className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-300 bg-[#1d2442]/30 p-3 rounded-md ml-8 border border-[#20253d]/50">
-                    <pre className="font-sans whitespace-pre-wrap break-words">
-                      {message.content}
-                    </pre>
-                  </div>
-                  <div className="mt-3 text-xs text-gray-500 ml-8">
-                    Added {new Date(message.createdAt).toLocaleDateString()}
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    <div className="mt-2 text-sm text-gray-300 bg-[#1d2442]/30 p-3 rounded-md ml-8 border border-[#20253d]/50">
+                      <pre className="font-sans whitespace-pre-wrap break-words">
+                        {message.content}
+                      </pre>
+                    </div>
+                    <div className="mt-3 text-xs text-gray-500 ml-8">
+                      Added {new Date(message.createdAt).toLocaleDateString()}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
       </main>

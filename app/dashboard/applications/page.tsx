@@ -19,6 +19,7 @@ import {
   ArrowLeft,
   Columns,
   GripVertical,
+  Briefcase,
 } from "lucide-react";
 import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
@@ -1433,31 +1434,37 @@ export default function ApplicationsPage() {
       <main className="relative z-10 max-w-full mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-3">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            {/* Back button and title */}
-            <div className="flex items-center">
-              <Link
-                href="/dashboard"
-                className="p-2 rounded-md text-gray-300 hover:bg-[#121a36] hover:text-white mr-2"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-              <div className="relative">
-                {isMobile && !showingAllColumns && statuses.length > 0 && (
-                  <div className="flex items-center space-x-1 mb-1 text-xs text-gray-400">
-                    <span>{activeColumnIndex + 1}</span>
-                    <span>/</span>
-                    <span>{statuses.length}</span>
-                  </div>
-                )}
-                <h2 className="text-lg md:text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-gray-300 relative z-10">
-                  {isMobile && !showingAllColumns && statuses.length > 0
-                    ? statuses.sort((a, b) => a.order - b.order)[
-                        activeColumnIndex
-                      ]?.name || "Applications"
-                    : "Job Applications"}
-                </h2>
-                <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-blue-500/80 via-purple-500/60 to-indigo-500/40"></div>
+            {/* App Name/Logo and Back button */}
+            <Link
+              href="/dashboard"
+              className="flex items-center text-gray-300 hover:text-white transition-colors"
+            >
+              <div className="h-8 w-8 mr-2 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                <Briefcase className="h-4 w-4 text-white" />
               </div>
+              <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-gray-300">
+                JobTracker
+              </span>
+            </Link>
+
+            <div className="h-6 border-r border-gray-700 mx-1"></div>
+
+            <div className="relative">
+              {isMobile && !showingAllColumns && statuses.length > 0 && (
+                <div className="flex items-center space-x-1 mb-1 text-xs text-gray-400">
+                  <span>{activeColumnIndex + 1}</span>
+                  <span>/</span>
+                  <span>{statuses.length}</span>
+                </div>
+              )}
+              <h2 className="text-lg md:text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-gray-300 relative z-10">
+                {isMobile && !showingAllColumns && statuses.length > 0
+                  ? statuses.sort((a, b) => a.order - b.order)[
+                      activeColumnIndex
+                    ]?.name || "Applications"
+                  : "Job Applications"}
+              </h2>
+              <div className="absolute -bottom-1 left-0 h-[1px] w-full bg-gradient-to-r from-blue-500/80 via-purple-500/60 to-indigo-500/40"></div>
             </div>
 
             {/* Search input - only visible on larger screens */}
@@ -1895,6 +1902,18 @@ export default function ApplicationsPage() {
                   onDragOver={handleDragOver}
                   onDrop={handleApplicationDrop}
                 >
+                  {/* Add New Application Button for Applied status */}
+                  {status.name === "Applied" && !isReorderingColumns && (
+                    <Link
+                      href="/dashboard/applications/new"
+                      className="flex items-center justify-center p-2 mb-3 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-md transition-colors group"
+                    >
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/30 group-hover:bg-blue-500/50 transition-colors">
+                        <Plus className="h-5 w-5 text-blue-300" />
+                      </div>
+                    </Link>
+                  )}
+
                   {filteredApplications
                     .filter((app) => app.statusId === status._id)
                     // Sort applications by date - newest first

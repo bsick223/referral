@@ -18,7 +18,7 @@ import {
   Briefcase,
   Building,
 } from "lucide-react";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { UserButton, useUser, useClerk } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 
 // Admin user IDs
@@ -32,6 +32,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useUser();
+  const { signOut } = useClerk();
 
   // Close sidebar when route changes on mobile
   useEffect(() => {
@@ -97,7 +98,7 @@ export default function DashboardLayout({
             RT
           </div>
           <div className="ml-2">
-            <h1 className="text-lg font-medium text-white">Vid2Sum</h1>
+            <h1 className="text-lg font-medium text-white">App Tracked</h1>
           </div>
         </Link>
 
@@ -131,7 +132,7 @@ export default function DashboardLayout({
           {/* Logo and site name - hidden on mobile (shown in header instead) */}
           <div className="px-6">
             <Link
-              href="/"
+              href="/dashboard"
               className="hidden md:flex items-center hover:opacity-80 transition-opacity cursor-pointer"
             >
               <div className="flex-shrink-0">
@@ -217,13 +218,13 @@ export default function DashboardLayout({
                 <Settings className="mr-3 h-5 w-5" />
                 <span>Settings</span>
               </a>
-              <a
-                href="/sign-out"
-                className="group flex items-center px-3 py-2 text-sm text-gray-400 rounded-md hover:text-red-400 hover:bg-[#121a36]/50"
+              <button
+                onClick={() => signOut({ redirectUrl: "/" })}
+                className="w-full text-left group flex items-center px-3 py-2 text-sm text-gray-400 rounded-md hover:text-red-400 hover:bg-[#121a36]/50"
               >
                 <LogOut className="mr-3 h-5 w-5" />
                 <span>Sign out</span>
-              </a>
+              </button>
             </div>
             <div className="mt-4 flex items-center px-3 py-2">
               <UserButton afterSignOutUrl="/" />
