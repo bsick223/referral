@@ -886,11 +886,22 @@ export default function ApplicationsPage() {
   };
 
   // Filter applications based on search query
-  const filteredApplications = applications.filter(
-    (app) =>
-      app.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.position.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredApplications = applications.filter((app) => {
+    if (!searchQuery) return true;
+
+    const query = searchQuery.toLowerCase();
+
+    return (
+      app.companyName.toLowerCase().includes(query) ||
+      app.position.toLowerCase().includes(query) ||
+      (app.notes && app.notes.toLowerCase().includes(query)) ||
+      (app.location && app.location.toLowerCase().includes(query)) ||
+      (app.salary && app.salary.toLowerCase().includes(query)) ||
+      (app.contactName && app.contactName.toLowerCase().includes(query)) ||
+      (app.contactEmail && app.contactEmail.toLowerCase().includes(query)) ||
+      (app.url && app.url.toLowerCase().includes(query))
+    );
+  });
 
   // Toggle reordering mode
   const toggleReorderingMode = () => {

@@ -54,7 +54,6 @@ export default function DashboardLayout({
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Applications", href: "/dashboard/applications", icon: Briefcase },
     { name: "Referrals", href: "/dashboard/referrals", icon: UsersRound },
-    { name: "Companies", href: "/dashboard/companies", icon: Building },
     {
       name: "Leaderboard",
       href: "/leaderboard",
