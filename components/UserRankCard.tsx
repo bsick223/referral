@@ -173,7 +173,19 @@ const UserRankCard = ({
     let color = "text-orange-400";
     let valueSuffix = "";
 
-    if (activeTab === "referrals" && referralLeaderboard) {
+    // Check if this is the current user's own card
+    const isOwnCard = clerkUser?.id === userId;
+
+    // Get the user's profile to check privacy settings
+    const userProfile = allUserProfiles ? allUserProfiles[userId || ""] : null;
+
+    // Always show own rank regardless of privacy settings
+    const canViewReferrals =
+      isOwnCard || userProfile?.showReferralsCount !== false;
+    const canViewApplications =
+      isOwnCard || userProfile?.showApplicationsCount !== false;
+
+    if (activeTab === "referrals" && referralLeaderboard && canViewReferrals) {
       // Handle referrals leaderboard
       const leaderboard = referralLeaderboard;
       total = leaderboard.length;
@@ -189,7 +201,7 @@ const UserRankCard = ({
 
       iconComponent = <Medal className="h-5 w-5 text-purple-400" />;
       color = "text-purple-400";
-    } else if (activeTab === "applications") {
+    } else if (activeTab === "applications" && canViewApplications) {
       // Handle applications leaderboard
       const leaderboard = applicationsLeaderboard;
       total = leaderboard.length;
@@ -206,7 +218,7 @@ const UserRankCard = ({
       iconComponent = <Briefcase className="h-5 w-5 text-blue-400" />;
       color = "text-blue-400";
     } else if (activeTab === "aura") {
-      // Handle aura leaderboard
+      // Handle aura leaderboard - aura rank is always visible
       const leaderboard = auraLeaderboard;
       total = leaderboard.length;
 
@@ -227,6 +239,12 @@ const UserRankCard = ({
     // Calculate percentile (if there are enough users)
     percentile = total > 0 ? Math.round(((total - rank) / total) * 100) : 0;
 
+    // Additional property to indicate if rank should be shown
+    const showRank =
+      (activeTab === "referrals" && canViewReferrals) ||
+      (activeTab === "applications" && canViewApplications) ||
+      activeTab === "aura";
+
     return {
       rank,
       total,
@@ -236,6 +254,7 @@ const UserRankCard = ({
       label,
       color,
       valueSuffix,
+      showRank,
     };
   };
 
@@ -289,6 +308,7 @@ const UserRankCard = ({
     label,
     color,
     valueSuffix,
+    showRank,
   } = getRankInfo();
 
   return (
@@ -299,31 +319,46 @@ const UserRankCard = ({
 
       {/* User info and rank */}
       <div className="p-6">
-        <div className="flex justify-center">{getMedal(rank)}</div>
+        {showRank ? (
+          <>
+            <div className="flex justify-center">{getMedal(rank)}</div>
 
-        <div className="text-center mt-4">
-          <p className="text-white font-medium">
-            {clerkUser?.firstName || "User"}
-            {clerkUser?.lastName && ` ${clerkUser.lastName}`}
-          </p>
+            <div className="text-center mt-4">
+              <p className="text-white font-medium">
+                {clerkUser?.firstName || "User"}
+                {clerkUser?.lastName && ` ${clerkUser.lastName}`}
+              </p>
 
-          <div className="flex items-center justify-center mt-2 space-x-1">
-            {iconComponent}
-            <p className={`text-xl font-bold ${color}`}>
-              #{rank} <span className="text-gray-400 text-sm">of {total}</span>
+              <div className="flex items-center justify-center mt-2 space-x-1">
+                {iconComponent}
+                <p className={`text-xl font-bold ${color}`}>
+                  #{rank}{" "}
+                  <span className="text-gray-400 text-sm">of {total}</span>
+                </p>
+              </div>
+
+              <p className="text-gray-400 text-sm mt-1">
+                Top {100 - percentile}%
+              </p>
+
+              <div className="bg-[#1d2442]/40 rounded-lg p-3 mt-4">
+                <p className="text-gray-400 text-sm">{label}</p>
+                <p className="text-lg font-bold text-white">
+                  {value}
+                  {valueSuffix}
+                </p>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-400">
+              {clerkUser?.id === userId
+                ? "Your position is hidden based on your privacy settings."
+                : "This user has hidden their rank information."}
             </p>
           </div>
-
-          <p className="text-gray-400 text-sm mt-1">Top {100 - percentile}%</p>
-
-          <div className="bg-[#1d2442]/40 rounded-lg p-3 mt-4">
-            <p className="text-gray-400 text-sm">{label}</p>
-            <p className="text-lg font-bold text-white">
-              {value}
-              {valueSuffix}
-            </p>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

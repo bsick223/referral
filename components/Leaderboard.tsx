@@ -89,18 +89,22 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
             "users in leaderboard"
           );
 
-          // Get list of users who opted out of leaderboards
-          const optedOutUsers = leaderboardUserIds.filter((userId) => {
-            return profiles[userId]?.hideFromLeaderboards === true;
+          // Get list of users who opted out of leaderboards or hid referral counts
+          const excludedUsers = leaderboardUserIds.filter((userId) => {
+            const profile = profiles[userId];
+            return (
+              profile?.hideFromLeaderboards === true ||
+              profile?.showReferralsCount === false
+            );
           });
 
           console.log(
-            `Filtered out ${optedOutUsers.length} users who opted out`
+            `Filtered out ${excludedUsers.length} users who opted out or hid referral counts`
           );
 
-          // Filter out users who have opted out of leaderboards
+          // Filter out users who have opted out of leaderboards or hid referral counts
           const filteredLeaderboard = leaderboard.filter(
-            (entry) => !optedOutUsers.includes(entry.userId)
+            (entry) => !excludedUsers.includes(entry.userId)
           );
 
           // Add ranking info with only visible users

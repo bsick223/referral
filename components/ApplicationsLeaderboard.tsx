@@ -71,16 +71,19 @@ const ApplicationsLeaderboard = ({
           // Fetch user profiles for privacy settings
           const profiles = await allUserProfiles;
 
-          // Filter users who have opted out of leaderboards
+          // Filter users who have opted out of leaderboards or have hidden application counts
           const filteredUserIds = allUserIds.filter((userId) => {
             const userProfile = profiles ? profiles[userId] : null;
-            return !userProfile?.hideFromLeaderboards;
+            return (
+              !userProfile?.hideFromLeaderboards &&
+              userProfile?.showApplicationsCount !== false
+            );
           });
 
           console.log(
             `Applications: Filtered out ${
               allUserIds.length - filteredUserIds.length
-            } users who opted out`
+            } users who opted out or hid application counts`
           );
 
           // Count applications for each user
@@ -145,11 +148,14 @@ const ApplicationsLeaderboard = ({
   const createBasicLeaderboard = () => {
     if (!allUserIds || !allApplications) return [];
 
-    // First filter out users who opted out of leaderboards
+    // Filter out users who opted out of leaderboards or hid application counts
     const filteredUserIds = allUserProfiles
       ? allUserIds.filter((userId) => {
           const userProfile = allUserProfiles[userId] || null;
-          return !userProfile?.hideFromLeaderboards;
+          return (
+            !userProfile?.hideFromLeaderboards &&
+            userProfile?.showApplicationsCount !== false
+          );
         })
       : allUserIds;
 
