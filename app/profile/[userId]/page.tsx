@@ -421,7 +421,9 @@ export default function UserProfilePage() {
 
   // Get user's full name or username
   const userFullName = userData
-    ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || userData.username || "User"
+    ? userData.firstName || userData.lastName
+      ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
+      : userData.username || "User"
     : "User";
 
   if (isLoading || !userData) {
