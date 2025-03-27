@@ -90,6 +90,16 @@ export default function Home() {
               </ul>
             </div>
           </div>
+
+          {/* Privacy Policy Link */}
+          <div className="mt-12 text-center">
+            <Link
+              href="/privacy"
+              className="text-gray-500 hover:text-gray-300 text-xs opacity-40 transition-opacity hover:opacity-80"
+            >
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
     </div>
