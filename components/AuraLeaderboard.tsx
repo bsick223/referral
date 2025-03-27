@@ -146,10 +146,9 @@ const AuraLeaderboard = ({
             };
 
             const auraPoints =
-              userStats.referrals * 10 +
-              userStats.applications * 5 +
-              userStats.interviews * 100 +
-              userStats.offers * 50 +
+              userStats.referrals * 5 +
+              userStats.applications * 1 +
+              userStats.offers * 100 +
               userStats.rejections * 2;
 
             return {
@@ -273,10 +272,9 @@ const AuraLeaderboard = ({
       };
 
       const auraPoints =
-        userStats.referrals * 10 +
-        userStats.applications * 5 +
-        userStats.interviews * 100 +
-        userStats.offers * 50 +
+        userStats.referrals * 5 +
+        userStats.applications * 1 +
+        userStats.offers * 100 +
         userStats.rejections * 2;
 
       return {

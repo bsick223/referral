@@ -185,18 +185,13 @@ export default function ProfilePage() {
         }
       });
 
-      // Calculate points: interviews (10), offers (500), rejections (2)
-      const interviewPoints = interviewCount * 100;
-      const offerPoints = offerCount * 500;
+      // Calculate points: interviews (100), offers (100), rejections (2)
+      const offerPoints = offerCount * 100;
       const rejectionPoints = rejectionCount * 2;
 
       // Total Aura points
       const totalPoints =
-        referralPoints +
-        applicationPoints +
-        interviewPoints +
-        offerPoints +
-        rejectionPoints;
+        referralPoints + applicationPoints + offerPoints + rejectionPoints;
 
       acc.push({
         userId,

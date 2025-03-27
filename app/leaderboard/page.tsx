@@ -140,15 +140,9 @@ export default function LeaderboardPage() {
                       </span>
                     </li>
                     <li className="flex justify-between">
-                      <span>Each interview</span>
-                      <span className="font-medium text-orange-300">
-                        100 points
-                      </span>
-                    </li>
-                    <li className="flex justify-between">
                       <span>Each offer</span>
                       <span className="font-medium text-orange-300">
-                        500 points
+                        100 points
                       </span>
                     </li>
                     <li className="flex justify-between">

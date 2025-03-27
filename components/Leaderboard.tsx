@@ -164,6 +164,7 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
 
       console.log("Referrals: Updated leaderboard with user details");
       setLeaderboardWithProfiles(enrichedLeaderboard);
+      setIsLoaded(true);
     } catch (error) {
       console.error("Error fetching user profiles:", error);
 
@@ -176,6 +177,7 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
       }));
 
       setLeaderboardWithProfiles(fallbackLeaderboard);
+      setIsLoaded(true);
     }
   };
 
@@ -183,6 +185,20 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
   useEffect(() => {
     console.log("LinkedIn URLs:", userProfiles);
   }, [userProfiles]);
+
+  // Add a fallback to ensure loading state doesn't get stuck
+  useEffect(() => {
+    // If leaderboard data is undefined after 5 seconds, set isLoaded to true
+    // This prevents the component from being stuck in loading state
+    const timeout = setTimeout(() => {
+      if (!isLoaded) {
+        console.log("Referrals: Setting isLoaded to true after timeout");
+        setIsLoaded(true);
+      }
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, [isLoaded]);
 
   // Return medal component based on position
   const getMedal = (position: number) => {
