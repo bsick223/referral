@@ -13,6 +13,15 @@ export async function getUserInfo(userId: string): Promise<UserInfo | null> {
     const clerk = await clerkClient();
     const user = await clerk.users.getUser(userId);
 
+    // Log the user data to see what fields are available
+    console.log("Clerk user data:", {
+      id: user.id,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      emailAddresses: user.emailAddresses?.map((email) => email.emailAddress),
+    });
+
     // Create optimized image URL with query parameters if available
     let optimizedImageUrl = undefined;
     if (user.imageUrl) {
@@ -60,6 +69,17 @@ export async function getBatchUserInfo(
     const users = await clerk.users.getUserList({
       userId: userIds,
     });
+
+    // Log user data for debugging
+    console.log(
+      "Clerk batch user data:",
+      users.data.map((user) => ({
+        id: user.id,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      }))
+    );
 
     const userMap: Record<string, UserInfo> = {};
 

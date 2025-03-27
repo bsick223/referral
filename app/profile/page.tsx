@@ -339,7 +339,7 @@ export default function ProfilePage() {
                   </div>
                 )}
                 <h2 className="text-xl font-medium text-white">
-                  {user?.fullName || "User"}
+                  {user?.fullName || user?.username || "User"}
                 </h2>
                 <p className="text-gray-400 text-sm mt-1">
                   {user?.primaryEmailAddress?.emailAddress}

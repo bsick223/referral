@@ -332,7 +332,7 @@ const UserRankCard = ({
 
             <div className="text-center mt-4">
               <p className="text-white font-medium">
-                {clerkUser?.firstName || "User"}
+                {clerkUser?.firstName || clerkUser?.username || "User"}
                 {clerkUser?.lastName && ` ${clerkUser.lastName}`}
               </p>
 

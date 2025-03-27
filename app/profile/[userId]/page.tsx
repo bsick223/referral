@@ -99,6 +99,7 @@ interface UserData {
   firstName?: string;
   lastName?: string;
   imageUrl?: string;
+  username?: string;
 }
 
 interface StatusInfo {
@@ -418,9 +419,9 @@ export default function UserProfilePage() {
     );
   });
 
-  // Get user's full name
+  // Get user's full name or username
   const userFullName = userData
-    ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
+    ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || userData.username || "User"
     : "User";
 
   if (isLoading || !userData) {
