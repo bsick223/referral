@@ -27,7 +27,7 @@ const UserRankCard = ({
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch data for all leaderboard types
-  const referralLeaderboard = useQuery(api.referrals.getLeaderboard);
+  const referralLeaderboard = useQuery(api.referrals.getLeaderboard, {});
 
   // For applications and aura leaderboards, we need to calculate metrics
   const allUserIds = useQuery(api.users.getAllUserIds);
@@ -237,12 +237,23 @@ const UserRankCard = ({
       case 3:
         return <Medal className="h-10 w-10 text-amber-600" />;
       default:
-        return rank <= 10 ? (
-          <Award className="h-8 w-8 text-blue-400" />
-        ) : (
-          <span className="text-xl font-bold text-white opacity-80">
-            #{rank}
-          </span>
+        return (
+          <div
+            className={`
+            flex items-center justify-center rounded-full 
+            ${
+              activeTab === "aura"
+                ? "bg-gradient-to-br from-orange-500/20 to-yellow-500/20 text-orange-400 border border-orange-500/30"
+                : activeTab === "applications"
+                ? "bg-gradient-to-br from-blue-500/20 to-cyan-500/20 text-blue-400 border border-blue-500/30"
+                : "bg-gradient-to-br from-purple-500/20 to-violet-500/20 text-purple-400 border border-purple-500/30"
+            }
+            ${rank <= 10 ? "w-10 h-10 text-lg" : "w-12 h-12 text-xl"}
+            font-bold
+          `}
+          >
+            {rank}
+          </div>
         );
     }
   };
@@ -289,7 +300,7 @@ const UserRankCard = ({
             </p>
           </div>
 
-          <p className="text-gray-400 text-sm mt-1">Top {percentile}%</p>
+          <p className="text-gray-400 text-sm mt-1">Top {100 - percentile}%</p>
 
           <div className="bg-[#1d2442]/40 rounded-lg p-3 mt-4">
             <p className="text-gray-400 text-sm">{label}</p>

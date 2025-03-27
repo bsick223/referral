@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
-import LeaderboardSection from "@/components/LeaderboardSection";
+import AuraLeaderboardSection from "@/components/AuraLeaderboardSection";
 import DataVisualizationBackground from "@/components/ParticleBackground";
 
 export default function Home() {
@@ -61,7 +61,7 @@ export default function Home() {
 
           {/* Semi-transparent Leaderboard */}
           <div className="mb-16 opacity-90 backdrop-blur-sm">
-            <LeaderboardSection />
+            <AuraLeaderboardSection />
           </div>
 
           {/* Footer info */}
@@ -76,7 +76,9 @@ export default function Home() {
                 <li>• 4x more likely to get an interview.</li>
                 <li>• 40% higher probability of being recruited.</li>
               </ul>
-              <p className="mt-2 italic opacity-45">JobStick, Apollo Technical</p>
+              <p className="mt-2 italic opacity-45">
+                JobStick, Apollo Technical
+              </p>
             </div>
             <div>
               <p className="mb-2 text-white font-medium">

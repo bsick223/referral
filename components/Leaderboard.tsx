@@ -124,7 +124,11 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
       case 2:
         return <Medal className="h-5 w-5 text-amber-600" />;
       default:
-        return <Award className="h-5 w-5 text-blue-400" />;
+        return (
+          <div className="flex items-center justify-center w-5 h-5 rounded-full text-xs font-semibold bg-gradient-to-br from-blue-400/20 to-indigo-400/20 text-blue-400 border border-blue-500/30">
+            {position + 1}
+          </div>
+        );
     }
   };
 

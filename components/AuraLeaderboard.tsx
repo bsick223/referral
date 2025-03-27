@@ -210,7 +210,11 @@ const AuraLeaderboard = ({
       case 2:
         return <Medal className="h-5 w-5 text-amber-600" />;
       default:
-        return <Award className="h-5 w-5 text-blue-400" />;
+        return (
+          <div className="flex items-center justify-center w-5 h-5 rounded-full text-xs font-semibold bg-gradient-to-br from-orange-400/20 to-pink-400/20 text-orange-400 border border-orange-500/30">
+            {position + 1}
+          </div>
+        );
     }
   };
 
