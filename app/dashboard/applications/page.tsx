@@ -659,7 +659,7 @@ export default function ApplicationsPage() {
   };
 
   // Form handlers
-  const handleAddList = async () => {
+  const handleAddStatus = async () => {
     if (!user || !newStatusName.trim()) return;
 
     try {
@@ -671,14 +671,14 @@ export default function ApplicationsPage() {
 
       setNewStatusName("");
       setIsAddingStatus(false);
-      showToast("success", "List column added");
+      showToast("success", "Status column added");
     } catch (error) {
-      console.error("Error creating list:", error);
-      showToast("error", "Failed to create list column");
+      console.error("Error creating status:", error);
+      showToast("error", "Failed to create status column");
     }
   };
 
-  const handleUpdateList = async (statusId: Id<"applicationStatuses">) => {
+  const handleUpdateStatus = async (statusId: Id<"applicationStatuses">) => {
     if (!editingStatusName.trim()) return;
 
     try {
@@ -689,19 +689,19 @@ export default function ApplicationsPage() {
       });
 
       setEditingStatusId(null);
-      showToast("success", "List column updated");
+      showToast("success", "Status column updated");
     } catch (error) {
-      console.error("Error updating list:", error);
-      showToast("error", "Failed to update list column");
+      console.error("Error updating status:", error);
+      showToast("error", "Failed to update status column");
     }
   };
 
-  const handleDeleteList = async (statusId: Id<"applicationStatuses">) => {
+  const handleDeleteStatus = async (statusId: Id<"applicationStatuses">) => {
     // Find a fallback status that isn't this one
     const fallbackStatus = statuses.find((s) => s._id !== statusId);
 
     if (!fallbackStatus) {
-      showToast("error", "Cannot delete the only list column");
+      showToast("error", "Cannot delete the only status column");
       return;
     }
 
@@ -711,10 +711,10 @@ export default function ApplicationsPage() {
           id: statusId,
         });
 
-        showToast("success", "List column deleted");
+        showToast("success", "Status column deleted");
       } catch (error) {
-        console.error("Error deleting list:", error);
-        showToast("error", "Failed to delete list column");
+        console.error("Error deleting status:", error);
+        showToast("error", "Failed to delete status column");
       }
     }
   };
@@ -879,7 +879,7 @@ export default function ApplicationsPage() {
   };
 
   // Start editing a status
-  const startEditingList = (status: ApplicationStatus) => {
+  const startEditingStatus = (status: ApplicationStatus) => {
     setEditingStatusId(status._id);
     setEditingStatusName(status.name);
     setEditingStatusColor(status.color);
@@ -1489,8 +1489,8 @@ export default function ApplicationsPage() {
                 className="add-status-trigger inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
               >
                 <Plus className="h-4 w-4 mr-2 text-blue-400" />
-                <span className="hidden sm:inline">Add List</span>
-                <span className="sm:hidden">List</span>
+                <span className="hidden sm:inline">Add Status</span>
+                <span className="sm:hidden">Status</span>
               </button>
 
               <Link
@@ -1537,7 +1537,7 @@ export default function ApplicationsPage() {
                     className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#1a2545] hover:text-white flex items-center"
                   >
                     <Plus className="h-4 w-4 mr-3 text-blue-400" />
-                    Add List
+                    Add Status
                   </button>
 
                   <Link
@@ -1611,7 +1611,7 @@ export default function ApplicationsPage() {
             className="mb-6 p-4 bg-[#121a36]/70 rounded-lg border border-[#20253d]/50 backdrop-blur-sm"
           >
             <h3 className="text-lg font-medium text-white mb-3">
-              Add New List Column
+              Add New Status Column
             </h3>
             <div className="flex items-center space-x-3">
               <input
@@ -1634,7 +1634,7 @@ export default function ApplicationsPage() {
               </button>
 
               <button
-                onClick={handleAddList}
+                onClick={handleAddStatus}
                 disabled={!newStatusName.trim()}
                 className="px-4 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -1657,8 +1657,8 @@ export default function ApplicationsPage() {
             <div className="flex items-center">
               <AlertCircle className="h-5 w-5 mr-2" />
               <p>
-                Drag and drop lists to reorder them. Click &quot;Done&quot; when
-                finished.
+                Drag and drop statuses to reorder them. Click &quot;Done&quot;
+                when finished.
               </p>
             </div>
           </div>
@@ -1693,7 +1693,7 @@ export default function ApplicationsPage() {
           } relative`}
           style={{ scrollbarWidth: "thin", msOverflowStyle: "auto" }}
         >
-          {/* List Columns */}
+          {/* Status Columns */}
           {statuses
             .sort((a, b) => a.order - b.order)
             .map((status, index) => (
@@ -1771,7 +1771,7 @@ export default function ApplicationsPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleUpdateList(status._id);
+                          handleUpdateStatus(status._id);
                         }}
                         className="p-1 text-green-400 hover:text-green-300"
                       >
@@ -1789,10 +1789,10 @@ export default function ApplicationsPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteList(status._id);
+                          handleDeleteStatus(status._id);
                         }}
                         className="p-1 text-red-400 hover:text-red-300"
-                        title="Delete this list"
+                        title="Delete this status"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -1828,10 +1828,10 @@ export default function ApplicationsPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              startEditingList(status);
+                              startEditingStatus(status);
                             }}
                             className="status-menu-trigger p-1 text-gray-400 hover:text-gray-200"
-                            title="Edit this list"
+                            title="Edit this status"
                           >
                             <MoreVertical className="h-4 w-4" />
                           </button>
