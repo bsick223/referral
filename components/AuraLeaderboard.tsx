@@ -4,8 +4,9 @@ import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
-import { Trophy, Medal, Award } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { Trophy, Medal, Award, Sparkles } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 
 interface UserInfo {
   id: string;
@@ -17,15 +18,9 @@ interface UserInfo {
 
 interface LeaderboardEntry {
   userId: string;
-  name: string;
+  name?: string;
   auraPoints: number;
-  referralCount: number;
-  applicationCount: number;
-  interviewCount: number;
-  offerCount: number;
-  rejectionCount: number;
   userInfo?: UserInfo;
-  linkedinUrl?: string;
 }
 
 interface AuraLeaderboardProps {
@@ -43,114 +38,93 @@ const AuraLeaderboard = ({
     LeaderboardEntry[]
   >([]);
 
-  // Fetch all user IDs from the database to calculate Aura scores
+  // Fetch data for Aura leaderboard calculation
   const allUserIds = useQuery(api.users.getAllUserIds);
-
-  // Fetch referrals for all users
   const allReferrals = useQuery(api.referrals.getAllReferrals);
-
-  // Fetch applications for all users
   const allApplications = useQuery(api.applications.getAllApplications);
-
-  // Fetch application statuses for all users to identify interviews, offers, rejections
   const allStatuses = useQuery(api.applicationStatuses.getAllStatuses);
 
-  // Fetch LinkedIn URLs
-  const userProfiles = useQuery(api.userProfiles.getAll);
+  // Create calculated leaderboard for aura
+  const auraLeaderboard = useMemo(() => {
+    if (!allUserIds || !allReferrals || !allApplications || !allStatuses)
+      return [];
 
-  // Helper function to get LinkedIn URL
-  const getLinkedinUrl = useCallback(
-    (userId: string) => {
-      if (!userProfiles) return undefined;
-      return userProfiles[userId]?.linkedinUrl;
-    },
-    [userProfiles]
-  );
+    // Build a map of status IDs to their names for each user
+    const statusMap = new Map();
 
-  // Calculate Aura points and build leaderboard
-  useEffect(() => {
-    if (allUserIds && allReferrals && allApplications && allStatuses) {
-      // Build a map of status IDs to their names for each user
-      const statusMap = new Map();
+    allStatuses.forEach((status) => {
+      statusMap.set(status._id.toString(), {
+        userId: status.userId,
+        name: status.name.toLowerCase(),
+      });
+    });
 
-      allStatuses.forEach((status) => {
-        statusMap.set(status._id.toString(), {
-          userId: status.userId,
-          name: status.name.toLowerCase(),
-        });
+    // Calculate points for each user
+    const userPoints = allUserIds.reduce((acc, userId) => {
+      // Count user's referrals - 5 points each
+      const referrals = allReferrals.filter((ref) => ref.userId === userId);
+      const referralCount = referrals.length;
+      const referralPoints = referralCount * 5;
+
+      // Count user's applications - 1 point each
+      const applications = allApplications.filter(
+        (app) => app.userId === userId
+      );
+      const applicationCount = applications.length;
+      const applicationPoints = applicationCount * 1;
+
+      // Count interviews, offers, and rejections
+      let interviewCount = 0;
+      let offerCount = 0;
+      let rejectionCount = 0;
+
+      applications.forEach((app) => {
+        const status = statusMap.get(app.statusId.toString());
+        if (status) {
+          const statusName = status.name;
+          if (statusName.includes("interview")) {
+            interviewCount++;
+          } else if (statusName === "offer") {
+            offerCount++;
+          } else if (statusName === "rejected") {
+            rejectionCount++;
+          }
+        }
       });
 
-      // Calculate points for each user
-      const userPoints = allUserIds.reduce((acc, userId) => {
-        // Count user's referrals - 5 points each
-        const referrals = allReferrals.filter((ref) => ref.userId === userId);
-        const referralCount = referrals.length;
-        const referralPoints = referralCount * 5;
+      // Calculate points: interviews (10), offers (500), rejections (2)
+      const interviewPoints = interviewCount * 10;
+      const offerPoints = offerCount * 500;
+      const rejectionPoints = rejectionCount * 2;
 
-        // Count user's applications - 1 point each
-        const applications = allApplications.filter(
-          (app) => app.userId === userId
-        );
-        const applicationCount = applications.length;
-        const applicationPoints = applicationCount * 1;
+      // Total Aura points
+      const totalPoints =
+        referralPoints +
+        applicationPoints +
+        interviewPoints +
+        offerPoints +
+        rejectionPoints;
 
-        // Count interviews, offers, and rejections
-        let interviewCount = 0;
-        let offerCount = 0;
-        let rejectionCount = 0;
+      acc.push({
+        userId,
+        auraPoints: totalPoints,
+      });
 
-        applications.forEach((app) => {
-          const status = statusMap.get(app.statusId.toString());
-          if (status) {
-            const statusName = status.name;
-            if (statusName.includes("interview")) {
-              interviewCount++;
-            } else if (statusName === "offer") {
-              offerCount++;
-            } else if (statusName === "rejected") {
-              rejectionCount++;
-            }
-          }
-        });
+      return acc;
+    }, [] as any[]);
 
-        // Calculate points: interviews (10), offers (500), rejections (2)
-        const interviewPoints = interviewCount * 10;
-        const offerPoints = offerCount * 500;
-        const rejectionPoints = rejectionCount * 2;
+    // Sort by aura points
+    return userPoints
+      .sort((a, b) => b.auraPoints - a.auraPoints)
+      .slice(0, limit);
+  }, [allUserIds, allReferrals, allApplications, allStatuses, limit]);
 
-        // Total Aura points
-        const totalPoints =
-          referralPoints +
-          applicationPoints +
-          interviewPoints +
-          offerPoints +
-          rejectionPoints;
-
-        acc[userId] = {
-          userId,
-          auraPoints: totalPoints,
-          referralCount,
-          applicationCount,
-          interviewCount,
-          offerCount,
-          rejectionCount,
-          name: referrals.length > 0 ? referrals[0].name.split(" ")[0] : "User",
-        };
-
-        return acc;
-      }, {} as Record<string, LeaderboardEntry>);
-
-      // Convert to array and sort by aura points
-      const sortedLeaderboard = Object.values(userPoints)
-        .sort((a, b) => b.auraPoints - a.auraPoints)
-        .slice(0, limit);
-
-      setIsLoaded(true);
-
-      // Fetch user profile information
+  // Fetch user profile information
+  useEffect(() => {
+    if (auraLeaderboard.length > 0) {
       const fetchUserProfiles = async () => {
         try {
-          const userIds = sortedLeaderboard.map((entry) => entry.userId);
+          const userIds = auraLeaderboard.map((entry) => entry.userId);
 
           if (userIds.length === 0) return;
 
@@ -169,36 +143,23 @@ const AuraLeaderboard = ({
           const { users } = await response.json();
 
           // Combine leaderboard data with user profiles
-          const enrichedLeaderboard = sortedLeaderboard.map((entry) => ({
+          const enrichedLeaderboard = auraLeaderboard.map((entry) => ({
             ...entry,
             userInfo: users[entry.userId],
-            linkedinUrl: getLinkedinUrl(entry.userId),
           }));
 
           setLeaderboardWithProfiles(enrichedLeaderboard);
+          setIsLoaded(true);
         } catch (error) {
           console.error("Error fetching user profiles:", error);
-
-          // Still include LinkedIn URLs even if other profile info fails
-          const fallbackLeaderboard = sortedLeaderboard.map((entry) => ({
-            ...entry,
-            linkedinUrl: getLinkedinUrl(entry.userId),
-          }));
-
-          setLeaderboardWithProfiles(fallbackLeaderboard);
+          setLeaderboardWithProfiles(auraLeaderboard);
+          setIsLoaded(true);
         }
       };
 
       fetchUserProfiles();
     }
-  }, [
-    allUserIds,
-    allReferrals,
-    allApplications,
-    allStatuses,
-    getLinkedinUrl,
-    limit,
-  ]);
+  }, [auraLeaderboard]);
 
   // Return medal component based on position
   const getMedal = (position: number) => {
@@ -211,7 +172,7 @@ const AuraLeaderboard = ({
         return <Medal className="h-5 w-5 text-amber-600" />;
       default:
         return (
-          <div className="flex items-center justify-center w-5 h-5 rounded-full text-xs font-semibold bg-gradient-to-br from-orange-400/20 to-pink-400/20 text-orange-400 border border-orange-500/30">
+          <div className="flex items-center justify-center w-5 h-5 rounded-full text-xs font-semibold bg-gradient-to-br from-orange-400/20 to-yellow-400/20 text-orange-400 border border-orange-500/30">
             {position + 1}
           </div>
         );
@@ -228,7 +189,7 @@ const AuraLeaderboard = ({
         return entry.userInfo.username;
       }
     }
-    return entry.name;
+    return entry.name || "User";
   };
 
   // Add a function to get the user's initials for the avatar
@@ -244,105 +205,86 @@ const AuraLeaderboard = ({
         return entry.userInfo.username.charAt(0);
       }
     }
-    return entry.name.charAt(0);
-  };
-
-  // Get background color for aura points
-  const getAuraBackground = (points: number) => {
-    if (points >= 1000) return "bg-gradient-to-r from-orange-500 to-pink-500";
-    if (points >= 500) return "bg-gradient-to-r from-violet-500 to-purple-500";
-    if (points >= 100) return "bg-gradient-to-r from-blue-500 to-cyan-500";
-    if (points >= 50) return "bg-gradient-to-r from-green-500 to-emerald-500";
-    return "bg-gradient-to-r from-slate-600 to-slate-500";
+    return (entry.name || "U").charAt(0);
   };
 
   return (
-    <div className="overflow-hidden rounded-xl bg-[#0a0e1c]/30 backdrop-blur-sm border border-[#20253d]/50">
+    <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50">
       {!hideHeader && (
-        <div className="px-6 py-4 bg-[#0f1326]/50 border-b border-[#20253d]/50">
+        <div className="px-6 py-4 bg-[#0f1326]/70 border-b border-[#20253d]/50">
           <h3 className="text-xl font-light text-white">Aura Leaderboard</h3>
-          <p className="text-gray-400 text-sm">
-            Users with highest Aura points from referrals, applications,
-            interviews, offers and more
-          </p>
         </div>
       )}
-
-      <div className="divide-y divide-[#20253d]/30">
-        {!isLoaded ? (
-          <div className="p-6 text-center">
-            <div className="animate-pulse h-12 bg-[#1d2442]/20 rounded"></div>
-            <div className="animate-pulse h-12 bg-[#1d2442]/20 rounded mt-2"></div>
-            <div className="animate-pulse h-12 bg-[#1d2442]/20 rounded mt-2"></div>
-          </div>
-        ) : leaderboardWithProfiles.length > 0 ? (
-          leaderboardWithProfiles.map((entry, index) => (
-            <div
-              key={entry.userId}
-              className={`p-4 flex items-center justify-between gap-4 ${
-                user && entry.userId === user.id ? "bg-[#1d2442]/20" : ""
-              }`}
-            >
-              <div className="flex items-center space-x-3 min-w-0">
-                <div className="flex-shrink-0 w-8">{getMedal(index)}</div>
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1d2442]/40 flex-shrink-0 border border-[#20253d]/50">
-                  {entry.userInfo?.imageUrl ? (
-                    <Image
-                      src={entry.userInfo.imageUrl}
-                      alt={getDisplayName(entry)}
-                      width={64}
-                      height={64}
-                      className="w-full h-full object-cover"
-                      priority={index < 3}
-                      loading={index < 3 ? "eager" : "lazy"}
-                      quality={90}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full bg-[#1d2442]">
-                      <span className="text-gray-300 font-medium text-xs">
-                        {getInitials(entry)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-medium text-white truncate text-left">
-                    {getDisplayName(entry)}
-                    {user && entry.userId === user.id && " (You)"}
-                  </div>
-
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-orange-900/20 text-orange-300 border border-orange-800/30">
-                      {entry.referralCount} refs
-                    </span>
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-blue-900/20 text-blue-300 border border-blue-800/30">
-                      {entry.applicationCount} apps
-                    </span>
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-purple-900/20 text-purple-300 border border-purple-800/30">
-                      {entry.interviewCount} ints
-                    </span>
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-green-900/20 text-green-300 border border-green-800/30">
-                      {entry.offerCount} offers
-                    </span>
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-red-900/20 text-red-300 border border-red-800/30">
-                      {entry.rejectionCount} rejs
-                    </span>
-                  </div>
-                </div>
-              </div>
+      <div className="overflow-hidden">
+        {isLoaded ? (
+          leaderboardWithProfiles.length > 0 ? (
+            leaderboardWithProfiles.map((entry, index) => (
               <div
-                className={`px-3 py-1.5 rounded-full text-xs font-medium text-white ${getAuraBackground(
-                  entry.auraPoints
-                )}`}
+                key={entry.userId}
+                className={`p-4 flex items-center justify-between ${
+                  user && entry.userId === user.id ? "bg-[#1d2442]/20" : ""
+                }`}
               >
-                {entry.auraPoints} points
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">{getMedal(index)}</div>
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1d2442]/40 flex-shrink-0 border border-[#20253d]/50">
+                    {entry.userInfo?.imageUrl ? (
+                      <Image
+                        src={entry.userInfo.imageUrl}
+                        alt={getDisplayName(entry)}
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                        priority={index < 3}
+                        loading={index < 3 ? "eager" : "lazy"}
+                        quality={90}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center w-full h-full bg-[#1d2442]">
+                        <span className="text-gray-300 font-medium text-xs">
+                          {getInitials(entry)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      href={`/profile/${entry.userId}`}
+                      className="hover:opacity-80 transition-opacity"
+                    >
+                      <p className="text-xs font-medium text-white truncate hover:text-orange-300">
+                        {getDisplayName(entry)}
+                        {user && entry.userId === user.id && " (You)"}
+                      </p>
+                    </Link>
+                  </div>
+                </div>
+                <div className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-900/20 text-orange-300 border border-orange-700/30">
+                  <Sparkles className="h-3 w-3 mr-1 text-orange-400" />
+                  {entry.auraPoints} points
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="p-6 text-center text-gray-400">
+              No data available yet.
+            </div>
+          )
+        ) : (
+          // Loading state
+          [1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="p-4 flex items-center justify-between animate-pulse"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-5 h-5 bg-gray-700 rounded-full"></div>
+                <div className="w-8 h-8 bg-gray-700 rounded-full"></div>
+                <div className="h-4 bg-gray-700 rounded w-24"></div>
+              </div>
+              <div className="h-4 bg-gray-700 rounded w-16"></div>
             </div>
           ))
-        ) : (
-          <div className="p-6 text-center text-gray-400">
-            No data available yet
-          </div>
         )}
       </div>
     </div>

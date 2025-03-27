@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
+import Link from "next/link";
 import { Medal, Trophy, Award, Link as LinkIcon } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
@@ -162,153 +163,96 @@ const Leaderboard = ({ limit = 5, hideHeader = false }: LeaderboardProps) => {
   };
 
   return (
-    <div className="overflow-hidden rounded-xl bg-[#0a0e1c]/30 backdrop-blur-sm border border-[#20253d]/50">
+    <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50">
       {!hideHeader && (
-        <div className="px-6 py-4 bg-[#0f1326]/50 border-b border-[#20253d]/50">
+        <div className="px-6 py-4 bg-[#0f1326]/70 border-b border-[#20253d]/50">
           <h3 className="text-xl font-light text-white">
             Referral Leaderboard
           </h3>
-          <p className="text-gray-400 text-sm">
-            Top users with the most referrals
-          </p>
         </div>
       )}
-
-      <div className="divide-y divide-[#20253d]/30">
-        {!isLoaded ? (
-          <div className="p-6 text-center">
-            <div className="animate-pulse h-12 bg-[#1d2442]/20 rounded"></div>
-            <div className="animate-pulse h-12 bg-[#1d2442]/20 rounded mt-2"></div>
-            <div className="animate-pulse h-12 bg-[#1d2442]/20 rounded mt-2"></div>
-          </div>
-        ) : leaderboardWithProfiles.length > 0 ? (
-          leaderboardWithProfiles.map((entry, index) => (
-            <div
-              key={entry.userId}
-              className={`p-4 flex items-center justify-between ${
-                user && entry.userId === user.id ? "bg-[#1d2442]/20" : ""
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className="flex-shrink-0">{getMedal(index)}</div>
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1d2442]/40 flex-shrink-0 border border-[#20253d]/50">
-                  {entry.userInfo?.imageUrl ? (
-                    <Image
-                      src={entry.userInfo.imageUrl}
-                      alt={getDisplayName(entry)}
-                      width={64}
-                      height={64}
-                      className="w-full h-full object-cover"
-                      priority={index < 3}
-                      loading={index < 3 ? "eager" : "lazy"}
-                      quality={90}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full bg-[#1d2442]">
-                      <span className="text-gray-300 font-medium text-xs">
-                        {getInitials(entry)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  {(() => {
-                    // Add console.log to debug linkedinUrl
-                    console.log(
-                      `Entry ${entry.userId} LinkedIn:`,
-                      entry.linkedinUrl
-                    );
-
-                    if (entry.linkedinUrl) {
-                      return (
-                        <a
-                          href={entry.linkedinUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-medium text-white hover:text-orange-400 hover:underline truncate flex items-center"
-                        >
-                          {getDisplayName(entry)}
-                          {user && entry.userId === user.id && " (You)"}
-                          <LinkIcon className="h-2.5 w-2.5 ml-1 flex-shrink-0" />
-                        </a>
-                      );
-                    } else {
-                      return (
-                        <p className="text-xs font-medium text-white truncate">
-                          {getDisplayName(entry)}
-                          {user && entry.userId === user.id && " (You)"}
-                        </p>
-                      );
-                    }
-                  })()}
-                </div>
-              </div>
-              <div className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-900/20 text-orange-300 border border-orange-700/30">
-                {entry.referralCount}{" "}
-                {entry.referralCount === 1 ? "referral" : "referrals"}
-              </div>
-            </div>
-          ))
-        ) : leaderboard && leaderboard.length > 0 ? (
-          leaderboard.map((entry, index) => (
-            <div
-              key={entry.userId}
-              className={`p-4 flex items-center justify-between ${
-                user && entry.userId === user.id ? "bg-[#1d2442]/20" : ""
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className="flex-shrink-0">{getMedal(index)}</div>
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1d2442]/40 flex-shrink-0">
-                  <div className="flex items-center justify-center w-full h-full bg-[#1d2442]">
-                    <span className="text-gray-300 font-medium text-xs">
-                      {getInitials(entry)}
-                    </span>
+      <div className="overflow-hidden">
+        {isLoaded ? (
+          leaderboardWithProfiles.length > 0 ? (
+            leaderboardWithProfiles.map((entry, index) => (
+              <div
+                key={entry.userId}
+                className={`p-4 flex items-center justify-between ${
+                  user && entry.userId === user.id ? "bg-[#1d2442]/20" : ""
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">{getMedal(index)}</div>
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1d2442]/40 flex-shrink-0 border border-[#20253d]/50">
+                    {entry.userInfo?.imageUrl ? (
+                      <Image
+                        src={entry.userInfo.imageUrl}
+                        alt={getDisplayName(entry)}
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                        priority={index < 3}
+                        loading={index < 3 ? "eager" : "lazy"}
+                        quality={90}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center w-full h-full bg-[#1d2442]">
+                        <span className="text-gray-300 font-medium text-xs">
+                          {getInitials(entry)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      href={`/profile/${entry.userId}`}
+                      className="hover:opacity-80 transition-opacity"
+                    >
+                      <p className="text-xs font-medium text-white truncate hover:text-orange-300">
+                        {getDisplayName(entry)}
+                        {user && entry.userId === user.id && " (You)"}
+                      </p>
+                    </Link>
                   </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  {(() => {
-                    const linkedinUrl = getLinkedinUrl(entry.userId);
-                    // Add console.log to debug linkedinUrl
-                    console.log(
-                      `Fallback entry ${entry.userId} LinkedIn:`,
-                      linkedinUrl
-                    );
-
-                    if (linkedinUrl) {
-                      return (
-                        <a
-                          href={linkedinUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-medium text-white hover:text-orange-400 hover:underline truncate flex items-center"
-                        >
-                          {getDisplayName(entry)}
-                          {user && entry.userId === user.id && " (You)"}
-                          <LinkIcon className="h-2.5 w-2.5 ml-1 flex-shrink-0" />
-                        </a>
-                      );
-                    } else {
-                      return (
-                        <p className="text-xs font-medium text-white truncate">
-                          {getDisplayName(entry)}
-                          {user && entry.userId === user.id && " (You)"}
-                        </p>
-                      );
-                    }
-                  })()}
+                <div className="flex items-center">
+                  <div className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-900/20 text-purple-300 border border-purple-700/30">
+                    {entry.referralCount}{" "}
+                    {entry.referralCount === 1 ? "referral" : "referrals"}
+                  </div>
+                  {entry.linkedinUrl && (
+                    <a
+                      href={entry.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-2 text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                      <LinkIcon className="h-4 w-4" />
+                    </a>
+                  )}
                 </div>
               </div>
-              <div className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-900/20 text-orange-300 border border-orange-700/30">
-                {entry.referralCount}{" "}
-                {entry.referralCount === 1 ? "referral" : "referrals"}
+            ))
+          ) : (
+            <div className="p-6 text-center text-gray-400">
+              No referrals yet. Be the first!
+            </div>
+          )
+        ) : (
+          // Loading state for both versions
+          [1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="p-4 flex items-center justify-between animate-pulse"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-5 h-5 bg-gray-700 rounded-full"></div>
+                <div className="w-8 h-8 bg-gray-700 rounded-full"></div>
+                <div className="h-4 bg-gray-700 rounded w-24"></div>
               </div>
+              <div className="h-4 bg-gray-700 rounded w-16"></div>
             </div>
           ))
-        ) : (
-          <div className="p-6 text-center text-gray-500">
-            No referrals yet. Be the first to add one!
-          </div>
         )}
       </div>
     </div>
