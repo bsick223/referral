@@ -19,10 +19,9 @@ export default function AuraLeaderboardSection() {
             Aura Leaders
           </h2>
           <p className="mt-2 text-gray-400 text-sm md:text-base">
-            Top users with the highest Aura points from referrals, applications,
-            and offers
+            Top users with the highest Aura points
           </p>
-          <div className="flex justify-center gap-6 mt-4 text-xs text-gray-400">
+          {/* <div className="flex justify-center gap-6 mt-4 text-xs text-gray-400">
             <div className="flex items-center">
               <span className="inline-block w-3 h-3 rounded-full bg-orange-500/60 mr-1"></span>
               <span>Referrals: 5 pts</span>
@@ -39,7 +38,7 @@ export default function AuraLeaderboardSection() {
               <span className="inline-block w-3 h-3 rounded-full bg-green-500/60 mr-1"></span>
               <span>Offers: 500 pts</span>
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="max-w-2xl mx-auto">
