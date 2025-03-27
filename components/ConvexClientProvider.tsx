@@ -4,6 +4,7 @@ import { ClerkProvider, useAuth } from "@clerk/nextjs";
 import { ReactNode } from "react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexReactClient } from "convex/react";
+import { dark } from "@clerk/themes";
 
 export const convex = new ConvexReactClient(
   process.env.NEXT_PUBLIC_CONVEX_URL!
@@ -13,6 +14,66 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
   return (
     <ClerkProvider
       appearance={{
+        baseTheme: dark,
+        elements: {
+          formButtonPrimary: {
+            backgroundColor: "#3b82f6",
+            borderRadius: "0.375rem",
+            "&:hover": {
+              backgroundColor: "#2563eb",
+            },
+          },
+          card: {
+            backgroundColor: "#121a36",
+            borderRadius: "0.5rem",
+            boxShadow: "0 5px 15px rgba(0, 0, 0, 0.3)",
+            border: "1px solid #20253d",
+          },
+          headerTitle: {
+            color: "white",
+          },
+          headerSubtitle: {
+            color: "#94a3b8",
+          },
+          socialButtonsIconButton: {
+            border: "1px solid #20253d",
+            backgroundColor: "#0c1029",
+            "&:hover": {
+              backgroundColor: "#192245",
+            },
+          },
+          socialButtonsBlockButton: {
+            backgroundColor: "#0c1029",
+            border: "1px solid #20253d",
+            "&:hover": {
+              backgroundColor: "#192245",
+            },
+          },
+          formFieldLabel: {
+            color: "#94a3b8",
+          },
+          formFieldInput: {
+            backgroundColor: "#0c1029",
+            border: "1px solid #20253d",
+            color: "white",
+            "&:focus": {
+              borderColor: "#3b82f6",
+              outline: "none",
+            },
+          },
+          footerActionText: {
+            color: "#94a3b8",
+          },
+          footerActionLink: {
+            color: "#3b82f6",
+            "&:hover": {
+              color: "#60a5fa",
+            },
+          },
+          identityPreviewText: {
+            color: "white",
+          },
+        },
         layout: {
           unsafe_disableDevelopmentModeWarnings: true,
         },
