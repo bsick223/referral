@@ -169,7 +169,7 @@ export default function PrivacyPolicy() {
             </ul>
             <p className="mb-4">
               To exercise these rights, please contact us using the information
-              provided in the "Contact Us" section below.
+              provided in the &quot;Contact Us&quot; section below.
             </p>
           </section>
 
@@ -228,7 +228,7 @@ export default function PrivacyPolicy() {
 
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-white mb-4">
-              Children's Privacy
+              Children&apos;s Privacy
             </h2>
             <p className="mb-4">
               Our service is not directed to individuals under 16. We do not
