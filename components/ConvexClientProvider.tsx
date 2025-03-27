@@ -1,14 +1,41 @@
 "use client";
 
 import { ClerkProvider, useAuth } from "@clerk/nextjs";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexReactClient } from "convex/react";
 import { dark } from "@clerk/themes";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export const convex = new ConvexReactClient(
   process.env.NEXT_PUBLIC_CONVEX_URL!
 );
+
+function ProfileInitializer() {
+  const { userId } = useAuth();
+  const updatePrivacySettings = useMutation(
+    api.userProfiles.updatePrivacySettings
+  );
+
+  useEffect(() => {
+    if (userId) {
+      // Ensure profile exists with default public settings
+      updatePrivacySettings({
+        userId,
+        profileVisibility: "public",
+        hideFromLeaderboards: false,
+        showApplicationsCount: true,
+        showReferralsCount: true,
+        showCompaniesCount: true,
+      }).catch((error) => {
+        console.error("Error ensuring user profile exists:", error);
+      });
+    }
+  }, [userId, updatePrivacySettings]);
+
+  return null;
+}
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
   return (
@@ -81,6 +108,7 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
       afterSignOutUrl="/"
     >
       <ConvexProviderWithClerk useAuth={useAuth} client={convex}>
+        <ProfileInitializer />
         {children}
       </ConvexProviderWithClerk>
     </ClerkProvider>
