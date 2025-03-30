@@ -45,6 +45,12 @@ export default function DashboardLayout({
   }, []);
 
   const navigation = [
+    {
+      name: "Your Account",
+      href: "/profile",
+      icon: UserButton,
+      isAccount: true,
+    },
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Applications", href: "/dashboard/applications", icon: Briefcase },
     { name: "Referrals", href: "/dashboard/referrals", icon: UsersRound },
@@ -165,13 +171,19 @@ export default function DashboardLayout({
                     {active && (
                       <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-orange-400 to-blue-500 rounded-full"></div>
                     )}
-                    <item.icon
-                      className={`mr-3 h-5 w-5 ${
-                        active
-                          ? "text-orange-400"
-                          : "text-gray-400 group-hover:text-gray-300"
-                      }`}
-                    />
+                    {item.isAccount ? (
+                      <div className="mr-3">
+                        <UserButton />
+                      </div>
+                    ) : (
+                      <item.icon
+                        className={`mr-3 h-5 w-5 ${
+                          active
+                            ? "text-orange-400"
+                            : "text-gray-400 group-hover:text-gray-300"
+                        }`}
+                      />
+                    )}
                     <span>{item.name}</span>
                     {active && (
                       <ChevronRight className="ml-auto h-4 w-4 text-gray-500" />
@@ -226,19 +238,6 @@ export default function DashboardLayout({
                 <LogOut className="mr-3 h-5 w-5" />
                 <span>Sign out</span>
               </button>
-            </div>
-            <div className="mt-4 flex items-center px-3 py-2">
-              <UserButton afterSignOutUrl="/" />
-              <div className="ml-3">
-                <Link
-                  href="/profile"
-                  className="hover:text-orange-300 transition-colors"
-                >
-                  <p className="text-sm font-medium text-gray-300 hover:text-orange-300">
-                    Your Account
-                  </p>
-                </Link>
-              </div>
             </div>
           </div>
         </div>
