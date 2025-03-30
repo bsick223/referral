@@ -188,6 +188,7 @@ export default function DashboardLayout({
                   <Link
                     key={item.name}
                     href={item.href}
+                    data-tab={item.name.toLowerCase()}
                     className={`group flex items-center px-3 py-2 rounded-md relative ${
                       active
                         ? "bg-[#121a36] text-orange-400"
@@ -203,6 +204,7 @@ export default function DashboardLayout({
                       </div>
                     ) : (
                       <item.icon
+                        data-tour={item.name.toLowerCase()}
                         className={`mr-3 h-5 w-5 ${
                           active
                             ? "text-orange-400"
@@ -252,9 +254,10 @@ export default function DashboardLayout({
             <div className="border-t border-[#20253d]/50 pt-4">
               <a
                 href="/settings"
+                data-tab="settings"
                 className="group flex items-center px-3 py-2 text-sm text-gray-400 rounded-md hover:text-gray-200 hover:bg-[#121a36]/50"
               >
-                <Settings className="mr-3 h-5 w-5" />
+                <Settings data-tour="settings" className="mr-3 h-5 w-5" />
                 <span>Settings</span>
               </a>
               <button

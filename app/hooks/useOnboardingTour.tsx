@@ -5,6 +5,7 @@ import Shepherd from "shepherd.js";
 import "shepherd.js/dist/css/shepherd.css";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { usePathname, useRouter } from "next/navigation";
 
 interface UseOnboardingTourProps {
   userId: string;
@@ -18,6 +19,8 @@ type ShepherdStep = any;
 
 export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
   const [tour, setTour] = useState<ShepherdTour>(null);
+  const pathname = usePathname();
+  const router = useRouter();
 
   // Use Convex to check if user has completed onboarding
   const hasCompletedOnboarding = useQuery(
@@ -154,29 +157,170 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         });
       };
 
-      // Helper function to handle common step setup
-      const setupStep = (step: ShepherdStep) => {
-        step.on("show", () => {
-          // Wait for DOM to update
-          setTimeout(() => {
-            // Scroll to better position the step
-            const stepElement = document.querySelector(".shepherd-element");
-            scrollToElement(stepElement as HTMLElement);
+      // Navigation routes for each step
+      const stepRoutes = {
+        applications: "/dashboard/applications",
+        referrals: "/dashboard/referrals",
+        messages: "/dashboard/messages",
+        settings: "/settings",
+        leaderboard: "/leaderboard",
+      };
 
-            // Add highlight to the target element
-            if (step.options.attachTo) {
-              const targetElement = document.querySelector(
-                step.options.attachTo.element
-              );
-              if (targetElement) {
-                // Add custom highlight effect
-                targetElement.classList.add("shepherd-highlighted");
+      // Helper function to navigate to the correct tab for a step
+      const navigateToStepRoute = async (stepId: string): Promise<boolean> => {
+        // Store the current step ID and tour state in sessionStorage
+        window.sessionStorage.setItem("currentTourStep", stepId);
+        window.sessionStorage.setItem("tourActive", "true");
 
-                // Also scroll to make the target element visible
-                scrollToElement(targetElement as HTMLElement);
-              }
+        // Only navigate if we have a route for this step
+        if (stepId in stepRoutes) {
+          const route = stepRoutes[stepId as keyof typeof stepRoutes];
+
+          // Check if we're already on this route
+          if (pathname !== route) {
+            console.log(`Navigating to ${route} for step ${stepId}`);
+
+            // Navigate using the router
+            router.push(route);
+
+            // Return true to indicate navigation occurred
+            return true;
+          }
+        }
+
+        // Return false if no navigation was needed
+        return false;
+      };
+
+      // Helper function to wait for a specific element to appear in the DOM
+      const waitForElement = (
+        selector: string,
+        timeout = 5000
+      ): Promise<HTMLElement | null> => {
+        return new Promise((resolve) => {
+          // Check if element already exists
+          const element = document.querySelector(selector) as HTMLElement;
+          if (element) {
+            return resolve(element);
+          }
+
+          // Set a timeout to avoid waiting forever
+          const timeoutId = setTimeout(() => {
+            observer.disconnect();
+            console.warn(`Timeout waiting for element: ${selector}`);
+            resolve(null);
+          }, timeout);
+
+          // Create an observer to watch for DOM changes
+          const observer = new MutationObserver((mutations) => {
+            const element = document.querySelector(selector) as HTMLElement;
+            if (element) {
+              clearTimeout(timeoutId);
+              observer.disconnect();
+              resolve(element);
             }
-          }, 100); // Slightly longer delay to ensure DOM is ready
+          });
+
+          // Start observing
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["id", "class"],
+          });
+        });
+      };
+
+      // Main function to setup each step with proper navigation and element detection
+      const setupStep = (step: ShepherdStep) => {
+        step.on("show", async () => {
+          const stepId = step.id;
+          console.log(`Showing step: ${stepId}`);
+
+          // Store exact step we're on to enable precise recovery
+          window.sessionStorage.setItem(
+            "exactTourStep",
+            String(tour.steps.indexOf(step))
+          );
+
+          // If navigation is required for this step, handle it
+          const didNavigate = await navigateToStepRoute(stepId);
+
+          // If we navigated, give time for the new page to load
+          if (didNavigate) {
+            // No need for further actions since page will reload and resume logic will trigger
+            return;
+          }
+
+          // Now look for the target element
+          if (step.options.attachTo) {
+            const targetSelector = step.options.attachTo.element;
+            console.log(`Looking for element: ${targetSelector}`);
+
+            // Try multiple times with increasing delay to find the element
+            let targetElement = null;
+            for (let attempt = 0; attempt < 5; attempt++) {
+              targetElement = document.querySelector(
+                targetSelector
+              ) as HTMLElement;
+              if (targetElement) break;
+
+              // Wait before next attempt (increasing delays: 100ms, 200ms, 400ms, 800ms, 1600ms)
+              await new Promise((resolve) =>
+                setTimeout(resolve, 100 * Math.pow(2, attempt))
+              );
+            }
+
+            // If element still not found after retries, try waiting for DOM changes
+            if (!targetElement) {
+              console.log(
+                `Element not found after retries, waiting for DOM changes: ${targetSelector}`
+              );
+              targetElement = await waitForElement(targetSelector, 3000);
+            }
+
+            if (targetElement) {
+              console.log(`Found element: ${targetSelector}`);
+
+              // Add highlight
+              targetElement.classList.add("shepherd-highlighted");
+
+              // Scroll to the element
+              scrollToElement(targetElement);
+            } else {
+              console.warn(
+                `Element not found after waiting: ${targetSelector}`
+              );
+              console.log(
+                "Available data-tour elements:",
+                Array.from(document.querySelectorAll("[data-tour]")).map((el) =>
+                  el.getAttribute("data-tour")
+                )
+              );
+              console.log(
+                "Available data-tab elements:",
+                Array.from(document.querySelectorAll("[data-tab]")).map((el) =>
+                  el.getAttribute("data-tab")
+                )
+              );
+
+              // Auto-advance if element can't be found
+              setTimeout(() => {
+                if (tour) {
+                  console.log(
+                    `Auto-advancing past step ${stepId} due to missing element`
+                  );
+                  tour.next();
+                }
+              }, 2000);
+            }
+          }
+
+          // Also scroll the tour element into view
+          setTimeout(() => {
+            const tourElement = document.querySelector(".shepherd-element");
+            scrollToElement(tourElement as HTMLElement);
+          }, 200);
         });
 
         step.on("hide", () => {
@@ -192,11 +336,11 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         });
       };
 
-      // Define tour steps with custom positioning
+      // Welcome step - doesn't need tab navigation
       newTour.addStep({
         id: "welcome",
         title: "Welcome to your Dashboard!",
-        text: `<p class="text-white mb-2">We'll guide you through the main features of our platform to help you get started.</p>`,
+        text: `<p class="text-white mb-2">Welcome to dashboard! Be sure to view the resources to get the most out of app tracking. <strong>Pro-tip:</strong> Ask your referral for the referral BEFORE applying to a job, or else you won't be able to get a referral.</p>`,
         buttons: [
           {
             action: () => {
@@ -216,54 +360,72 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         when: {
           show: () => {
             // For welcome step, scroll to top of the page with slight offset for header
-            // Detect if we're on a mobile device
-            const isMobile = window.innerWidth <= 768;
-
-            setTimeout(
-              () => {
-                const header = document.querySelector("header");
-                const headerHeight = header ? header.offsetHeight : 0;
-
-                // Use a different scroll approach for mobile
-                if (isMobile) {
-                  // On mobile, we want to make sure we're at the very top
-                  window.scrollTo({
-                    top: 0,
-                    behavior: "smooth",
-                  });
-
-                  // Then after a brief delay, adjust if needed to account for any mobile UI elements
-                  setTimeout(() => {
-                    const tourElement =
-                      document.querySelector(".shepherd-element");
-                    if (tourElement) {
-                      tourElement.scrollIntoView({
-                        behavior: "smooth",
-                        block: "center",
-                      });
-                    }
-                  }, 300);
-                } else {
-                  // Original desktop behavior
-                  window.scrollTo({
-                    top: headerHeight + 10,
-                    behavior: "smooth",
-                  });
-                }
-              },
-              isMobile ? 500 : 100
-            ); // Longer timeout for mobile
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            });
           },
         },
       });
 
+      // Applications step
+      const applicationsStep = newTour.addStep({
+        id: "applications",
+        title: "Applications Tab",
+        text: '<p class="text-white mb-2">Create a new application and drag and drop them through the pipeline to track your progress.</p>',
+        attachTo: {
+          element: '[data-tab="applications"]',
+          on: "right",
+        },
+        buttons: [
+          {
+            action: newTour.back,
+            classes: "shepherd-button-secondary",
+            text: "Back",
+          },
+          {
+            action: newTour.next,
+            classes: "shepherd-button-primary",
+            text: "Next",
+          },
+        ],
+      });
+
+      setupStep(applicationsStep);
+
+      // Referrals step
+      const referralsStep = newTour.addStep({
+        id: "referrals",
+        title: "Track Your Referrals",
+        text: '<p class="text-white mb-2">To track your referrals, add a company first then try to reach your goal of 5 confirmations of your referral.</p>',
+        attachTo: {
+          element: '[data-tab="referrals"]',
+          on: "right",
+        },
+        buttons: [
+          {
+            action: newTour.back,
+            classes: "shepherd-button-secondary",
+            text: "Back",
+          },
+          {
+            action: newTour.next,
+            classes: "shepherd-button-primary",
+            text: "Next",
+          },
+        ],
+      });
+
+      setupStep(referralsStep);
+
+      // After reaching referrals page, point to the Add Company button
       const addCompanyStep = newTour.addStep({
         id: "add-company",
-        title: "Add Your First Company",
-        text: '<p class="text-white mb-2">Start by adding a company. Click on the "Add Company" button to create your first company profile.</p>',
+        title: "Add a Company",
+        text: '<p class="text-white mb-2">Click here to add a company when you want to track referrals for a specific organization.</p>',
         attachTo: {
           element: '[data-tour="add-company"]',
-          on: "bottom-start",
+          on: "bottom",
         },
         buttons: [
           {
@@ -281,13 +443,14 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
 
       setupStep(addCompanyStep);
 
+      // Messages step
       const messagesStep = newTour.addStep({
         id: "messages",
-        title: "Manage Your Messages",
-        text: '<p class="text-white mb-2">Create and customize message templates for different scenarios.</p>',
+        title: "Message Templates",
+        text: '<p class="text-white mb-2">Create message templates for reaching out to people. These templates will help you save time and be consistent.</p>',
         attachTo: {
-          element: '[data-tour="messages"]',
-          on: "bottom-start",
+          element: '[data-tab="messages"]',
+          on: "right",
         },
         buttons: [
           {
@@ -305,14 +468,61 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
 
       setupStep(messagesStep);
 
+      // Settings step
+      const settingsStep = newTour.addStep({
+        id: "settings",
+        title: "Settings",
+        text: '<p class="text-white mb-2">Update your profile, privacy settings, and reach out for feedback in the settings page.</p>',
+        attachTo: {
+          element: '[data-tab="settings"]',
+          on: "right",
+        },
+        buttons: [
+          {
+            action: newTour.back,
+            classes: "shepherd-button-secondary",
+            text: "Back",
+          },
+          {
+            action: newTour.next,
+            classes: "shepherd-button-primary",
+            text: "Next",
+          },
+        ],
+      });
+
+      setupStep(settingsStep);
+
+      // Leaderboard step
       const leaderboardStep = newTour.addStep({
         id: "leaderboard",
-        title: "Check the Leaderboard",
-        text: '<p class="text-white mb-2">See how you compare to others on our leaderboard.</p>',
+        title: "Leaderboard",
+        text: '<p class="text-white mb-2">This is where you can see how you compare with others. Compete and improve together!</p>',
         attachTo: {
-          element: '[data-tour="leaderboard"]',
-          on: "bottom-start",
+          element: '[data-tab="leaderboard"]',
+          on: "right",
         },
+        buttons: [
+          {
+            action: newTour.back,
+            classes: "shepherd-button-secondary",
+            text: "Back",
+          },
+          {
+            action: newTour.next,
+            classes: "shepherd-button-primary",
+            text: "Next",
+          },
+        ],
+      });
+
+      setupStep(leaderboardStep);
+
+      // Thank you step
+      const thankYouStep = newTour.addStep({
+        id: "thank-you",
+        title: "Thank You!",
+        text: `<p class="text-white mb-2">This is one of the best ways to track applications, this process is similar to how businesses track leads and nurture them to become sales. In your case, job offers. Best of luck and see you on the score board!</p>`,
         buttons: [
           {
             action: newTour.back,
@@ -331,7 +541,7 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         ],
       });
 
-      setupStep(leaderboardStep);
+      setupStep(thankYouStep);
 
       setTour(newTour);
 
@@ -347,81 +557,124 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
     } catch (error) {
       console.error("Error initializing tour:", error);
     }
-  }, [userId, markOnboardingCompleted]); // Add dependencies
+  }, [userId, markOnboardingCompleted, pathname, router]);
 
   // Auto-start the tour if user hasn't completed onboarding
   useEffect(() => {
     // Only execute on client side and when tour is initialized
     if (typeof window === "undefined" || !tour) return;
 
-    // The only condition: auto-start unless explicitly completed
-    // The hasCompletedOnboarding will be undefined while loading, which is fine
-    if (hasCompletedOnboarding !== true) {
-      console.log("Auto-starting tour as onboarding not completed yet");
-      console.log("Current onboarding status:", hasCompletedOnboarding);
+    // Check if we need to resume from a specific step after navigation
+    const resumeStep = window.sessionStorage.getItem("currentTourStep");
+    const exactStepIndex = window.sessionStorage.getItem("exactTourStep");
+    const tourActive = window.sessionStorage.getItem("tourActive") === "true";
 
-      // Longer delay to ensure elements are fully rendered and styled
-      const timer = setTimeout(() => {
-        try {
-          // Check if DOM elements exist first
-          const addCompanyElement = document.querySelector(
-            '[data-tour="add-company"]'
-          );
-          const messagesElement = document.querySelector(
-            '[data-tour="messages"]'
-          );
-          const leaderboardElement = document.querySelector(
-            '[data-tour="leaderboard"]'
-          );
+    if (tourActive) {
+      // Try most precise step index first if available
+      if (exactStepIndex && !isNaN(Number(exactStepIndex))) {
+        const stepIndex = Number(exactStepIndex);
+        if (stepIndex >= 0 && stepIndex < tour.steps.length) {
+          console.log(`Resuming tour at exact step index: ${stepIndex}`);
+          // Clear the exact step to avoid loops
+          window.sessionStorage.removeItem("exactTourStep");
 
-          console.log("Tour elements found?", {
-            addCompany: !!addCompanyElement,
-            messages: !!messagesElement,
-            leaderboard: !!leaderboardElement,
-          });
-
-          if (addCompanyElement && messagesElement && leaderboardElement) {
-            // Reset scroll position before starting tour
-            window.scrollTo(0, 0);
-
-            // Small additional delay to ensure scroll is complete
-            setTimeout(() => {
+          // Wait for the page to be fully loaded after navigation
+          setTimeout(() => {
+            try {
+              tour.show(stepIndex);
+            } catch (error) {
+              console.error("Error resuming tour at exact step:", error);
+              // Fallback to first step if error
               tour.start();
-              console.log("Auto-started tour - onboarding not completed");
-            }, 200);
-          } else {
-            console.warn(
-              "Could not start tour - some elements were not found in DOM"
-            );
-          }
-        } catch (error) {
-          console.error("Error starting tour:", error);
+            }
+          }, 500);
+          return;
         }
-      }, 2500); // Increased delay to ensure everything is fully loaded
+      }
+
+      // Fall back to step ID if exact index not available
+      if (resumeStep) {
+        console.log(`Attempting to resume tour from step ID: ${resumeStep}`);
+
+        // Find the step by ID
+        const stepIndex = tour.steps.findIndex(
+          (step: ShepherdStep) => step.id === resumeStep
+        );
+
+        if (stepIndex !== -1) {
+          // Wait for the page to be fully loaded after navigation
+          setTimeout(() => {
+            // Only clear the specific step to avoid loops
+            window.sessionStorage.removeItem("currentTourStep");
+            try {
+              tour.show(stepIndex);
+            } catch (error) {
+              console.error("Error resuming tour at step by ID:", error);
+              // Fallback to first step if error
+              tour.start();
+            }
+          }, 500);
+          return;
+        }
+      }
+
+      // If we get here but tour is active, restart from beginning
+      // This is a fallback for cases where step info is lost
+      if (tourActive && !resumeStep && !exactStepIndex) {
+        console.log("Tour active but no step info, restarting tour");
+        setTimeout(() => tour.start(), 800);
+        return;
+      }
+    }
+
+    // Only start the tour if the user hasn't completed onboarding and tour isn't already active
+    if (hasCompletedOnboarding !== true && !tourActive) {
+      // Longer delay to ensure elements are fully rendered
+      const timer = setTimeout(() => {
+        // Set tour as active to preserve across page loads
+        window.sessionStorage.setItem("tourActive", "true");
+        tour.start();
+      }, 1000);
 
       return () => clearTimeout(timer);
-    } else {
-      console.log("Not auto-starting tour - onboarding already completed");
     }
-  }, [hasCompletedOnboarding, tour]);
+  }, [hasCompletedOnboarding, tour, pathname]);
+
+  // Cleanup tourActive flag when tour completes or is cancelled
+  useEffect(() => {
+    if (!tour) return;
+
+    const handleTourComplete = () => {
+      window.sessionStorage.removeItem("tourActive");
+      window.sessionStorage.removeItem("currentTourStep");
+    };
+
+    const handleTourCancel = () => {
+      window.sessionStorage.removeItem("tourActive");
+      window.sessionStorage.removeItem("currentTourStep");
+    };
+
+    tour.on("complete", handleTourComplete);
+    tour.on("cancel", handleTourCancel);
+
+    return () => {
+      tour.off("complete", handleTourComplete);
+      tour.off("cancel", handleTourCancel);
+    };
+  }, [tour]);
 
   const startTour = () => {
-    console.log("useOnboardingTour: startTour called, tour exists:", !!tour);
     if (tour) {
-      try {
-        // Start the tour
-        tour.start();
-        console.log("useOnboardingTour: tour started manually");
-      } catch (error) {
-        console.error("Error starting tour:", error);
-      }
+      window.sessionStorage.setItem("tourActive", "true");
+      tour.start();
     }
   };
 
   const completeTour = () => {
     if (tour) {
-      // Mark onboarding as completed in Convex
       markOnboardingCompleted({ userId });
+      window.sessionStorage.removeItem("tourActive");
+      window.sessionStorage.removeItem("currentTourStep");
       tour.complete();
     }
   };

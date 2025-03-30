@@ -228,6 +228,7 @@ export default function ReferralsPage() {
         <div className="flex space-x-3">
           <Link
             href="/dashboard/companies/new"
+            data-tour="add-company"
             className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
           >
             <PlusCircle className="h-4 w-4 sm:mr-2 text-orange-400" />
@@ -249,6 +250,7 @@ export default function ReferralsPage() {
           <div className="mt-6">
             <Link
               href="/dashboard/companies/new"
+              data-tour="add-company"
               className="inline-flex items-center px-4 py-2 border border-[#20253d]/50 shadow-sm text-sm font-medium text-gray-300 bg-[#121a36]/50 hover:bg-[#121a36]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer backdrop-blur-sm"
             >
               <PlusCircle className="h-4 w-4 sm:mr-2 text-orange-400" />
