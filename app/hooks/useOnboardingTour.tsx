@@ -20,6 +20,7 @@ type ShepherdStep = any;
 export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
   const [tour, setTour] = useState<ShepherdTour>(null);
   const pathname = usePathname();
+  const [isMobile, setIsMobile] = useState(false);
 
   // Use Convex to check if user has completed onboarding
   const hasCompletedOnboarding = useQuery(
@@ -33,6 +34,22 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
   const markOnboardingCompleted = useMutation(
     api.userProfiles.markOnboardingCompleted
   );
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Check on initial load
+    checkMobile();
+
+    // Add resize listener
+    window.addEventListener("resize", checkMobile);
+
+    // Cleanup
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     // Only run on client-side
@@ -134,6 +151,45 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
           box-shadow: 0 0 10px 3px rgba(249,115,22,0.5) !important;
           z-index: 10000 !important;
         }
+        /* Make sure the tour is visible on mobile */
+        @media (max-width: 767px) {
+          .shepherd-theme-custom {
+            max-width: 300px;
+            font-size: 14px;
+          }
+          .shepherd-text {
+            padding: 0.75rem;
+          }
+          .shepherd-footer {
+            padding: 0.5rem 0.75rem;
+          }
+          /* Ensure step is visible at bottom of screen */
+          .shepherd-element[data-popper-placement="bottom"] {
+            margin-top: 10px !important;
+          }
+          /* Ensure modal stays within screen */
+          .shepherd-modal-overlay-container {
+            z-index: 9999 !important;
+          }
+          /* Make buttons more tappable */
+          .shepherd-button {
+            padding: 8px 12px !important;
+            min-height: 44px;
+            font-size: 16px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          /* Fix mobile floating sidebar issues */
+          .shepherd-element[x-out-of-boundaries] {
+            visibility: visible !important;
+            /* Force the tour to stay visible on the screen */
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+          }
+        }
       `;
       document.head.appendChild(styleEl);
 
@@ -156,11 +212,55 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         });
       };
 
+      // Helper function to open the mobile sidebar
+      const openMobileSidebar = () => {
+        const menuButton = document.querySelector(
+          'button[aria-controls="mobile-sidebar"]'
+        );
+        if (menuButton && isMobile) {
+          // Check if sidebar is already open
+          const sidebar = document.querySelector('[data-sidebar="mobile"]');
+          const isOpen = sidebar?.classList.contains("translate-x-0");
+
+          if (!isOpen) {
+            console.log("Opening mobile sidebar for tour");
+            (menuButton as HTMLElement).click();
+          }
+        }
+      };
+
       // Helper function to handle common step setup
       const setupStep = (step: ShepherdStep) => {
         step.on("show", () => {
           // Wait for DOM to update
           setTimeout(() => {
+            // If on mobile and showing a step related to sidebar tabs, make sure the sidebar is open
+            if (
+              isMobile &&
+              step.id !== "welcome" &&
+              step.id !== "menu-button" &&
+              step.id !== "thank-you"
+            ) {
+              openMobileSidebar();
+
+              // A little extra time to ensure the sidebar fully opens
+              setTimeout(() => {
+                // Need to update the target element after sidebar opens
+                if (step.options.attachTo) {
+                  const targetSelector = step.options.attachTo.element;
+                  const targetElement = document.querySelector(targetSelector);
+
+                  if (targetElement) {
+                    // Add custom highlight effect
+                    targetElement.classList.add("shepherd-highlighted");
+
+                    // Also scroll to make the target element visible
+                    scrollToElement(targetElement as HTMLElement);
+                  }
+                }
+              }, 300);
+            }
+
             // Scroll to better position the step
             const stepElement = document.querySelector(".shepherd-element");
             scrollToElement(stepElement as HTMLElement);
@@ -179,12 +279,17 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
                 scrollToElement(targetElement as HTMLElement);
               } else {
                 console.warn(`Target element not found: ${targetSelector}`);
-                console.log(
-                  "Available data-tab elements:",
-                  Array.from(document.querySelectorAll("[data-tab]")).map(
-                    (el) => el.getAttribute("data-tab")
-                  )
-                );
+                console.log("Available elements:", {
+                  "data-tab": Array.from(
+                    document.querySelectorAll("[data-tab]")
+                  ).map((el) => el.getAttribute("data-tab")),
+                  "aria-controls": Array.from(
+                    document.querySelectorAll("[aria-controls]")
+                  ).map((el) => el.getAttribute("aria-controls")),
+                  "in sidebar": document.querySelector(
+                    '[data-sidebar="mobile"]'
+                  ),
+                });
 
                 // Auto-advance if element can't be found
                 setTimeout(() => {
@@ -197,7 +302,7 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
                 }, 1000);
               }
             }
-          }, 100);
+          }, 200);
         });
 
         step.on("hide", () => {
@@ -245,6 +350,34 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         },
       });
 
+      // Mobile-specific step for menu button (only shown on mobile)
+      const menuButtonStep = newTour.addStep({
+        id: "menu-button",
+        title: "Navigation Menu",
+        text: '<p class="text-white mb-2">Tap this menu button to access navigation options like Applications, Referrals, and Messages.</p>',
+        attachTo: {
+          element: 'button[aria-controls="mobile-sidebar"]',
+          on: "bottom",
+        },
+        buttons: [
+          {
+            action: () => {
+              // Open sidebar then go to next step
+              openMobileSidebar();
+              // Add more delay on mobile to ensure sidebar opens fully
+              setTimeout(() => newTour.next(), 800);
+            },
+            classes: "shepherd-button-primary",
+            text: "Next",
+          },
+        ],
+      });
+
+      // Only set up the menu button step for mobile devices
+      if (isMobile) {
+        setupStep(menuButtonStep);
+      }
+
       // Applications step
       const applicationsStep = newTour.addStep({
         id: "applications",
@@ -252,7 +385,7 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         text: '<p class="text-white mb-2">Create a new application and drag and drop them through the pipeline to track your progress.</p>',
         attachTo: {
           element: '[data-tab="applications"]',
-          on: "right",
+          on: isMobile ? "bottom" : "right",
         },
         buttons: [
           {
@@ -277,7 +410,7 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         text: '<p class="text-white mb-2">To track your referrals, add a company first then try to reach your goal of 5 confirmations of your referral.</p>',
         attachTo: {
           element: '[data-tab="referrals"]',
-          on: "right",
+          on: isMobile ? "bottom" : "right",
         },
         buttons: [
           {
@@ -302,7 +435,7 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         text: '<p class="text-white mb-2">Create message templates for reaching out to people. These templates will help you save time and be consistent.</p>',
         attachTo: {
           element: '[data-tab="messages"]',
-          on: "right",
+          on: isMobile ? "bottom" : "right",
         },
         buttons: [
           {
@@ -327,7 +460,7 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         text: '<p class="text-white mb-2">Update your profile, privacy settings, and reach out for feedback in the settings page.</p>',
         attachTo: {
           element: '[data-tab="settings"]',
-          on: "right",
+          on: isMobile ? "bottom" : "right",
         },
         buttons: [
           {
@@ -352,7 +485,7 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         text: '<p class="text-white mb-2">This is where you can see how you compare with others. Compete and improve together!</p>',
         attachTo: {
           element: '[data-tab="leaderboard"]',
-          on: "right",
+          on: isMobile ? "bottom" : "right",
         },
         buttons: [
           {
@@ -409,7 +542,7 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
     } catch (error) {
       console.error("Error initializing tour:", error);
     }
-  }, [userId, markOnboardingCompleted, pathname]);
+  }, [userId, markOnboardingCompleted, pathname, isMobile]);
 
   // Auto-start the tour if user hasn't completed onboarding
   useEffect(() => {
