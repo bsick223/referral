@@ -225,40 +225,65 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
           if (!isOpen) {
             console.log("Opening mobile sidebar for tour");
             (menuButton as HTMLElement).click();
+            return true; // Sidebar was opened
           }
         }
+        return false; // No change to sidebar state
       };
+
+      // Check if the sidebar is currently open
+      const isSidebarCurrentlyOpen = () => {
+        const sidebar = document.querySelector('[data-sidebar="mobile"]');
+        return sidebar?.classList.contains("translate-x-0") || false;
+      };
+
+      // Track sidebar state to prevent reopening
+      let isSidebarOpen = false;
 
       // Helper function to handle common step setup
       const setupStep = (step: ShepherdStep) => {
         step.on("show", () => {
           // Wait for DOM to update
           setTimeout(() => {
-            // If on mobile and showing a step related to sidebar tabs, make sure the sidebar is open
+            // For mobile steps after welcome but not the thank you step
             if (
               isMobile &&
               step.id !== "welcome" &&
               step.id !== "menu-button" &&
               step.id !== "thank-you"
             ) {
-              openMobileSidebar();
+              // Check if the sidebar is actually open
+              const sidebarIsOpen = isSidebarCurrentlyOpen();
 
-              // A little extra time to ensure the sidebar fully opens
-              setTimeout(() => {
-                // Need to update the target element after sidebar opens
-                if (step.options.attachTo) {
-                  const targetSelector = step.options.attachTo.element;
-                  const targetElement = document.querySelector(targetSelector);
+              // If sidebar should be open but isn't, reopen it
+              if (!sidebarIsOpen) {
+                console.log(
+                  "Sidebar closed unexpectedly, reopening for",
+                  step.id
+                );
+                openMobileSidebar();
+                isSidebarOpen = true;
 
-                  if (targetElement) {
-                    // Add custom highlight effect
-                    targetElement.classList.add("shepherd-highlighted");
+                // Give extra time for sidebar to reopen
+                setTimeout(() => {
+                  // After sidebar reopens, find target element
+                  if (step.options.attachTo) {
+                    const targetSelector = step.options.attachTo.element;
+                    const targetElement =
+                      document.querySelector(targetSelector);
 
-                    // Also scroll to make the target element visible
-                    scrollToElement(targetElement as HTMLElement);
+                    if (targetElement) {
+                      // Add custom highlight effect
+                      targetElement.classList.add("shepherd-highlighted");
+
+                      // Also scroll to make the target element visible
+                      scrollToElement(targetElement as HTMLElement);
+                    }
                   }
-                }
-              }, 300);
+                }, 500); // Longer timeout to ensure sidebar fully opens
+
+                return; // Skip the rest of the show handler to avoid conflicts
+              }
             }
 
             // Scroll to better position the step
@@ -306,7 +331,8 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         });
 
         step.on("hide", () => {
-          // Remove highlight from the target element when step is hidden
+          // Don't close sidebar between steps during the tour
+          // Just remove highlight from the target element when step is hidden
           if (step.options.attachTo) {
             const targetElement = document.querySelector(
               step.options.attachTo.element
@@ -372,6 +398,7 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
               action: () => {
                 // Open sidebar then go to next step
                 openMobileSidebar();
+                isSidebarOpen = true;
                 // Add more delay on mobile to ensure sidebar opens fully
                 setTimeout(() => newTour.next(), 800);
               },
@@ -398,7 +425,15 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
             text: "Back",
           },
           {
-            action: newTour.next,
+            action: () => {
+              // Ensure sidebar is still open before going to next step
+              if (isMobile && !isSidebarCurrentlyOpen()) {
+                openMobileSidebar();
+                setTimeout(() => newTour.next(), 500);
+              } else {
+                newTour.next();
+              }
+            },
             classes: "shepherd-button-primary",
             text: "Next",
           },
@@ -423,7 +458,15 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
             text: "Back",
           },
           {
-            action: newTour.next,
+            action: () => {
+              // Ensure sidebar is still open before going to next step
+              if (isMobile && !isSidebarCurrentlyOpen()) {
+                openMobileSidebar();
+                setTimeout(() => newTour.next(), 500);
+              } else {
+                newTour.next();
+              }
+            },
             classes: "shepherd-button-primary",
             text: "Next",
           },
@@ -448,7 +491,15 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
             text: "Back",
           },
           {
-            action: newTour.next,
+            action: () => {
+              // Ensure sidebar is still open before going to next step
+              if (isMobile && !isSidebarCurrentlyOpen()) {
+                openMobileSidebar();
+                setTimeout(() => newTour.next(), 500);
+              } else {
+                newTour.next();
+              }
+            },
             classes: "shepherd-button-primary",
             text: "Next",
           },
@@ -473,7 +524,15 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
             text: "Back",
           },
           {
-            action: newTour.next,
+            action: () => {
+              // Ensure sidebar is still open before going to next step
+              if (isMobile && !isSidebarCurrentlyOpen()) {
+                openMobileSidebar();
+                setTimeout(() => newTour.next(), 500);
+              } else {
+                newTour.next();
+              }
+            },
             classes: "shepherd-button-primary",
             text: "Next",
           },
@@ -498,7 +557,15 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
             text: "Back",
           },
           {
-            action: newTour.next,
+            action: () => {
+              // Ensure sidebar is still open before going to next step
+              if (isMobile && !isSidebarCurrentlyOpen()) {
+                openMobileSidebar();
+                setTimeout(() => newTour.next(), 500);
+              } else {
+                newTour.next();
+              }
+            },
             classes: "shepherd-button-primary",
             text: "Next",
           },
@@ -520,6 +587,8 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
           },
           {
             action: () => {
+              // Reset sidebar state
+              isSidebarOpen = false;
               // Mark onboarding as completed in Convex
               markOnboardingCompleted({ userId });
               newTour.complete();
