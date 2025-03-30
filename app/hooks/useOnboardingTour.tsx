@@ -334,7 +334,14 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
             text: "Skip Tour",
           },
           {
-            action: newTour.next,
+            action: () => {
+              // Go to appropriate next step based on device type
+              if (isMobile) {
+                newTour.show("menu-button");
+              } else {
+                newTour.show("applications");
+              }
+            },
             classes: "shepherd-button-primary",
             text: "Next",
           },
@@ -351,31 +358,28 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
       });
 
       // Mobile-specific step for menu button (only shown on mobile)
-      const menuButtonStep = newTour.addStep({
-        id: "menu-button",
-        title: "Navigation Menu",
-        text: '<p class="text-white mb-2">Tap this menu button to access navigation options like Applications, Referrals, and Messages.</p>',
-        attachTo: {
-          element: 'button[aria-controls="mobile-sidebar"]',
-          on: "bottom",
-        },
-        buttons: [
-          {
-            action: () => {
-              // Open sidebar then go to next step
-              openMobileSidebar();
-              // Add more delay on mobile to ensure sidebar opens fully
-              setTimeout(() => newTour.next(), 800);
-            },
-            classes: "shepherd-button-primary",
-            text: "Next",
-          },
-        ],
-      });
-
-      // Only set up the menu button step for mobile devices
       if (isMobile) {
-        setupStep(menuButtonStep);
+        newTour.addStep({
+          id: "menu-button",
+          title: "Navigation Menu",
+          text: '<p class="text-white mb-2">Tap this menu button to access navigation options like Applications, Referrals, and Messages.</p>',
+          attachTo: {
+            element: 'button[aria-controls="mobile-sidebar"]',
+            on: "bottom",
+          },
+          buttons: [
+            {
+              action: () => {
+                // Open sidebar then go to next step
+                openMobileSidebar();
+                // Add more delay on mobile to ensure sidebar opens fully
+                setTimeout(() => newTour.next(), 800);
+              },
+              classes: "shepherd-button-primary",
+              text: "Next",
+            },
+          ],
+        });
       }
 
       // Applications step
