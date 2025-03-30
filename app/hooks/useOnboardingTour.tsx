@@ -574,6 +574,35 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
 
       setupStep(referralsStep);
 
+      // Leaderboard step
+      const leaderboardStep = newTour.addStep({
+        id: "leaderboard",
+        title: "Leaderboard",
+        text: '<p class="text-white mb-2">This is where you can see how you compare with others. Compete and improve together!</p>',
+        attachTo: {
+          element: '[data-tab="leaderboard"]',
+          on: isMobile ? "bottom" : "right",
+        },
+        buttons: [
+          {
+            action: newTour.back,
+            classes: "shepherd-button-secondary",
+            text: "Back",
+          },
+          {
+            action: () => {
+              // On mobile, simply go to next step without checking sidebar
+              // The setupStep function already handles this on the show event
+              newTour.next();
+            },
+            classes: "shepherd-button-primary",
+            text: "Next",
+          },
+        ],
+      });
+
+      setupStep(leaderboardStep);
+
       // Messages step
       const messagesStep = newTour.addStep({
         id: "messages",
@@ -631,35 +660,6 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
       });
 
       setupStep(settingsStep);
-
-      // Leaderboard step
-      const leaderboardStep = newTour.addStep({
-        id: "leaderboard",
-        title: "Leaderboard",
-        text: '<p class="text-white mb-2">This is where you can see how you compare with others. Compete and improve together!</p>',
-        attachTo: {
-          element: '[data-tab="leaderboard"]',
-          on: isMobile ? "bottom" : "right",
-        },
-        buttons: [
-          {
-            action: newTour.back,
-            classes: "shepherd-button-secondary",
-            text: "Back",
-          },
-          {
-            action: () => {
-              // On mobile, simply go to next step without checking sidebar
-              // The setupStep function already handles this on the show event
-              newTour.next();
-            },
-            classes: "shepherd-button-primary",
-            text: "Next",
-          },
-        ],
-      });
-
-      setupStep(leaderboardStep);
 
       // Thank you step
       const thankYouStep = newTour.addStep({
