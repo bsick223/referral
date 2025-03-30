@@ -1,13 +1,38 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 const DataVisualizationBackground = () => {
   const mountRef = useRef<HTMLDivElement>(null);
+  const [webGLError, setWebGLError] = useState<string | null>(null);
 
   useEffect(() => {
     console.log("DataVisualizationBackground mounting");
+
+    // Check for WebGL support before initializing
+    const checkWebGLSupport = (): boolean => {
+      try {
+        const canvas = document.createElement("canvas");
+        const supportedContexts = ["webgl2", "webgl", "experimental-webgl"];
+
+        let gl = null;
+        for (const contextType of supportedContexts) {
+          gl = canvas.getContext(contextType);
+          if (gl) {
+            console.log(`WebGL supported with ${contextType}`);
+            return true;
+          }
+        }
+
+        setWebGLError("WebGL not supported in this browser");
+        return false;
+      } catch (e) {
+        console.error("Error checking WebGL support:", e);
+        setWebGLError("Error detecting WebGL support");
+        return false;
+      }
+    };
 
     // Only proceed if the mounting element is available
     const initScene = () => {
@@ -15,6 +40,12 @@ const DataVisualizationBackground = () => {
       if (!currentRef) {
         console.log("Mount ref not available, trying again...");
         requestAnimationFrame(initScene);
+        return;
+      }
+
+      // Check WebGL support first
+      if (!checkWebGLSupport()) {
+        console.error("WebGL not supported, falling back to static content");
         return;
       }
 
@@ -33,15 +64,37 @@ const DataVisualizationBackground = () => {
       camera.position.set(0, 0, 24);
       camera.lookAt(0, 0, 0);
 
-      // Renderer setup
-      const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true,
-      });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      currentRef.appendChild(renderer.domElement);
-      renderer.setClearColor(0x000000, 0);
+      // Renderer setup with error handling
+      let renderer: THREE.WebGLRenderer;
+      try {
+        renderer = new THREE.WebGLRenderer({
+          antialias: true,
+          alpha: true,
+          powerPreference: "default",
+          failIfMajorPerformanceCaveat: false, // Don't fail on performance issues
+        });
+      } catch (e) {
+        console.error("Error creating WebGL renderer:", e);
+        setWebGLError("Could not create WebGL renderer");
+        return;
+      }
+
+      // If renderer creation was successful
+      if (!renderer) {
+        setWebGLError("WebGL renderer could not be created");
+        return;
+      }
+
+      try {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        currentRef.appendChild(renderer.domElement);
+        renderer.setClearColor(0x000000, 0);
+      } catch (e) {
+        console.error("Error setting up renderer:", e);
+        setWebGLError("Error configuring WebGL renderer");
+        return;
+      }
 
       // =================================
       // Grid System
@@ -676,11 +729,24 @@ const DataVisualizationBackground = () => {
         camera.lookAt(0, 0, 0);
 
         // Render
-        renderer.render(scene, camera);
+        try {
+          renderer.render(scene, camera);
+        } catch (e) {
+          console.error("Error during rendering:", e);
+          setWebGLError("Rendering error occurred");
+          cancelAnimationFrame(animationId);
+          return;
+        }
       }
 
       // Call animation for the first time
-      animate();
+      try {
+        animate();
+      } catch (e) {
+        console.error("Error starting animation:", e);
+        setWebGLError("Animation could not start");
+        return;
+      }
 
       // Handle window resize
       const handleResize = () => {
@@ -731,17 +797,44 @@ const DataVisualizationBackground = () => {
     };
   }, []);
 
+  // Render the canvas container and a fallback if WebGL fails
   return (
-    <div
-      ref={mountRef}
-      className="absolute inset-0 z-0 pointer-events-none"
-      style={{
-        height: "100vh",
-        width: "100vw",
-        overflow: "hidden",
-      }}
-      data-testid="data-visualization-background"
-    />
+    <>
+      <div
+        ref={mountRef}
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          height: "100vh",
+          width: "100vw",
+          overflow: "hidden",
+        }}
+        data-testid="data-visualization-background"
+      />
+
+      {webGLError && (
+        <div
+          className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-blue-900/50 via-purple-900/50 to-black/50"
+          style={{
+            height: "100vh",
+            width: "100vw",
+          }}
+          data-testid="webgl-fallback-background"
+        >
+          {/* CSS fallback instead of Three.js */}
+          <div className="absolute inset-0 opacity-30">
+            <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-500/20 via-transparent to-transparent"></div>
+            <div
+              className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-500/20 via-transparent to-transparent"
+              style={{ transform: "translate(20%, 20%)" }}
+            ></div>
+            <div
+              className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-orange-500/20 via-transparent to-transparent"
+              style={{ transform: "translate(-20%, -10%)" }}
+            ></div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
