@@ -829,6 +829,26 @@ export default function ApplicationsPage() {
       ) {
         closeApplicationModal();
       }
+
+      // Close mobile menu when clicking outside
+      const actionsMenu = document.getElementById("mobile-actions-menu");
+      if (
+        actionsMenu &&
+        !actionsMenu.contains(target) &&
+        !target.closest('button[aria-controls="mobile-actions-menu"]')
+      ) {
+        actionsMenu.classList.add("hidden");
+      }
+
+      // Close mobile search when clicking outside
+      const searchInput = document.getElementById("mobile-search");
+      if (
+        searchInput &&
+        !searchInput.contains(target) &&
+        !target.closest('button[aria-controls="mobile-search"]')
+      ) {
+        searchInput.classList.add("hidden");
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -1018,6 +1038,15 @@ export default function ApplicationsPage() {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
 
+      // If modal is open and clicked outside it, close it
+      if (
+        applicationModalRef.current &&
+        !applicationModalRef.current.contains(target) &&
+        selectedApplication
+      ) {
+        closeApplicationModal();
+      }
+
       // Close mobile menu when clicking outside
       const actionsMenu = document.getElementById("mobile-actions-menu");
       if (
@@ -1027,13 +1056,23 @@ export default function ApplicationsPage() {
       ) {
         actionsMenu.classList.add("hidden");
       }
+
+      // Close mobile search when clicking outside
+      const searchInput = document.getElementById("mobile-search");
+      if (
+        searchInput &&
+        !searchInput.contains(target) &&
+        !target.closest('button[aria-controls="mobile-search"]')
+      ) {
+        searchInput.classList.add("hidden");
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [selectedApplication]);
 
   // Add document listeners for closing menus on navigation
   useEffect(() => {
@@ -1498,6 +1537,7 @@ export default function ApplicationsPage() {
                   }
                 }
               }}
+              aria-controls="mobile-search"
             >
               <Search className="h-5 w-5" />
             </button>

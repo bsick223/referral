@@ -20,8 +20,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ReferralTracker - Organize Your Job Search Referrals",
-  description: "Track and manage your job application referrals in one place",
+  title: "App Tracked - Organize Your Job Search",
+  description: "Track and manage your job applications & referrals in one place",
 };
 
 export default function RootLayout({

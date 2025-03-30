@@ -44,6 +44,30 @@ export default function DashboardLayout({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Add click outside detection to close mobile sidebar
+  useEffect(() => {
+    if (!sidebarOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const sidebar = document.querySelector('[data-sidebar="mobile"]');
+
+      // If click is outside sidebar and not on the toggle button
+      if (
+        sidebar &&
+        !sidebar.contains(target) &&
+        !target.closest('button[aria-controls="mobile-sidebar"]')
+      ) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [sidebarOpen]);
+
   const navigation = [
     {
       name: "Your Account",
@@ -108,6 +132,7 @@ export default function DashboardLayout({
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="p-2 rounded-md text-gray-300 hover:bg-[#121a36] hover:text-white"
+          aria-controls="mobile-sidebar"
         >
           {sidebarOpen ? (
             <X className="h-6 w-6" />
@@ -127,6 +152,7 @@ export default function DashboardLayout({
 
       {/* Sidebar - hidden on mobile unless open, always visible on desktop */}
       <div
+        data-sidebar="mobile"
         className={`${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         } fixed md:static w-64 h-full border-r border-[#20253d]/50 backdrop-blur-sm bg-[#0c1029]/90 transition-transform duration-300 ease-in-out z-20 md:z-10 pt-16 md:pt-0`}
