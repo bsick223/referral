@@ -409,7 +409,9 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
       newTour.addStep({
         id: "welcome",
         title: "Welcome to your Dashboard!",
-        text: `<p class="text-white mb-2">Welcome to dashboard! Be sure to view the resources to get the most out of app tracking. <strong>Pro-tip:</strong> Ask your referral for the referral BEFORE applying to a job, or else you won't be able to get a referral.</p>`,
+        text: `<p class="text-white mb-2">Welcome to dashboard!</p>
+        <div class="w-full h-[1px] my-3 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+        <p class="text-white mb-2"><strong>Pro-tip:</strong> Ask your referral for the referral BEFORE applying to a job, or else you won't be able to get a referral.</p>`,
         buttons: [
           {
             action: () => {
@@ -665,7 +667,18 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
       const thankYouStep = newTour.addStep({
         id: "thank-you",
         title: "Thank You!",
-        text: `<p class="text-white mb-2">This is one of the best ways to track applications, this process is similar to how businesses track leads and nurture them to become sales. In your case, job offers. Best of luck and see you on the score board!</p>`,
+        text: `
+          <p class="text-white mb-3">This is one of the best ways to track applications!</p>
+          
+          <div class="bg-gradient-to-r from-orange-500/20 via-purple-500/20 to-blue-500/20 p-3 rounded-md mb-3">
+            <p class="text-white text-sm">Think of it like a business tracking leads → sales.</p>
+            <p class="text-white text-sm font-bold">In your case: applications → job offers!</p>
+          </div>
+          
+          <div class="w-full h-[1px] my-3 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+          
+          <p class="text-white text-sm">Best of luck and see you on the <span class="font-bold text-blue-400">scoreboard</span>! 🏆</p>
+        `,
         buttons: [
           {
             action: newTour.back,
