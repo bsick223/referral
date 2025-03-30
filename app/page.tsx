@@ -36,9 +36,28 @@ export default function Home() {
             <span className="text-white font-normal">Get Prepared.</span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto mb-16 leading-relaxed">
+          <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto mb-8 leading-relaxed">
             Never lose track of who offered to refer you again.
           </p>
+
+          {/* YouTube Video Embed */}
+          <div className="max-w-2xl mx-auto mb-16 rounded-xl overflow-hidden shadow-2xl shadow-blue-900/20 relative aspect-video">
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/MX8eeYRFIFg?si=lJEcO05_9066RJJg&autoplay=1&mute=1&rel=0&modestbranding=1&controls=0&loop=1&playlist=MX8eeYRFIFg"
+              title="Product Demo"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+              style={{
+                objectFit: "cover",
+                transform: "scale(1.05)",
+                transformOrigin: "center",
+              }}
+            ></iframe>
+          </div>
 
           {/* CTA Button */}
           <div className="mb-24">
