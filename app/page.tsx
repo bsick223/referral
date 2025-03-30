@@ -27,17 +27,15 @@ export default function Home() {
       <DataVisualizationBackground />
 
       {/* Main content */}
-      <div className="container mx-auto px-4 pt-16 md:pt-24 pb-24 md:pb-32 relative z-20">
+      <div className="container mx-auto px-4 pt-10 md:pt-10 pb-24 md:pb-32 relative z-20">
         <div className="w-full max-w-4xl mx-auto text-center">
           {/* Main Heading */}
-          <h1 className="text-4xl md:text-6xl font-light text-white mb-6 leading-tight italic">
-            {/* <span className="text-[#e2e2e2]">a new-era of</span> */}
-            <br />
-            <span className="text-white font-normal">Get Prepared.</span>
+          <h1 className="text-4xl md:text-6xl font-light text-white mb-4 leading-tight italic">
+            <span className="text-white font-normal">Application Tracker</span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto mb-8 leading-relaxed">
-            Never lose track of who offered to refer you again.
+          <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto mb-6 leading-relaxed">
+            Never lose track of your applications again.
           </p>
 
           {/* YouTube Video Embed */}
@@ -53,14 +51,14 @@ export default function Home() {
               className="absolute inset-0 w-full h-full"
               style={{
                 objectFit: "cover",
-                transform: "scale(1.05)",
+                transform: "scale(1.00)",
                 transformOrigin: "center",
               }}
             ></iframe>
           </div>
 
           {/* CTA Button */}
-          <div className="mb-24">
+          <div className="mb-16">
             <SignedOut>
               <SignInButton mode="modal">
                 <button className="px-8 py-3 text-base font-medium rounded-full bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 text-white hover:from-orange-500 hover:via-purple-500 hover:to-blue-600 transition-colors hover:shadow-xl backdrop-blur-sm shadow-[0_0_15px_rgba(249,115,22,0.5)] cursor-pointer">
