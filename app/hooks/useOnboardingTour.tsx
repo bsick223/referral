@@ -411,7 +411,7 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
         title: "Welcome to your Dashboard!",
         text: `<p class="text-white mb-2">Welcome to dashboard!</p>
         <div class="w-full h-[1px] my-3 bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-        <p class="text-white mb-2"><strong>Pro-tip:</strong> Ask your referral for the referral BEFORE applying to a job, or else you won't be able to get a referral.</p>`,
+        <p class="text-white mb-2"><strong>Pro-tip:</strong> Ask your referrer for the referral BEFORE applying to a job, usually they'll give you a link to apply.</p>`,
         buttons: [
           {
             action: () => {
