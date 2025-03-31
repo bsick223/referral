@@ -179,6 +179,7 @@ const UserRankCard = ({
     let label = "Rank";
     let color = "text-orange-400";
     let valueSuffix = "";
+    let hasContributions = false;
 
     // Check if this is the current user's own card
     const isOwnCard = clerkUser?.id === userId;
@@ -197,14 +198,16 @@ const UserRankCard = ({
       const leaderboard = referralLeaderboard;
       total = leaderboard.length;
 
-      const userIndex = leaderboard.findIndex(
-        (entry) => entry.userId === userId
-      );
-      rank = userIndex !== -1 ? userIndex + 1 : total > 0 ? total + 1 : 1;
-
       const userEntry = leaderboard.find((entry) => entry.userId === userId);
-      value = userEntry ? userEntry.referralCount : 0;
-      valueSuffix = value === 1 ? " referral" : " referrals";
+      if (userEntry && userEntry.referralCount > 0) {
+        hasContributions = true;
+        const userIndex = leaderboard.findIndex(
+          (entry) => entry.userId === userId
+        );
+        rank = userIndex !== -1 ? userIndex + 1 : total > 0 ? total + 1 : 1;
+        value = userEntry.referralCount;
+        valueSuffix = value === 1 ? " referral" : " referrals";
+      }
 
       iconComponent = <Medal className="h-5 w-5 text-purple-400" />;
       color = "text-purple-400";
@@ -213,14 +216,16 @@ const UserRankCard = ({
       const leaderboard = applicationsLeaderboard;
       total = leaderboard.length;
 
-      const userIndex = leaderboard.findIndex(
-        (entry) => entry.userId === userId
-      );
-      rank = userIndex !== -1 ? userIndex + 1 : total > 0 ? total + 1 : 1;
-
       const userEntry = leaderboard.find((entry) => entry.userId === userId);
-      value = userEntry ? userEntry.applicationCount : 0;
-      valueSuffix = value === 1 ? " application" : " applications";
+      if (userEntry && userEntry.applicationCount > 0) {
+        hasContributions = true;
+        const userIndex = leaderboard.findIndex(
+          (entry) => entry.userId === userId
+        );
+        rank = userIndex !== -1 ? userIndex + 1 : total > 0 ? total + 1 : 1;
+        value = userEntry.applicationCount;
+        valueSuffix = value === 1 ? " application" : " applications";
+      }
 
       iconComponent = <Briefcase className="h-5 w-5 text-blue-400" />;
       color = "text-blue-400";
@@ -229,14 +234,16 @@ const UserRankCard = ({
       const leaderboard = auraLeaderboard;
       total = leaderboard.length;
 
-      const userIndex = leaderboard.findIndex(
-        (entry) => entry.userId === userId
-      );
-      rank = userIndex !== -1 ? userIndex + 1 : total > 0 ? total + 1 : 1;
-
       const userEntry = leaderboard.find((entry) => entry.userId === userId);
-      value = userEntry ? userEntry.auraPoints : 0;
-      valueSuffix = " points";
+      if (userEntry && userEntry.auraPoints > 0) {
+        hasContributions = true;
+        const userIndex = leaderboard.findIndex(
+          (entry) => entry.userId === userId
+        );
+        rank = userIndex !== -1 ? userIndex + 1 : total > 0 ? total + 1 : 1;
+        value = userEntry.auraPoints;
+        valueSuffix = " points";
+      }
 
       iconComponent = <Sparkles className="h-5 w-5 text-orange-400" />;
       color = "text-orange-400";
@@ -248,9 +255,10 @@ const UserRankCard = ({
 
     // Additional property to indicate if rank should be shown
     const showRank =
-      (activeTab === "referrals" && canViewReferrals) ||
-      (activeTab === "applications" && canViewApplications) ||
-      activeTab === "aura";
+      ((activeTab === "referrals" && canViewReferrals) ||
+        (activeTab === "applications" && canViewApplications) ||
+        activeTab === "aura") &&
+      hasContributions;
 
     return {
       rank,
@@ -262,6 +270,7 @@ const UserRankCard = ({
       color,
       valueSuffix,
       showRank,
+      hasContributions,
     };
   };
 
@@ -316,6 +325,7 @@ const UserRankCard = ({
     color,
     valueSuffix,
     showRank,
+    hasContributions,
   } = getRankInfo();
 
   return (
@@ -357,6 +367,36 @@ const UserRankCard = ({
               </div>
             </div>
           </>
+        ) : clerkUser?.id === userId && !hasContributions ? (
+          <div className="text-center py-8">
+            <div className="mb-4">
+              {activeTab === "aura" ? (
+                <Sparkles className="h-12 w-12 text-orange-400 mx-auto mb-3 opacity-50" />
+              ) : activeTab === "applications" ? (
+                <Briefcase className="h-12 w-12 text-blue-400 mx-auto mb-3 opacity-50" />
+              ) : (
+                <Medal className="h-12 w-12 text-purple-400 mx-auto mb-3 opacity-50" />
+              )}
+            </div>
+            <p className="text-gray-400 mb-2">
+              {activeTab === "aura"
+                ? "Start earning Aura points by submitting applications and making referrals!"
+                : activeTab === "applications"
+                ? "Submit your first job application to join the leaderboard!"
+                : "Make your first referral to join the leaderboard!"}
+            </p>
+            <p
+              className={`text-sm ${
+                activeTab === "aura"
+                  ? "text-orange-400"
+                  : activeTab === "applications"
+                  ? "text-blue-400"
+                  : "text-purple-400"
+              }`}
+            >
+              Join the competition!
+            </p>
+          </div>
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-400">
