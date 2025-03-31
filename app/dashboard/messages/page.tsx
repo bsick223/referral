@@ -90,6 +90,18 @@ export default function MessagesPage() {
   const createMessage = useMutation(api.messages.create);
   const updateMessage = useMutation(api.messages.update);
   const deleteMessage = useMutation(api.messages.remove);
+  const ensureDefaultTemplate = useMutation(
+    api.seedMessages.ensureDefaultTemplate
+  );
+
+  // Ensure default messages are created when user visits messages page
+  useEffect(() => {
+    if (user) {
+      ensureDefaultTemplate({ userId: user.id })
+        .then(() => console.log("Default templates checked"))
+        .catch((err) => console.error("Error with default templates:", err));
+    }
+  }, [user, ensureDefaultTemplate]);
 
   // Update the orderedMessages state when messages are loaded or updated
   useEffect(() => {
