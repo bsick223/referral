@@ -100,7 +100,7 @@ const DataVisualizationBackground = () => {
       // Grid System
       // =================================
       const createGrid = () => {
-        const gridSize = 30;
+        const gridSize = 45;
         const gridDivisions = 20;
         const gridGeometry = new THREE.PlaneGeometry(
           gridSize,
@@ -187,10 +187,10 @@ const DataVisualizationBackground = () => {
 
       // Node parameters
       const nodeParams = {
-        count: 60,
-        minSize: 0.05,
-        maxSize: 0.4,
-        connectionThreshold: 8, // Maximum distance for nodes to connect
+        count: 70,
+        minSize: 0.1,
+        maxSize: 0.7,
+        connectionThreshold: 10, // Maximum distance for nodes to connect
         colors: [
           new THREE.Color("#ff7e00"), // Orange
           new THREE.Color("#3b82f6"), // Blue
@@ -211,9 +211,9 @@ const DataVisualizationBackground = () => {
         // Create nodes with random positions, sizes, and colors
         for (let i = 0; i < nodeParams.count; i++) {
           // Position nodes in a disc shape (concentrated around the center)
-          const radius = 15 * Math.pow(Math.random(), 0.5); // Squared distribution for more central density
+          const radius = 20 * Math.pow(Math.random(), 0.5); // Squared distribution for more central density
           const theta = Math.random() * Math.PI * 2;
-          const height = (Math.random() - 0.5) * 10;
+          const height = (Math.random() - 0.5) * 14;
 
           nodePositions[i * 3] = Math.cos(theta) * radius;
           nodePositions[i * 3 + 1] = height;
@@ -226,7 +226,7 @@ const DataVisualizationBackground = () => {
           );
 
           // Size based on distance from center
-          const sizeFactor = 1 - Math.min(distanceFromCenter / 15, 1);
+          const sizeFactor = 1 - Math.min(distanceFromCenter / 20, 1);
           nodeSizes[i] =
             nodeParams.minSize +
             sizeFactor * (nodeParams.maxSize - nodeParams.minSize);
@@ -288,7 +288,7 @@ const DataVisualizationBackground = () => {
               
               // Project position to screen space
               vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-              gl_PointSize = size * (300.0 / -mvPosition.z);
+              gl_PointSize = size * (400.0 / -mvPosition.z);
               gl_Position = projectionMatrix * mvPosition;
             }
           `,
@@ -324,6 +324,7 @@ const DataVisualizationBackground = () => {
 
         // Create points
         const nodePoints = new THREE.Points(nodesGeometry, nodesMaterial);
+        nodePoints.scale.set(1.2, 1.2, 1.2);
         scene.add(nodePoints);
 
         return {
