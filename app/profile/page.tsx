@@ -24,6 +24,9 @@ import {
   Target,
   Loader2,
   Coffee,
+  MapPin,
+  Linkedin,
+  Phone,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -110,6 +113,12 @@ export default function ProfilePage() {
   if (isLoaded && !isSignedIn) {
     redirect("/");
   }
+
+  // Fetch user's profile info
+  const userProfile = useQuery(
+    api.userProfiles.getByUserId,
+    user?.id ? { userId: user.id } : "skip"
+  );
 
   // Fetch user's referrals and applications
   const referrals =
@@ -345,6 +354,46 @@ export default function ProfilePage() {
                   {user?.primaryEmailAddress?.emailAddress}
                 </p>
 
+                {/* Professional title */}
+                {userProfile && userProfile.professionalTitle && (
+                  <p className="text-orange-400 text-sm mt-1">
+                    {userProfile.professionalTitle as string}
+                  </p>
+                )}
+
+                {/* Location */}
+                {userProfile && userProfile.location && (
+                  <div className="flex items-center justify-center gap-1 text-gray-400 text-xs mt-2">
+                    <MapPin className="h-3 w-3" />
+                    <span>{userProfile.location as string}</span>
+                  </div>
+                )}
+
+                {/* Phone number */}
+                {userProfile && userProfile.phoneNumber && (
+                  <div className="flex items-center justify-center gap-1 text-gray-400 text-xs mt-2">
+                    <Phone className="h-3 w-3" />
+                    <span>{userProfile.phoneNumber as string}</span>
+                  </div>
+                )}
+
+                {/* LinkedIn link */}
+                {userProfile && userProfile.linkedinUrl && (
+                  <a
+                    href={
+                      (userProfile.linkedinUrl as string).startsWith("http")
+                        ? (userProfile.linkedinUrl as string)
+                        : `https://${userProfile.linkedinUrl as string}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1 text-blue-400 hover:text-blue-300 text-xs mt-2 transition-colors"
+                  >
+                    <Linkedin className="h-3 w-3" />
+                    <span>LinkedIn Profile</span>
+                  </a>
+                )}
+
                 <div className="mt-6 w-full">
                   <h3 className="text-md font-medium text-gray-300 mb-3">
                     Your Stats
@@ -403,7 +452,7 @@ export default function ProfilePage() {
                   </p>
                 </div>
                 <Link
-                  href="/leaderboard"
+                  href="/dashboard/leaderboard"
                   className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
                 >
                   View Leaderboard

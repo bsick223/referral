@@ -440,7 +440,7 @@ export default function UserProfilePage() {
         <div className="max-w-6xl mx-auto p-6">
           <div className="mb-6">
             <Link
-              href="/leaderboard"
+              href="/dashboard/leaderboard"
               className="text-gray-300 hover:text-blue-400 transition-colors flex items-center gap-2"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -459,7 +459,7 @@ export default function UserProfilePage() {
                 not available for viewing.
               </p>
               <Link
-                href="/leaderboard"
+                href="/dashboard/leaderboard"
                 className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:border-blue-700 focus:shadow-outline-blue active:bg-blue-700 transition ease-in-out duration-150"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />

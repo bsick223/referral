@@ -307,7 +307,7 @@ export default function DashboardHomePage() {
           </Link>
 
           <Link
-            href="/leaderboard"
+            href="/dashboard/leaderboard"
             className="flex items-center justify-between bg-[#121a36]/50 backdrop-blur-sm rounded-lg border border-[#20253d]/50 p-4 hover:bg-[#121a36]/70 transition-colors"
           >
             <div className="flex items-center">

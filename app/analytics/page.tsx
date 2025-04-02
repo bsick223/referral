@@ -124,7 +124,7 @@ function AnalyticsContent() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
         <Link
-          href="/leaderboard"
+          href="/dashboard/leaderboard"
           className="text-gray-300 hover:text-blue-400 transition-colors flex items-center gap-2"
         >
           <ArrowLeft className="h-5 w-5" />

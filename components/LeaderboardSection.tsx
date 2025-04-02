@@ -95,7 +95,7 @@ export default function LeaderboardSection() {
 
           <div className="mt-4 text-center">
             <Link
-              href="/leaderboard"
+              href="/dashboard/leaderboard"
               className="inline-flex items-center text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors"
             >
               View full leaderboard
