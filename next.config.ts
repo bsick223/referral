@@ -13,7 +13,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
       },
       {
-        hostname: "dazzling-setter-717.convex.cloud",
+        // Use a dynamic pattern that will work for both dev and prod environments
+        // Extract hostname from NEXT_PUBLIC_CONVEX_URL environment variable
+        hostname: process.env.NEXT_PUBLIC_CONVEX_URL
+          ? new URL(process.env.NEXT_PUBLIC_CONVEX_URL).hostname
+          : "dependable-giraffe-309.convex.cloud",
         protocol: "https",
       },
       {
