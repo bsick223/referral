@@ -17,6 +17,9 @@ function ProfileInitializer() {
   const updatePrivacySettings = useMutation(
     api.userProfiles.updatePrivacySettings
   );
+  const markOnboardingCompleted = useMutation(
+    api.userProfiles.markOnboardingCompleted
+  );
 
   useEffect(() => {
     if (userId) {
@@ -28,11 +31,17 @@ function ProfileInitializer() {
         showApplicationsCount: true,
         showReferralsCount: true,
         showCompaniesCount: true,
-      }).catch((error) => {
-        console.error("Error ensuring user profile exists:", error);
-      });
+      })
+        .then(() => {
+          // Also ensure onboarding is marked as completed for existing users
+          // This will help fix any users that have existing profiles but no onboardingCompleted flag
+          markOnboardingCompleted({ userId });
+        })
+        .catch((error) => {
+          console.error("Error ensuring user profile exists:", error);
+        });
     }
-  }, [userId, updatePrivacySettings]);
+  }, [userId, updatePrivacySettings, markOnboardingCompleted]);
 
   return null;
 }

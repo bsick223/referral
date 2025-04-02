@@ -135,14 +135,25 @@ export const markOnboardingCompleted = mutation({
 export const hasCompletedOnboarding = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
-    const profile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
-      .first();
+    try {
+      // If userId is empty or invalid, assume onboarding is completed
+      if (!args.userId || args.userId.trim() === "") {
+        return true;
+      }
 
-    // Return true only if profile exists AND onboardingCompleted is explicitly true
-    // Return false for undefined/null/false values
-    return profile?.onboardingCompleted === true;
+      const profile = await ctx.db
+        .query("userProfiles")
+        .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+        .first();
+
+      // Return true only if profile exists AND onboardingCompleted is explicitly true
+      // Return false for undefined/null/false values
+      return profile?.onboardingCompleted === true;
+    } catch (error) {
+      // In case of error (auth issues, etc.), default to true to prevent unwanted tours
+      console.error("Error checking onboarding status:", error);
+      return true;
+    }
   },
 });
 

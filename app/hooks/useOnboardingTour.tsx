@@ -723,7 +723,9 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
     if (typeof window === "undefined" || !tour) return;
 
     // Only start the tour if the user hasn't completed onboarding
-    if (hasCompletedOnboarding !== true) {
+    // hasCompletedOnboarding could be undefined during loading or auth errors
+    // Only auto-start tour if hasCompletedOnboarding is explicitly false
+    if (hasCompletedOnboarding === false) {
       // Longer delay to ensure elements are fully rendered
       const timer = setTimeout(() => {
         tour.start();

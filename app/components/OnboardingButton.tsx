@@ -13,23 +13,37 @@ interface OnboardingButtonProps {
 export default function OnboardingButton({ startTour }: OnboardingButtonProps) {
   const { user } = useUser();
   const [isMounted, setIsMounted] = useState(false);
-  const onboardingCompleted =
-    useQuery(api.userProfiles.hasCompletedOnboarding, {
+
+  // Get the onboarding completion status
+  const onboardingCompletedStatus = useQuery(
+    api.userProfiles.hasCompletedOnboarding,
+    {
       userId: user?.id || "",
-    }) || false;
-  const [showAnimation, setShowAnimation] = useState(!onboardingCompleted);
+    }
+  );
+
+  // Only treat as not completed if explicitly false
+  const onboardingCompleted =
+    onboardingCompletedStatus === false ? false : true;
+
+  const [showAnimation, setShowAnimation] = useState(false);
 
   // Prevent hydration errors by only rendering once the component is mounted
   useEffect(() => {
     setIsMounted(true);
 
-    // Disable animation after 10 seconds
-    const timer = setTimeout(() => {
-      setShowAnimation(false);
-    }, 10000);
+    // Only show animation if onboarding is explicitly not completed
+    if (onboardingCompletedStatus === false) {
+      setShowAnimation(true);
 
-    return () => clearTimeout(timer);
-  }, [onboardingCompleted]);
+      // Disable animation after 10 seconds
+      const timer = setTimeout(() => {
+        setShowAnimation(false);
+      }, 10000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [onboardingCompletedStatus]);
 
   if (!isMounted) return null;
 
