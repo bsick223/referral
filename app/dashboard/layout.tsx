@@ -80,7 +80,7 @@ export default function DashboardLayout({
     { name: "Referrals", href: "/dashboard/referrals", icon: UsersRound },
     {
       name: "Leaderboard",
-      href: "/leaderboard",
+      href: "/dashboard/leaderboard",
       icon: Trophy,
     },
     { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
