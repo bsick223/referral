@@ -17,31 +17,32 @@ function ProfileInitializer() {
   const updatePrivacySettings = useMutation(
     api.userProfiles.updatePrivacySettings
   );
-  const markOnboardingCompleted = useMutation(
-    api.userProfiles.markOnboardingCompleted
+  const initializeUserProfile = useMutation(
+    api.userProfiles.initializeNewUserProfile
   );
 
   useEffect(() => {
     if (userId) {
-      // Ensure profile exists with default public settings
-      updatePrivacySettings({
-        userId,
-        profileVisibility: "public",
-        hideFromLeaderboards: false,
-        showApplicationsCount: true,
-        showReferralsCount: true,
-        showCompaniesCount: true,
-      })
+      // First, initialize the user profile with onboardingCompleted set to false for new users
+      initializeUserProfile({ userId })
         .then(() => {
-          // Also ensure onboarding is marked as completed for existing users
-          // This will help fix any users that have existing profiles but no onboardingCompleted flag
-          markOnboardingCompleted({ userId });
+          // Then ensure profile has default public settings
+          updatePrivacySettings({
+            userId,
+            profileVisibility: "public",
+            hideFromLeaderboards: false,
+            showApplicationsCount: true,
+            showReferralsCount: true,
+            showCompaniesCount: true,
+          }).catch((error) => {
+            console.error("Error updating privacy settings:", error);
+          });
         })
         .catch((error) => {
-          console.error("Error ensuring user profile exists:", error);
+          console.error("Error initializing user profile:", error);
         });
     }
-  }, [userId, updatePrivacySettings, markOnboardingCompleted]);
+  }, [userId, updatePrivacySettings, initializeUserProfile]);
 
   return null;
 }

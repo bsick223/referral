@@ -22,9 +22,8 @@ export default function OnboardingButton({ startTour }: OnboardingButtonProps) {
     }
   );
 
-  // Only treat as not completed if explicitly false
-  const onboardingCompleted =
-    onboardingCompletedStatus === false ? false : true;
+  // Only consider onboarding completed if explicitly true
+  const onboardingCompleted = onboardingCompletedStatus === true;
 
   const [showAnimation, setShowAnimation] = useState(false);
 
@@ -32,7 +31,7 @@ export default function OnboardingButton({ startTour }: OnboardingButtonProps) {
   useEffect(() => {
     setIsMounted(true);
 
-    // Only show animation if onboarding is explicitly not completed
+    // Only show animation if onboarding is explicitly false
     if (onboardingCompletedStatus === false) {
       setShowAnimation(true);
 

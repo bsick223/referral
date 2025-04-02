@@ -136,9 +136,9 @@ export const hasCompletedOnboarding = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     try {
-      // If userId is empty or invalid, assume onboarding is completed
+      // If userId is empty or invalid, assume onboarding is needed
       if (!args.userId || args.userId.trim() === "") {
-        return true;
+        return false;
       }
 
       const profile = await ctx.db
@@ -147,12 +147,12 @@ export const hasCompletedOnboarding = query({
         .first();
 
       // Return true only if profile exists AND onboardingCompleted is explicitly true
-      // Return false for undefined/null/false values
+      // With our new initialization, it should be explicitly false for new users
       return profile?.onboardingCompleted === true;
     } catch (error) {
-      // In case of error (auth issues, etc.), default to true to prevent unwanted tours
+      // In case of error (auth issues, etc.), default to needing onboarding (false)
       console.error("Error checking onboarding status:", error);
-      return true;
+      return false;
     }
   },
 });
@@ -302,5 +302,42 @@ export const getProfileSettings = query({
       showReferralsCount: profile.showReferralsCount !== false, // default to true
       showCompaniesCount: profile.showCompaniesCount !== false, // default to true
     };
+  },
+});
+
+// Initialize user profile with onboardingCompleted set to false for new users
+export const initializeNewUserProfile = mutation({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const { userId } = args;
+
+    // Check if profile already exists
+    const existingProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+
+    if (existingProfile) {
+      // If user already exists and onboardingCompleted is explicitly set, don't change it
+      if (existingProfile.onboardingCompleted !== undefined) {
+        return existingProfile._id;
+      }
+
+      // If user exists but onboardingCompleted is not set, set it to false
+      await ctx.db.patch(existingProfile._id, {
+        onboardingCompleted: false,
+        updatedAt: Date.now(),
+      });
+      return existingProfile._id;
+    } else {
+      // Create new profile with onboardingCompleted explicitly set to false
+      const profileId = await ctx.db.insert("userProfiles", {
+        userId,
+        onboardingCompleted: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      return profileId;
+    }
   },
 });
