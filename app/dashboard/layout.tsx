@@ -199,7 +199,7 @@ export default function DashboardLayout({
                       <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-orange-400 to-blue-500 rounded-full"></div>
                     )}
                     {item.isAccount ? (
-                      <div className="mr-3">
+                      <div className="mr-3 flex items-center justify-center">
                         <UserButton />
                       </div>
                     ) : (
