@@ -28,20 +28,28 @@ export default function Home() {
 
       {/* Main content */}
       <div className="container mx-auto px-4 pt-10 md:pt-10 pb-24 md:pb-32 relative z-20">
-        <div className="w-full max-w-4xl mx-auto text-center">
+        <div className="w-full max-w-5xl mx-auto text-center">
           {/* Main Heading */}
           <h1 className="text-4xl md:text-6xl font-light text-white mb-4 leading-tight italic">
-            <span className="text-white font-normal">Track Your Job Applications & Referrals, Effortlessly</span>
+            <span className="text-white font-normal">
+              Track Your{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-purple-400 to-blue-400 font-semibold">
+                Job Applications & Referrals
+              </span>
+              , Effortlessly
+            </span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-2xl text-gray-300 max-w-[95%] md:max-w-3xl mx-auto mb-2 leading-relaxed px-2 md:px-4">
-          Turn the grind into a game. Boost your chances of landing interviews by{" "}
+          <p className="text-base sm:text-lg md:text-2xl text-gray-300 max-w-[100%] md:max-w-full mx-auto mb-2 leading-relaxed px-2 md:px-4 whitespace-nowrap">
+            Turn the grind into a game. Boost your chances of landing interviews
+            by{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-purple-400 to-blue-400 font-semibold">
               4x
             </span>
-            {" "}with a streamlined tracker that encourages action through gamification.
           </p>
-          <p className="text-sm sm:text-base md:text-lg text-gray-400 max-w-[95%] md:max-w-3xl mx-auto mb-6 leading-relaxed px-2 md:px-4">
+
+          <p className="text-base sm:text-lg md:text-2xl text-gray-300 max-w-[100%] md:max-w-full mx-auto mb-2 leading-relaxed px-2 md:px-4">
+            Level up your progress with points and leaderboards.
           </p>
 
           {/* YouTube Video Embed */}
