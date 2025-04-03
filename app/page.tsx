@@ -34,9 +34,22 @@ export default function Home() {
             <span className="text-white font-normal">
               Track Your{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-purple-400 to-blue-400 font-semibold">
-                Job Applications & Referrals
+                Job Applications <span className="text-white">&</span> Referrals
               </span>
-              , Effortlessly
+              ,{" "}
+              <span className="sparkle-container">
+                Effortlessly
+                <span className="sparkle sparkle-1"></span>
+                <span className="sparkle sparkle-2"></span>
+                <span className="sparkle sparkle-3"></span>
+                <span className="sparkle sparkle-4"></span>
+                <span className="sparkle sparkle-5"></span>
+                <span className="sparkle sparkle-6"></span>
+                <span className="sparkle sparkle-7"></span>
+                <span className="sparkle sparkle-8"></span>
+                <span className="sparkle sparkle-9"></span>
+                <span className="sparkle sparkle-10"></span>
+              </span>
             </span>
           </h1>
 
@@ -82,7 +95,7 @@ export default function Home() {
                 href="/dashboard"
                 className="px-8 py-3 text-base font-medium rounded-full bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 text-white hover:from-orange-500 hover:via-purple-500 hover:to-blue-600 transition-colors hover:shadow-xl backdrop-blur-sm inline-flex items-center shadow-[0_0_15px_rgba(249,115,22,0.5)]"
               >
-                Start Tracking Referrals <ArrowRight className="ml-2 h-4 w-4" />
+                Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </SignedIn>
           </div>
