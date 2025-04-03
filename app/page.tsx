@@ -31,18 +31,17 @@ export default function Home() {
         <div className="w-full max-w-4xl mx-auto text-center">
           {/* Main Heading */}
           <h1 className="text-4xl md:text-6xl font-light text-white mb-4 leading-tight italic">
-            <span className="text-white font-normal">Get Refferals Early</span>
+            <span className="text-white font-normal">Track Your Job Applications & Referrals, Effortlessly</span>
           </h1>
 
           <p className="text-base sm:text-lg md:text-2xl text-gray-300 max-w-[95%] md:max-w-3xl mx-auto mb-2 leading-relaxed px-2 md:px-4">
-            Boost your chances of landing interviews by{" "}
+          Turn the grind into a game. Boost your chances of landing interviews by{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-purple-400 to-blue-400 font-semibold">
               4x
             </span>
+            {" "}with a streamlined tracker that encourages action through gamification.
           </p>
           <p className="text-sm sm:text-base md:text-lg text-gray-400 max-w-[95%] md:max-w-3xl mx-auto mb-6 leading-relaxed px-2 md:px-4">
-            Track your referral connections effortlessly, so you&apos;re ready
-            when opportunities open up.
           </p>
 
           {/* YouTube Video Embed */}
