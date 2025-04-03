@@ -1473,16 +1473,8 @@ export default function ApplicationsPage() {
             <Link
               href="/dashboard"
               className="flex items-center text-gray-300 hover:text-white transition-colors"
-            >
-              <div className="h-8 w-8 mr-2 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                <Briefcase className="h-4 w-4 text-white" />
-              </div>
-              <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-gray-300">
-                JobTracker
-              </span>
+            > 
             </Link>
-
-            <div className="h-6 border-r border-gray-700 mx-1"></div>
 
             <div className="relative">
               {isMobile && !showingAllColumns && statuses.length > 0 && (
