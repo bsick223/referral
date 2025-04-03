@@ -31,11 +31,14 @@ export default function Home() {
         <div className="w-full max-w-4xl mx-auto text-center">
           {/* Main Heading */}
           <h1 className="text-4xl md:text-6xl font-light text-white mb-4 leading-tight italic">
-            <span className="text-white font-normal">Application Tracker</span>
+            <span className="text-white font-normal">Get Refferals Early</span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto mb-6 leading-relaxed">
-            Never lose track of your applications again.
+          <p className="text-base sm:text-lg md:text-2xl text-gray-300 max-w-[95%] md:max-w-3xl mx-auto mb-6 leading-relaxed px-2 md:px-4">
+            Boost your chances of landing interviews by{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-purple-400 to-blue-400 font-semibold">
+              4x
+            </span>
           </p>
 
           {/* YouTube Video Embed */}
