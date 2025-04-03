@@ -34,11 +34,15 @@ export default function Home() {
             <span className="text-white font-normal">Get Refferals Early</span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-2xl text-gray-300 max-w-[95%] md:max-w-3xl mx-auto mb-6 leading-relaxed px-2 md:px-4">
+          <p className="text-base sm:text-lg md:text-2xl text-gray-300 max-w-[95%] md:max-w-3xl mx-auto mb-2 leading-relaxed px-2 md:px-4">
             Boost your chances of landing interviews by{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-purple-400 to-blue-400 font-semibold">
               4x
             </span>
+          </p>
+          <p className="text-sm sm:text-base md:text-lg text-gray-400 max-w-[95%] md:max-w-3xl mx-auto mb-6 leading-relaxed px-2 md:px-4">
+            Track your referral connections effortlessly, so you're ready when
+            opportunities open up.
           </p>
 
           {/* YouTube Video Embed */}
@@ -65,7 +69,7 @@ export default function Home() {
             <SignedOut>
               <SignInButton mode="modal">
                 <button className="px-8 py-3 text-base font-medium rounded-full bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 text-white hover:from-orange-500 hover:via-purple-500 hover:to-blue-600 transition-colors hover:shadow-xl backdrop-blur-sm shadow-[0_0_15px_rgba(249,115,22,0.5)] cursor-pointer">
-                  Get Started <ArrowRight className="ml-2 inline h-4 w-4" />
+                Unlock Your Network <ArrowRight className="ml-2 inline h-4 w-4" />
                 </button>
               </SignInButton>
             </SignedOut>
@@ -74,7 +78,7 @@ export default function Home() {
                 href="/dashboard"
                 className="px-8 py-3 text-base font-medium rounded-full bg-gradient-to-r from-orange-600/90 via-purple-600/80 to-blue-700/90 text-white hover:from-orange-500 hover:via-purple-500 hover:to-blue-600 transition-colors hover:shadow-xl backdrop-blur-sm inline-flex items-center shadow-[0_0_15px_rgba(249,115,22,0.5)]"
               >
-                Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                Dashboard <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </SignedIn>
           </div>
