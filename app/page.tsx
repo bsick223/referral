@@ -30,13 +30,12 @@ export default function Home() {
       <div className="container mx-auto px-4 pt-4 md:pt-6 pb-24 md:pb-32 relative z-20">
         <div className="w-full max-w-5xl mx-auto text-center">
           {/* Main Heading */}
-          <h1 className="text-4xl md:text-6xl font-light text-white mb-6 leading-tight italic">
+          <h1 className="text-4xl md:text-6xl font-light text-white mb-4 leading-tight italic">
             <span className="text-white font-normal">
               Track Your{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-purple-400 to-blue-400 font-semibold">
                 Job Applications <span className="text-white">&</span> Referrals
-              </span>
-              ,{" "}
+              </span>{" "}
               <span className="sparkle-container">
                 Effortlessly
                 <span className="sparkle sparkle-1"></span>
@@ -53,7 +52,7 @@ export default function Home() {
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-2xl text-gray-300 max-w-[100%] md:max-w-full mx-auto mb-2 leading-relaxed px-2 md:px-4 whitespace-nowrap">
+          <p className="text-base sm:text-lg md:text-2xl text-gray-300 max-w-[100%] md:max-w-full mx-auto mb-2 leading-relaxed px-2 md:px-4">
             Turn the grind into a game. Boost your chances of landing interviews
             by{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-purple-400 to-blue-400 font-semibold">
