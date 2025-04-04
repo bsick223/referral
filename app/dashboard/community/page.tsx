@@ -89,8 +89,21 @@ export default function CommunityPage() {
 
   // Format the status color class
   const getStatusColorClass = (color: string) => {
+    if (!color) return "bg-gray-500";
     if (color.startsWith("bg-")) return color;
     return `bg-${color}`;
+  };
+
+  // Format the text color based on background color
+  const getStatusTextColorClass = (bgColor: string) => {
+    if (!bgColor) return "text-gray-400";
+
+    // Extract the color name without the "bg-" prefix
+    const colorName = bgColor.startsWith("bg-")
+      ? bgColor.replace("bg-", "")
+      : bgColor;
+
+    return `text-${colorName}-400`;
   };
 
   return (
@@ -180,8 +193,20 @@ export default function CommunityPage() {
                 <div className="flex-1">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-lg font-medium text-white">
-                        {app.position}
+                      <h3 className="text-lg font-medium text-white group">
+                        {app.url ? (
+                          <a
+                            href={app.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-blue-400 transition-colors flex items-center"
+                          >
+                            {app.position}
+                            <ExternalLink className="ml-2 h-4 w-4 opacity-50 group-hover:opacity-100" />
+                          </a>
+                        ) : (
+                          app.position
+                        )}
                       </h3>
                       <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
                         <Building className="h-4 w-4" />
@@ -192,24 +217,62 @@ export default function CommunityPage() {
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColorClass(
                           app.statusColor
-                        )} bg-opacity-20 text-${app.statusColor.replace(
-                          "bg-",
-                          ""
-                        )}-400`}
+                        )} bg-opacity-20 ${getStatusTextColorClass(
+                          app.statusColor
+                        )}`}
                       >
                         {app.statusName}
                       </span>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
-                    <div className="flex items-center text-sm text-gray-400">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      <span>{app.location}</span>
-                    </div>
+                    {app.location && (
+                      <div className="flex items-center text-sm text-gray-400">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        <span>{app.location}</span>
+                      </div>
+                    )}
+                    {app.salary && (
+                      <div className="flex items-center text-sm text-gray-400">
+                        <svg
+                          className="h-4 w-4 mr-1"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="12" y1="1" x2="12" y2="23"></line>
+                          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span>{app.salary}</span>
+                      </div>
+                    )}
                     <div className="flex items-center text-sm text-gray-400">
                       <Clock className="h-4 w-4 mr-1" />
                       <span>Applied {app.dateApplied}</span>
                     </div>
+                  </div>
+
+                  <div className="mt-3 text-xs text-gray-500 flex items-center">
+                    <Link
+                      href={`/profile/${app.userId}`}
+                      className="hover:text-blue-400 transition-colors flex items-center"
+                    >
+                      {app.userImageUrl ? (
+                        <img
+                          src={app.userImageUrl}
+                          alt={app.userName}
+                          className="h-5 w-5 rounded-full mr-2 object-cover"
+                        />
+                      ) : (
+                        <div className="h-5 w-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 mr-2">
+                          {app.userName.charAt(0)}
+                        </div>
+                      )}
+                      <span>Added by {app.userName}</span>
+                    </Link>
                   </div>
                 </div>
               </div>

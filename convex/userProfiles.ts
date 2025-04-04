@@ -246,17 +246,27 @@ export const updatePrivacySettings = mutation({
       .filter((q) => q.eq(q.field("userId"), userId))
       .first();
 
+    // Create updates object with only the fields that are provided
+    const updates: any = {
+      updatedAt: Date.now(),
+    };
+
+    if (hideFromLeaderboards !== undefined)
+      updates.hideFromLeaderboards = hideFromLeaderboards;
+    if (profileVisibility !== undefined)
+      updates.profileVisibility = profileVisibility;
+    if (showApplicationsCount !== undefined)
+      updates.showApplicationsCount = showApplicationsCount;
+    if (showReferralsCount !== undefined)
+      updates.showReferralsCount = showReferralsCount;
+    if (showCompaniesCount !== undefined)
+      updates.showCompaniesCount = showCompaniesCount;
+    if (showApplicationsInCommunity !== undefined)
+      updates.showApplicationsInCommunity = showApplicationsInCommunity;
+
     if (profile) {
       // Update existing profile
-      await ctx.db.patch(profile._id, {
-        hideFromLeaderboards,
-        profileVisibility,
-        showApplicationsCount,
-        showReferralsCount,
-        showCompaniesCount,
-        showApplicationsInCommunity,
-        updatedAt: Date.now(),
-      });
+      await ctx.db.patch(profile._id, updates);
       return profile._id;
     } else {
       // Create new profile with privacy settings
@@ -292,7 +302,7 @@ export const getProfileSettings = query({
         showApplicationsCount: true,
         showReferralsCount: true,
         showCompaniesCount: true,
-        showApplicationsInCommunity: true,
+        showApplicationsInCommunity: true, // Default to true (opt-in)
       };
     }
 
@@ -306,8 +316,12 @@ export const getProfileSettings = query({
       showApplicationsCount: profile.showApplicationsCount !== false, // default to true
       showReferralsCount: profile.showReferralsCount !== false, // default to true
       showCompaniesCount: profile.showCompaniesCount !== false, // default to true
+      // If we have an explicit value saved in the profile, use that value
+      // Otherwise, default to true for opt-in behavior
       showApplicationsInCommunity:
-        profile.showApplicationsInCommunity !== false, // default to true
+        profile.showApplicationsInCommunity !== undefined
+          ? profile.showApplicationsInCommunity
+          : true,
     };
   },
 });

@@ -270,8 +270,10 @@ export default function PrivacySettingsPage() {
                   <Info className="h-5 w-5 text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-gray-300">
                     When enabled, your applications will be visible in the
-                    community timeline. Your name will not be shown, only
+                    community timeline. Your name will be shown, along with
                     application details like company name, position, and status.
+                    Turn this off if you don't want your applications to appear
+                    in the community feed.
                   </p>
                 </div>
               </div>

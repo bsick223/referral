@@ -344,10 +344,14 @@ export const getCommunityApplications = query({
     // Filter out applications where the user has opted out
     const visibleApplications = filteredApplications.filter((app) => {
       const profile = userProfiles[app.userId];
-      return (
-        // Include application if no profile (default to show) or explicitly opted in
-        !profile || profile.showApplicationsInCommunity !== false
-      );
+      // If no profile, default to showing (opt-in by default)
+      if (!profile) return true;
+
+      // If the setting is explicitly set to false, filter out
+      if (profile.showApplicationsInCommunity === false) return false;
+
+      // Otherwise, include the application (handles undefined, null, and true values)
+      return true;
     });
 
     // Get application statuses for each application
@@ -374,9 +378,26 @@ export const getCommunityApplications = query({
     // Format the applications with user and status information
     const formattedApplications = await Promise.all(
       paginatedApplications.map(async (app) => {
-        // Get user info from Clerk
+        // Try to get user info
         let userName = "Anonymous";
         let userImageUrl = "";
+
+        try {
+          // Get user information from the userId
+          const { clerkClient } = await import("@clerk/clerk-sdk-node");
+          // Set the Clerk API key
+          process.env.CLERK_SECRET_KEY =
+            process.env.CLERK_SECRET_KEY ||
+            "sk_test_ID3TgE9gZNDX6kkJQkgayylLtfZ7ch5bVylPh0QRgw";
+          const user = await clerkClient.users.getUser(app.userId);
+          userName =
+            user.firstName && user.lastName
+              ? `${user.firstName} ${user.lastName}`
+              : user.username || "Anonymous";
+          userImageUrl = user.imageUrl || "";
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
 
         // Get status info
         const status = statusMap.get(app.statusId.toString());
@@ -390,7 +411,9 @@ export const getCommunityApplications = query({
           id: app._id.toString(),
           companyName: app.companyName,
           position: app.position,
-          location: app.location || "Remote",
+          location: app.location || undefined,
+          salary: app.salary || undefined,
+          url: app.url || undefined,
           dateApplied,
           timestamp: app.createdAt,
           userId: app.userId,
@@ -460,18 +483,39 @@ export const searchCommunityApplications = query({
     // Filter out applications where the user has opted out
     const visibleApplications = filteredApplications.filter((app) => {
       const profile = userProfiles[app.userId];
-      return (
-        // Include application if no profile (default to show) or explicitly opted in
-        !profile || profile.showApplicationsInCommunity !== false
-      );
+      // If no profile, default to showing (opt-in by default)
+      if (!profile) return true;
+
+      // If the setting is explicitly set to false, filter out
+      if (profile.showApplicationsInCommunity === false) return false;
+
+      // Otherwise, include the application (handles undefined, null, and true values)
+      return true;
     });
 
     // Format the applications with user and status information
     const formattedApplications = await Promise.all(
       visibleApplications.slice(0, limit).map(async (app) => {
-        // Get user info from Clerk
+        // Try to get user info
         let userName = "Anonymous";
         let userImageUrl = "";
+
+        try {
+          // Get user information from the userId
+          const { clerkClient } = await import("@clerk/clerk-sdk-node");
+          // Set the Clerk API key
+          process.env.CLERK_SECRET_KEY =
+            process.env.CLERK_SECRET_KEY ||
+            "sk_test_ID3TgE9gZNDX6kkJQkgayylLtfZ7ch5bVylPh0QRgw";
+          const user = await clerkClient.users.getUser(app.userId);
+          userName =
+            user.firstName && user.lastName
+              ? `${user.firstName} ${user.lastName}`
+              : user.username || "Anonymous";
+          userImageUrl = user.imageUrl || "";
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
 
         // Get status info
         const status = statusMap.get(app.statusId.toString());
@@ -485,7 +529,9 @@ export const searchCommunityApplications = query({
           id: app._id.toString(),
           companyName: app.companyName,
           position: app.position,
-          location: app.location || "Remote",
+          location: app.location || undefined,
+          salary: app.salary || undefined,
+          url: app.url || undefined,
           dateApplied,
           timestamp: app.createdAt,
           userId: app.userId,
