@@ -318,14 +318,6 @@ export default function PrivacySettingsPage() {
                     enabled={formData.showCompaniesCount}
                     onChange={() => handleToggleChange("showCompaniesCount")}
                   />
-                  <ToggleButton
-                    label="Show Applications in Community"
-                    description="Share your job applications in the community timeline for others to see"
-                    enabled={formData.showApplicationsInCommunity}
-                    onChange={() =>
-                      handleToggleChange("showApplicationsInCommunity")
-                    }
-                  />
                 </div>
 
                 <div className="mt-6 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md flex items-start">
