@@ -547,6 +547,35 @@ export default function useOnboardingTour({ userId }: UseOnboardingTourProps) {
 
       setupStep(applicationsStep);
 
+      // Community step
+      const communityStep = newTour.addStep({
+        id: "community",
+        title: "Community Tab",
+        text: '<p class="text-white mb-2">Explore applications from other users in the community. See where others are applying and get inspired by their job search journey.</p>',
+        attachTo: {
+          element: '[data-tab="community"]',
+          on: isMobile ? "bottom" : "right",
+        },
+        buttons: [
+          {
+            action: newTour.back,
+            classes: "shepherd-button-secondary",
+            text: "Back",
+          },
+          {
+            action: () => {
+              // On mobile, simply go to next step without checking sidebar
+              // The setupStep function already handles this on the show event
+              newTour.next();
+            },
+            classes: "shepherd-button-primary",
+            text: "Next",
+          },
+        ],
+      });
+
+      setupStep(communityStep);
+
       // Referrals step
       const referralsStep = newTour.addStep({
         id: "referrals",
