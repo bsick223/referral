@@ -66,6 +66,7 @@ export default function CommunityPage() {
   const [userProfiles, setUserProfiles] = useState<Record<string, UserInfo>>(
     {}
   );
+  const [forceUpdateCounter, setForceUpdateCounter] = useState(0);
 
   // Filter state
   const [showFilters, setShowFilters] = useState(false);
@@ -146,7 +147,7 @@ export default function CommunityPage() {
       }
       setIsLoadingMore(false);
     }
-  }, [results, skip]);
+  }, [results, skip, forceUpdateCounter]);
 
   // Load more when scrolling to the bottom
   useEffect(() => {
@@ -272,10 +273,16 @@ export default function CommunityPage() {
 
   // Apply filters
   const applyFilters = () => {
-    setAppliedFilters(filterOptions);
+    // Force clean state
+    setAllApplications([]);
+    setSkip(0);
+
+    // Set applied filters
+    setAppliedFilters({ ...filterOptions });
     setShowFilters(false);
-    setSkip(0); // Reset pagination
-    setAllApplications([]); // Clear existing results
+
+    // Force a refresh by incrementing our counter
+    setForceUpdateCounter((prev) => prev + 1);
   };
 
   // Reset filters
@@ -285,27 +292,64 @@ export default function CommunityPage() {
       status: [],
       locationType: [],
     };
+
+    // Force clean state
+    setAllApplications([]);
+    setSkip(0);
+
     setFilterOptions(defaultFilters);
     setAppliedFilters(defaultFilters);
-    setSkip(0); // Reset pagination
-    setAllApplications([]); // Clear existing results
+
+    // Force a refresh by incrementing our counter
+    setForceUpdateCounter((prev) => prev + 1);
   };
 
   // Filter applications based on applied filters
   const filteredApplications = useMemo(() => {
+    // For debugging
+    console.log("Filtering applications:", {
+      allApplicationsLength: allApplications.length,
+      dateRange: appliedFilters.dateRange,
+      statusFilters: appliedFilters.status,
+      locationFilters: appliedFilters.locationType,
+    });
+
     return allApplications.filter((app) => {
       // Date range filter
       if (appliedFilters.dateRange !== "all") {
         const now = new Date();
         const appDate = new Date(app.timestamp);
-        const diffTime = Math.abs(now.getTime() - appDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        if (appliedFilters.dateRange === "week" && diffDays > 7) return false;
-        if (appliedFilters.dateRange === "month" && diffDays > 30) return false;
-        if (appliedFilters.dateRange === "quarter" && diffDays > 90)
-          return false;
-        if (appliedFilters.dateRange === "year" && diffDays > 365) return false;
+        // Calculate days difference correctly - positive means app is older than cutoff
+        const diffInMs = now.getTime() - appDate.getTime();
+        const diffDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+        // Debug logging for week filter
+        if (appliedFilters.dateRange === "week") {
+          console.log(
+            `App: ${
+              app.companyName
+            }, Date: ${appDate.toLocaleDateString()}, Days ago: ${diffDays}, Included: ${
+              diffDays <= 7
+            }`
+          );
+        }
+
+        // Check if the application falls within the filter timeframe
+        switch (appliedFilters.dateRange) {
+          case "week":
+            if (diffDays > 7) return false;
+            break;
+          case "month":
+            if (diffDays > 30) return false;
+            break;
+          case "quarter":
+            if (diffDays > 90) return false;
+            break;
+          case "year":
+            if (diffDays > 365) return false;
+            break;
+        }
       }
 
       // Status filter
