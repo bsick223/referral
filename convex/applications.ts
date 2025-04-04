@@ -378,27 +378,6 @@ export const getCommunityApplications = query({
     // Format the applications with user and status information
     const formattedApplications = await Promise.all(
       paginatedApplications.map(async (app) => {
-        // Try to get user info
-        let userName = "Anonymous";
-        let userImageUrl = "";
-
-        try {
-          // Get user information from the userId
-          const { clerkClient } = await import("@clerk/clerk-sdk-node");
-          // Set the Clerk API key
-          process.env.CLERK_SECRET_KEY =
-            process.env.CLERK_SECRET_KEY ||
-            "sk_test_ID3TgE9gZNDX6kkJQkgayylLtfZ7ch5bVylPh0QRgw";
-          const user = await clerkClient.users.getUser(app.userId);
-          userName =
-            user.firstName && user.lastName
-              ? `${user.firstName} ${user.lastName}`
-              : user.username || "Anonymous";
-          userImageUrl = user.imageUrl || "";
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-
         // Get status info
         const status = statusMap.get(app.statusId.toString());
         const statusName = status ? status.name : "Unknown";
@@ -417,8 +396,6 @@ export const getCommunityApplications = query({
           dateApplied,
           timestamp: app.createdAt,
           userId: app.userId,
-          userName,
-          userImageUrl,
           statusName,
           statusColor,
         };
@@ -496,27 +473,6 @@ export const searchCommunityApplications = query({
     // Format the applications with user and status information
     const formattedApplications = await Promise.all(
       visibleApplications.slice(0, limit).map(async (app) => {
-        // Try to get user info
-        let userName = "Anonymous";
-        let userImageUrl = "";
-
-        try {
-          // Get user information from the userId
-          const { clerkClient } = await import("@clerk/clerk-sdk-node");
-          // Set the Clerk API key
-          process.env.CLERK_SECRET_KEY =
-            process.env.CLERK_SECRET_KEY ||
-            "sk_test_ID3TgE9gZNDX6kkJQkgayylLtfZ7ch5bVylPh0QRgw";
-          const user = await clerkClient.users.getUser(app.userId);
-          userName =
-            user.firstName && user.lastName
-              ? `${user.firstName} ${user.lastName}`
-              : user.username || "Anonymous";
-          userImageUrl = user.imageUrl || "";
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-
         // Get status info
         const status = statusMap.get(app.statusId.toString());
         const statusName = status ? status.name : "Unknown";
@@ -535,8 +491,6 @@ export const searchCommunityApplications = query({
           dateApplied,
           timestamp: app.createdAt,
           userId: app.userId,
-          userName,
-          userImageUrl,
           statusName,
           statusColor,
         };

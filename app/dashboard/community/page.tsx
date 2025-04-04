@@ -21,6 +21,16 @@ import Link from "next/link";
 import { debounce } from "lodash";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
+import Image from "next/image";
+
+// Define the user info interface
+interface UserInfo {
+  id: string;
+  username: string;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string;
+}
 
 export default function CommunityPage() {
   const { user } = useUser();
@@ -29,6 +39,9 @@ export default function CommunityPage() {
   const [skip, setSkip] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [allApplications, setAllApplications] = useState<any[]>([]);
+  const [userProfiles, setUserProfiles] = useState<Record<string, UserInfo>>(
+    {}
+  );
 
   // Set up intersection observer for infinite scroll
   const { ref: loadMoreRef, inView } = useInView({
@@ -87,6 +100,51 @@ export default function CommunityPage() {
     }
   }, [inView, results, isLoadingMore]);
 
+  // Fetch user profiles when applications change
+  useEffect(() => {
+    if (allApplications.length > 0) {
+      const fetchUserProfiles = async () => {
+        try {
+          // Get unique user IDs from applications
+          const userIds = [
+            ...new Set(allApplications.map((app) => app.userId)),
+          ];
+
+          // Skip if no users or if we already have all profiles
+          if (userIds.length === 0) return;
+
+          // Filter to only fetch profiles we don't already have
+          const missingUserIds = userIds.filter((id) => !userProfiles[id]);
+          if (missingUserIds.length === 0) return;
+
+          const response = await fetch("/api/users", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ userIds: missingUserIds }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch user profiles");
+          }
+
+          const { users } = await response.json();
+
+          // Update user profiles state with new data
+          setUserProfiles((prev) => ({
+            ...prev,
+            ...users,
+          }));
+        } catch (error) {
+          console.error("Error fetching user profiles:", error);
+        }
+      };
+
+      fetchUserProfiles();
+    }
+  }, [allApplications, userProfiles]);
+
   // Format the status color class
   const getStatusColorClass = (color: string) => {
     if (!color) return "bg-gray-500";
@@ -104,6 +162,40 @@ export default function CommunityPage() {
       : bgColor;
 
     return `text-${colorName}-400`;
+  };
+
+  // Get display name for a user
+  const getDisplayName = (userId: string) => {
+    const userInfo = userProfiles[userId];
+
+    if (userInfo) {
+      if (userInfo.firstName && userInfo.lastName) {
+        return `${userInfo.firstName} ${userInfo.lastName}`;
+      } else if (userInfo.firstName) {
+        return userInfo.firstName;
+      } else if (userInfo.username) {
+        return userInfo.username;
+      }
+    }
+
+    return "Anonymous";
+  };
+
+  // Get initials for the avatar
+  const getInitials = (userId: string) => {
+    const userInfo = userProfiles[userId];
+
+    if (userInfo) {
+      if (userInfo.firstName && userInfo.lastName) {
+        return `${userInfo.firstName.charAt(0)}${userInfo.lastName.charAt(0)}`;
+      } else if (userInfo.firstName) {
+        return userInfo.firstName.charAt(0);
+      } else if (userInfo.username) {
+        return userInfo.username.charAt(0);
+      }
+    }
+
+    return "?";
   };
 
   return (
@@ -260,18 +352,18 @@ export default function CommunityPage() {
                       href={`/profile/${app.userId}`}
                       className="hover:text-blue-400 transition-colors flex items-center"
                     >
-                      {app.userImageUrl ? (
+                      {userProfiles[app.userId]?.imageUrl ? (
                         <img
-                          src={app.userImageUrl}
-                          alt={app.userName}
+                          src={userProfiles[app.userId].imageUrl}
+                          alt={getDisplayName(app.userId)}
                           className="h-5 w-5 rounded-full mr-2 object-cover"
                         />
                       ) : (
                         <div className="h-5 w-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 mr-2">
-                          {app.userName.charAt(0)}
+                          {getInitials(app.userId)}
                         </div>
                       )}
-                      <span>Added by {app.userName}</span>
+                      <span>Added by {getDisplayName(app.userId)}</span>
                     </Link>
                   </div>
                 </div>
