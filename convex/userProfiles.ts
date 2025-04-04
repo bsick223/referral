@@ -227,6 +227,7 @@ export const updatePrivacySettings = mutation({
     showApplicationsCount: v.optional(v.boolean()),
     showReferralsCount: v.optional(v.boolean()),
     showCompaniesCount: v.optional(v.boolean()),
+    showApplicationsInCommunity: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const {
@@ -236,6 +237,7 @@ export const updatePrivacySettings = mutation({
       showApplicationsCount,
       showReferralsCount,
       showCompaniesCount,
+      showApplicationsInCommunity,
     } = args;
 
     // Find existing profile
@@ -252,6 +254,7 @@ export const updatePrivacySettings = mutation({
         showApplicationsCount,
         showReferralsCount,
         showCompaniesCount,
+        showApplicationsInCommunity,
         updatedAt: Date.now(),
       });
       return profile._id;
@@ -264,6 +267,7 @@ export const updatePrivacySettings = mutation({
         showApplicationsCount: showApplicationsCount !== false, // default to true
         showReferralsCount: showReferralsCount !== false, // default to true
         showCompaniesCount: showCompaniesCount !== false, // default to true
+        showApplicationsInCommunity: showApplicationsInCommunity !== false, // default to true
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -288,6 +292,7 @@ export const getProfileSettings = query({
         showApplicationsCount: true,
         showReferralsCount: true,
         showCompaniesCount: true,
+        showApplicationsInCommunity: true,
       };
     }
 
@@ -301,6 +306,8 @@ export const getProfileSettings = query({
       showApplicationsCount: profile.showApplicationsCount !== false, // default to true
       showReferralsCount: profile.showReferralsCount !== false, // default to true
       showCompaniesCount: profile.showCompaniesCount !== false, // default to true
+      showApplicationsInCommunity:
+        profile.showApplicationsInCommunity !== false, // default to true
     };
   },
 });

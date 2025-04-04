@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Briefcase,
+  Globe,
 } from "lucide-react";
 import { UserButton, useClerk } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
@@ -77,6 +78,7 @@ export default function DashboardLayout({
     },
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Applications", href: "/dashboard/applications", icon: Briefcase },
+    { name: "Community", href: "/dashboard/community", icon: Globe },
     { name: "Referrals", href: "/dashboard/referrals", icon: UsersRound },
     {
       name: "Leaderboard",

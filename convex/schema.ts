@@ -121,6 +121,7 @@ export default defineSchema({
     showApplicationsCount: v.optional(v.boolean()),
     showReferralsCount: v.optional(v.boolean()),
     showCompaniesCount: v.optional(v.boolean()),
+    showApplicationsInCommunity: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user_id", ["userId"]),

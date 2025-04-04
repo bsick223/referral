@@ -300,3 +300,209 @@ export const countUniqueStatusEntries = query({
     return counts;
   },
 });
+
+// Fetch applications for community timeline with pagination
+export const getCommunityApplications = query({
+  args: {
+    limit: v.optional(v.number()),
+    skip: v.optional(v.number()),
+    searchQuery: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 20;
+    const skip = args.skip || 0;
+    const searchQuery = args.searchQuery?.toLowerCase() || "";
+
+    // Fetch all applications
+    const applications = await ctx.db
+      .query("applications")
+      .order("desc")
+      .collect();
+
+    // Filter applications based on search query if provided
+    const filteredApplications = searchQuery
+      ? applications.filter(
+          (app) =>
+            app.companyName.toLowerCase().includes(searchQuery) ||
+            app.position.toLowerCase().includes(searchQuery) ||
+            (app.location && app.location.toLowerCase().includes(searchQuery))
+        )
+      : applications;
+
+    // Get user profiles to check privacy settings
+    const userIds = [...new Set(filteredApplications.map((app) => app.userId))];
+    const userProfiles: Record<string, any> = {};
+
+    for (const userId of userIds) {
+      const profile = await ctx.db
+        .query("userProfiles")
+        .withIndex("by_user_id", (q) => q.eq("userId", userId))
+        .first();
+      userProfiles[userId] = profile;
+    }
+
+    // Filter out applications where the user has opted out
+    const visibleApplications = filteredApplications.filter((app) => {
+      const profile = userProfiles[app.userId];
+      return (
+        // Include application if no profile (default to show) or explicitly opted in
+        !profile || profile.showApplicationsInCommunity !== false
+      );
+    });
+
+    // Get application statuses for each application
+    const statusMap = new Map();
+    const statusIds = [
+      ...new Set(visibleApplications.map((app) => app.statusId)),
+    ];
+
+    for (const statusId of statusIds) {
+      const status = await ctx.db.get(statusId);
+      if (status) {
+        statusMap.set(statusId.toString(), status);
+      }
+    }
+
+    // Apply pagination
+    const paginatedApplications = visibleApplications
+      .sort((a, b) => b.createdAt - a.createdAt) // Sort by timestamp (newest first)
+      .slice(skip, skip + limit);
+
+    // Calculate if there are more results
+    const hasMore = skip + limit < visibleApplications.length;
+
+    // Format the applications with user and status information
+    const formattedApplications = await Promise.all(
+      paginatedApplications.map(async (app) => {
+        // Get user info from Clerk
+        let userName = "Anonymous";
+        let userImageUrl = "";
+
+        // Get status info
+        const status = statusMap.get(app.statusId.toString());
+        const statusName = status ? status.name : "Unknown";
+        const statusColor = status ? status.color : "bg-gray-500";
+
+        // Format date
+        const dateApplied = new Date(app.dateApplied).toLocaleDateString();
+
+        return {
+          id: app._id.toString(),
+          companyName: app.companyName,
+          position: app.position,
+          location: app.location || "Remote",
+          dateApplied,
+          timestamp: app.createdAt,
+          userId: app.userId,
+          userName,
+          userImageUrl,
+          statusName,
+          statusColor,
+        };
+      })
+    );
+
+    return {
+      applications: formattedApplications,
+      hasMore,
+      nextSkip: hasMore ? skip + limit : null,
+      total: visibleApplications.length,
+    };
+  },
+});
+
+// Search applications for community search
+export const searchCommunityApplications = query({
+  args: {
+    searchQuery: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 20;
+    const searchQuery = args.searchQuery.toLowerCase();
+
+    // Get all applications
+    const applications = await ctx.db.query("applications").collect();
+
+    // Filter by search term
+    const filteredApplications = applications.filter(
+      (app) =>
+        app.companyName.toLowerCase().includes(searchQuery) ||
+        app.position.toLowerCase().includes(searchQuery) ||
+        (app.location && app.location.toLowerCase().includes(searchQuery))
+    );
+
+    // Get user profiles to check privacy settings
+    const userIds = [...new Set(filteredApplications.map((app) => app.userId))];
+    const userProfiles: Record<string, any> = {};
+
+    for (const userId of userIds) {
+      const profile = await ctx.db
+        .query("userProfiles")
+        .withIndex("by_user_id", (q) => q.eq("userId", userId))
+        .first();
+      userProfiles[userId] = profile;
+    }
+
+    // Get application statuses for each application
+    const statusMap = new Map();
+    const statusIds = [
+      ...new Set(filteredApplications.map((app) => app.statusId)),
+    ];
+
+    for (const statusId of statusIds) {
+      const status = await ctx.db.get(statusId);
+      if (status) {
+        statusMap.set(statusId.toString(), status);
+      }
+    }
+
+    // Filter out applications where the user has opted out
+    const visibleApplications = filteredApplications.filter((app) => {
+      const profile = userProfiles[app.userId];
+      return (
+        // Include application if no profile (default to show) or explicitly opted in
+        !profile || profile.showApplicationsInCommunity !== false
+      );
+    });
+
+    // Format the applications with user and status information
+    const formattedApplications = await Promise.all(
+      visibleApplications.slice(0, limit).map(async (app) => {
+        // Get user info from Clerk
+        let userName = "Anonymous";
+        let userImageUrl = "";
+
+        // Get status info
+        const status = statusMap.get(app.statusId.toString());
+        const statusName = status ? status.name : "Unknown";
+        const statusColor = status ? status.color : "bg-gray-500";
+
+        // Format date
+        const dateApplied = new Date(app.dateApplied).toLocaleDateString();
+
+        return {
+          id: app._id.toString(),
+          companyName: app.companyName,
+          position: app.position,
+          location: app.location || "Remote",
+          dateApplied,
+          timestamp: app.createdAt,
+          userId: app.userId,
+          userName,
+          userImageUrl,
+          statusName,
+          statusColor,
+        };
+      })
+    );
+
+    // Sort by timestamp (newest first)
+    formattedApplications.sort((a, b) => b.timestamp - a.timestamp);
+
+    return {
+      applications: formattedApplications,
+      total: visibleApplications.length,
+    };
+  },
+});

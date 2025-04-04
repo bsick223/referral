@@ -12,6 +12,7 @@ import {
   Loader2,
   Check,
   Info,
+  Globe,
 } from "lucide-react";
 import Link from "next/link";
 import SettingsTabs from "@/components/SettingsTabs";
@@ -40,6 +41,7 @@ export default function PrivacySettingsPage() {
     showApplicationsCount: true,
     showReferralsCount: true,
     showCompaniesCount: true,
+    showApplicationsInCommunity: true,
   });
 
   // Update form data when profile settings are loaded
@@ -51,6 +53,8 @@ export default function PrivacySettingsPage() {
         showApplicationsCount: profileSettings.showApplicationsCount !== false,
         showReferralsCount: profileSettings.showReferralsCount !== false,
         showCompaniesCount: profileSettings.showCompaniesCount !== false,
+        showApplicationsInCommunity:
+          profileSettings.showApplicationsInCommunity !== false,
       });
       setIsLoading(false);
     }
@@ -86,6 +90,7 @@ export default function PrivacySettingsPage() {
         showApplicationsCount: formData.showApplicationsCount,
         showReferralsCount: formData.showReferralsCount,
         showCompaniesCount: formData.showCompaniesCount,
+        showApplicationsInCommunity: formData.showApplicationsInCommunity,
       });
 
       setSuccessMessage("Privacy settings updated successfully!");
@@ -234,6 +239,46 @@ export default function PrivacySettingsPage() {
           </div>
         </div>
 
+        {/* Community Settings Section */}
+        <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50 mb-6">
+          <div className="p-6 border-b border-[#20253d]/50">
+            <h2 className="text-xl font-light text-white flex items-center">
+              <Globe className="h-5 w-5 mr-2 text-blue-400" />
+              Community Settings
+            </h2>
+            <p className="text-gray-400 text-sm mt-1">
+              Control what information is shared with the community
+            </p>
+          </div>
+
+          <div className="p-6">
+            {isLoading ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <ToggleButton
+                  label="Share Applications in Community"
+                  description="Allow your job applications to appear in the community timeline"
+                  enabled={formData.showApplicationsInCommunity}
+                  onChange={() =>
+                    handleToggleChange("showApplicationsInCommunity")
+                  }
+                />
+                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md flex items-start">
+                  <Info className="h-5 w-5 text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-gray-300">
+                    When enabled, your applications will be visible in the
+                    community timeline. Your name will not be shown, only
+                    application details like company name, position, and status.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="bg-[#121a36]/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-[#20253d]/50">
           <div className="p-6 border-b border-[#20253d]/50">
             <h2 className="text-xl font-light text-white flex items-center">
@@ -270,6 +315,14 @@ export default function PrivacySettingsPage() {
                     description="Allow others to see how many companies you've applied to"
                     enabled={formData.showCompaniesCount}
                     onChange={() => handleToggleChange("showCompaniesCount")}
+                  />
+                  <ToggleButton
+                    label="Show Applications in Community"
+                    description="Share your job applications in the community timeline for others to see"
+                    enabled={formData.showApplicationsInCommunity}
+                    onChange={() =>
+                      handleToggleChange("showApplicationsInCommunity")
+                    }
                   />
                 </div>
 
