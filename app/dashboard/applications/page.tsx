@@ -18,7 +18,6 @@ import {
   Move,
   Columns,
   GripVertical,
-  Briefcase,
 } from "lucide-react";
 import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
