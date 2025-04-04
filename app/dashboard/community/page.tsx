@@ -14,7 +14,6 @@ import {
   ExternalLink,
   Filter,
   Loader2,
-  X,
   Check,
   Calendar,
 } from "lucide-react";
@@ -53,7 +52,6 @@ interface Application {
 interface FilterOptions {
   dateRange: string;
   status: string[];
-  locationType: string[];
 }
 
 export default function CommunityPage() {
@@ -68,17 +66,23 @@ export default function CommunityPage() {
   );
   const [forceUpdateCounter, setForceUpdateCounter] = useState(0);
 
+  // Add a ref to track the latest userProfiles without causing re-renders
+  const userProfilesRef = useRef<Record<string, UserInfo>>({});
+
+  // Update the ref whenever userProfiles changes
+  useEffect(() => {
+    userProfilesRef.current = userProfiles;
+  }, [userProfiles]);
+
   // Filter state
   const [showFilters, setShowFilters] = useState(false);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     dateRange: "all",
     status: [],
-    locationType: [],
   });
   const [appliedFilters, setAppliedFilters] = useState<FilterOptions>({
     dateRange: "all",
     status: [],
-    locationType: [],
   });
   const filterRef = useRef<HTMLDivElement>(null);
 
@@ -160,20 +164,21 @@ export default function CommunityPage() {
   // Fetch user profiles when applications change
   useEffect(() => {
     if (allApplications.length > 0) {
-      const fetchUserProfiles = async () => {
+      // Use the ref instead of the state directly
+      const currentProfiles = userProfilesRef.current;
+
+      // Get unique user IDs from applications
+      const userIds = [...new Set(allApplications.map((app) => app.userId))];
+
+      // Skip if no users
+      if (userIds.length === 0) return;
+
+      // Filter to only fetch profiles we don't already have
+      const missingUserIds = userIds.filter((id) => !currentProfiles[id]);
+      if (missingUserIds.length === 0) return;
+
+      const fetchMissingProfiles = async () => {
         try {
-          // Get unique user IDs from applications
-          const userIds = [
-            ...new Set(allApplications.map((app) => app.userId)),
-          ];
-
-          // Skip if no users or if we already have all profiles
-          if (userIds.length === 0) return;
-
-          // Filter to only fetch profiles we don't already have
-          const missingUserIds = userIds.filter((id) => !userProfiles[id]);
-          if (missingUserIds.length === 0) return;
-
           const response = await fetch("/api/users", {
             method: "POST",
             headers: {
@@ -198,9 +203,9 @@ export default function CommunityPage() {
         }
       };
 
-      fetchUserProfiles();
+      fetchMissingProfiles();
     }
-  }, [allApplications]);
+  }, [allApplications]); // Remove userProfiles from dependency array
 
   // Format the status color class
   const getStatusColorClass = (color: string) => {
@@ -290,7 +295,6 @@ export default function CommunityPage() {
     const defaultFilters = {
       dateRange: "all",
       status: [],
-      locationType: [],
     };
 
     // Force clean state
@@ -311,7 +315,6 @@ export default function CommunityPage() {
       allApplicationsLength: allApplications.length,
       dateRange: appliedFilters.dateRange,
       statusFilters: appliedFilters.status,
-      locationFilters: appliedFilters.locationType,
     });
 
     return allApplications.filter((app) => {
@@ -360,24 +363,6 @@ export default function CommunityPage() {
         return false;
       }
 
-      // Location type filter
-      if (appliedFilters.locationType.length > 0) {
-        const location = app.location?.toLowerCase() || "";
-        const hasMatchingLocation = appliedFilters.locationType.some((type) => {
-          if (type === "remote" && location.includes("remote")) return true;
-          if (type === "hybrid" && location.includes("hybrid")) return true;
-          if (
-            type === "onsite" &&
-            !location.includes("remote") &&
-            !location.includes("hybrid")
-          )
-            return true;
-          return false;
-        });
-
-        if (!hasMatchingLocation) return false;
-      }
-
       return true;
     });
   }, [allApplications, appliedFilters]);
@@ -392,13 +377,6 @@ export default function CommunityPage() {
     "Rejected",
     "Accepted",
     "Withdrawn",
-  ];
-
-  // Location type options for filter
-  const locationTypeOptions = [
-    { value: "remote", label: "Remote" },
-    { value: "hybrid", label: "Hybrid" },
-    { value: "onsite", label: "On-site" },
   ];
 
   // Date range options for filter
@@ -456,11 +434,9 @@ export default function CommunityPage() {
             <Filter className="h-4 w-4" />
             <span>Filter</span>
             {(appliedFilters.status.length > 0 ||
-              appliedFilters.locationType.length > 0 ||
               appliedFilters.dateRange !== "all") && (
               <span className="ml-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {appliedFilters.status.length +
-                  appliedFilters.locationType.length +
                   (appliedFilters.dateRange !== "all" ? 1 : 0)}
               </span>
             )}
@@ -536,37 +512,6 @@ export default function CommunityPage() {
                     ))}
                   </div>
                 </div>
-
-                {/* Location Type Filter */}
-                <div className="mb-4">
-                  <h4 className="text-sm text-gray-300 mb-2">Location Type</h4>
-                  <div className="grid grid-cols-3 gap-2">
-                    {locationTypeOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => {
-                          const newLocationTypes =
-                            filterOptions.locationType.includes(option.value)
-                              ? filterOptions.locationType.filter(
-                                  (l) => l !== option.value
-                                )
-                              : [...filterOptions.locationType, option.value];
-                          handleFilterChange("locationType", newLocationTypes);
-                        }}
-                        className={`text-xs py-1 px-2 rounded flex items-center justify-between ${
-                          filterOptions.locationType.includes(option.value)
-                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                            : "bg-[#121a36]/50 text-gray-300 border border-[#20253d] hover:bg-[#121a36]"
-                        }`}
-                      >
-                        <span>{option.label}</span>
-                        {filterOptions.locationType.includes(option.value) && (
-                          <Check className="h-3 w-3" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
 
               <div className="p-3 border-t border-[#20253d]/50 flex justify-end gap-2">
@@ -614,7 +559,6 @@ export default function CommunityPage() {
               <p className="text-sm text-gray-500">
                 {searchQuery ||
                 appliedFilters.status.length > 0 ||
-                appliedFilters.locationType.length > 0 ||
                 appliedFilters.dateRange !== "all"
                   ? "Try adjusting your search or filters"
                   : "Check back later for new applications"}
