@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -11,11 +11,12 @@ import {
   Clock,
   Building,
   MapPin,
-  Briefcase,
   ExternalLink,
-  ChevronRight,
   Filter,
   Loader2,
+  X,
+  Check,
+  Calendar,
 } from "lucide-react";
 import Link from "next/link";
 import { debounce } from "lodash";
@@ -32,16 +33,70 @@ interface UserInfo {
   imageUrl: string;
 }
 
+// Define the application interface
+interface Application {
+  id: string;
+  userId: string;
+  companyName: string;
+  position: string;
+  statusName: string;
+  statusColor: string;
+  location?: string;
+  salary?: string;
+  url?: string;
+  dateApplied: string;
+  timestamp: number;
+  isPublic?: boolean;
+}
+
+// Define filter options interface
+interface FilterOptions {
+  dateRange: string;
+  status: string[];
+  locationType: string[];
+}
+
 export default function CommunityPage() {
   const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [skip, setSkip] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [allApplications, setAllApplications] = useState<any[]>([]);
+  const [allApplications, setAllApplications] = useState<Application[]>([]);
   const [userProfiles, setUserProfiles] = useState<Record<string, UserInfo>>(
     {}
   );
+
+  // Filter state
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    dateRange: "all",
+    status: [],
+    locationType: [],
+  });
+  const [appliedFilters, setAppliedFilters] = useState<FilterOptions>({
+    dateRange: "all",
+    status: [],
+    locationType: [],
+  });
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  // Close filter dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target as Node)
+      ) {
+        setShowFilters(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Set up intersection observer for infinite scroll
   const { ref: loadMoreRef, inView } = useInView({
@@ -61,13 +116,14 @@ export default function CommunityPage() {
       : "skip"
   );
 
-  // Update the debounced search query
-  const debouncedSetSearchQuery = useCallback(
-    debounce((value: string) => {
-      setDebouncedQuery(value);
-      setSkip(0); // Reset pagination when search changes
-      setAllApplications([]); // Clear existing results when search changes
-    }, 300),
+  // Create a memoized debounced search function
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((value: string) => {
+        setDebouncedQuery(value);
+        setSkip(0); // Reset pagination when search changes
+        setAllApplications([]); // Clear existing results when search changes
+      }, 300),
     []
   );
 
@@ -75,7 +131,7 @@ export default function CommunityPage() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-    debouncedSetSearchQuery(value);
+    debouncedSearch(value);
   };
 
   // Update the applications list when results change
@@ -198,6 +254,118 @@ export default function CommunityPage() {
     return "?";
   };
 
+  // Toggle filter dropdown
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
+  };
+
+  // Handle filter option changes
+  const handleFilterChange = (
+    filterType: keyof FilterOptions,
+    value: string | string[]
+  ) => {
+    setFilterOptions((prev) => ({
+      ...prev,
+      [filterType]: value,
+    }));
+  };
+
+  // Apply filters
+  const applyFilters = () => {
+    setAppliedFilters(filterOptions);
+    setShowFilters(false);
+    setSkip(0); // Reset pagination
+    setAllApplications([]); // Clear existing results
+  };
+
+  // Reset filters
+  const resetFilters = () => {
+    const defaultFilters = {
+      dateRange: "all",
+      status: [],
+      locationType: [],
+    };
+    setFilterOptions(defaultFilters);
+    setAppliedFilters(defaultFilters);
+    setSkip(0); // Reset pagination
+    setAllApplications([]); // Clear existing results
+  };
+
+  // Filter applications based on applied filters
+  const filteredApplications = useMemo(() => {
+    return allApplications.filter((app) => {
+      // Date range filter
+      if (appliedFilters.dateRange !== "all") {
+        const now = new Date();
+        const appDate = new Date(app.timestamp);
+        const diffTime = Math.abs(now.getTime() - appDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (appliedFilters.dateRange === "week" && diffDays > 7) return false;
+        if (appliedFilters.dateRange === "month" && diffDays > 30) return false;
+        if (appliedFilters.dateRange === "quarter" && diffDays > 90)
+          return false;
+        if (appliedFilters.dateRange === "year" && diffDays > 365) return false;
+      }
+
+      // Status filter
+      if (
+        appliedFilters.status.length > 0 &&
+        !appliedFilters.status.includes(app.statusName)
+      ) {
+        return false;
+      }
+
+      // Location type filter
+      if (appliedFilters.locationType.length > 0) {
+        const location = app.location?.toLowerCase() || "";
+        const hasMatchingLocation = appliedFilters.locationType.some((type) => {
+          if (type === "remote" && location.includes("remote")) return true;
+          if (type === "hybrid" && location.includes("hybrid")) return true;
+          if (
+            type === "onsite" &&
+            !location.includes("remote") &&
+            !location.includes("hybrid")
+          )
+            return true;
+          return false;
+        });
+
+        if (!hasMatchingLocation) return false;
+      }
+
+      return true;
+    });
+  }, [allApplications, appliedFilters]);
+
+  // Status options for filter
+  const statusOptions = [
+    "Applied",
+    "Phone Screen",
+    "Interview",
+    "Take Home",
+    "Offer",
+    "Rejected",
+    "Accepted",
+    "Withdrawn",
+  ];
+
+  // Location type options for filter
+  const locationTypeOptions = [
+    { value: "remote", label: "Remote" },
+    { value: "hybrid", label: "Hybrid" },
+    { value: "onsite", label: "On-site" },
+  ];
+
+  // Date range options for filter
+  const dateRangeOptions = [
+    { value: "all", label: "All Time" },
+    { value: "week", label: "Last Week" },
+    { value: "month", label: "Last Month" },
+    { value: "quarter", label: "Last 3 Months" },
+    { value: "year", label: "Last Year" },
+  ];
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex items-center mb-8">
@@ -225,7 +393,7 @@ export default function CommunityPage() {
       </div>
 
       {/* Search and filter bar */}
-      <div className="mb-6 bg-[#121a36]/50 backdrop-blur-sm rounded-lg border border-[#20253d]/50 p-4 flex flex-col md:flex-row gap-3">
+      <div className="mb-6 bg-[#121a36]/50 backdrop-blur-sm rounded-lg border border-[#20253d]/50 p-4 flex flex-col md:flex-row gap-3 relative z-[100]">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
           <input
@@ -236,10 +404,144 @@ export default function CommunityPage() {
             className="w-full bg-[#0c1029] border border-[#20253d] rounded-md py-2 pl-10 pr-4 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
-        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0c1029] border border-[#20253d] rounded-md text-gray-200 hover:bg-[#0c1029]/80 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <Filter className="h-4 w-4" />
-          <span>Filter</span>
-        </button>
+        <div className="relative" ref={filterRef}>
+          <button
+            onClick={toggleFilters}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0c1029] border border-[#20253d] rounded-md text-gray-200 hover:bg-[#0c1029]/80 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <Filter className="h-4 w-4" />
+            <span>Filter</span>
+            {(appliedFilters.status.length > 0 ||
+              appliedFilters.locationType.length > 0 ||
+              appliedFilters.dateRange !== "all") && (
+              <span className="ml-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {appliedFilters.status.length +
+                  appliedFilters.locationType.length +
+                  (appliedFilters.dateRange !== "all" ? 1 : 0)}
+              </span>
+            )}
+          </button>
+
+          {/* Filter dropdown */}
+          {showFilters && (
+            <div className="fixed right-4 mt-2 w-72 bg-[#0c1029] border border-[#20253d] rounded-md shadow-xl z-[999]">
+              <div className="p-4 border-b border-[#20253d]/50">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-medium">
+                    Filter Applications
+                  </h3>
+                  <button
+                    onClick={resetFilters}
+                    className="text-xs text-blue-400 hover:text-blue-300"
+                  >
+                    Reset All
+                  </button>
+                </div>
+
+                {/* Date Range Filter */}
+                <div className="mb-4">
+                  <h4 className="text-sm text-gray-300 mb-2 flex items-center">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    Date Range
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {dateRangeOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleFilterChange("dateRange", option.value)
+                        }
+                        className={`text-xs py-1 px-2 rounded ${
+                          filterOptions.dateRange === option.value
+                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                            : "bg-[#121a36]/50 text-gray-300 border border-[#20253d] hover:bg-[#121a36]"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Status Filter */}
+                <div className="mb-4">
+                  <h4 className="text-sm text-gray-300 mb-2">Status</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {statusOptions.map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => {
+                          const newStatus = filterOptions.status.includes(
+                            status
+                          )
+                            ? filterOptions.status.filter((s) => s !== status)
+                            : [...filterOptions.status, status];
+                          handleFilterChange("status", newStatus);
+                        }}
+                        className={`text-xs py-1 px-2 rounded flex items-center justify-between ${
+                          filterOptions.status.includes(status)
+                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                            : "bg-[#121a36]/50 text-gray-300 border border-[#20253d] hover:bg-[#121a36]"
+                        }`}
+                      >
+                        <span>{status}</span>
+                        {filterOptions.status.includes(status) && (
+                          <Check className="h-3 w-3" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Location Type Filter */}
+                <div className="mb-4">
+                  <h4 className="text-sm text-gray-300 mb-2">Location Type</h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    {locationTypeOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          const newLocationTypes =
+                            filterOptions.locationType.includes(option.value)
+                              ? filterOptions.locationType.filter(
+                                  (l) => l !== option.value
+                                )
+                              : [...filterOptions.locationType, option.value];
+                          handleFilterChange("locationType", newLocationTypes);
+                        }}
+                        className={`text-xs py-1 px-2 rounded flex items-center justify-between ${
+                          filterOptions.locationType.includes(option.value)
+                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                            : "bg-[#121a36]/50 text-gray-300 border border-[#20253d] hover:bg-[#121a36]"
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {filterOptions.locationType.includes(option.value) && (
+                          <Check className="h-3 w-3" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 border-t border-[#20253d]/50 flex justify-end gap-2">
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="px-3 py-1.5 text-xs bg-[#121a36] text-gray-300 rounded hover:bg-[#121a36]/80"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={applyFilters}
+                  className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Applications timeline */}
@@ -250,7 +552,7 @@ export default function CommunityPage() {
             Latest Applications
           </h2>
           <span className="text-sm text-gray-400">
-            {results?.total || 0} total applications
+            {filteredApplications.length} of {results?.total || 0} applications
           </span>
         </div>
 
@@ -262,18 +564,21 @@ export default function CommunityPage() {
             </div>
           )}
 
-          {results && allApplications.length === 0 && (
+          {results && filteredApplications.length === 0 && (
             <div className="p-8 text-center">
               <p className="text-gray-400 mb-2">No applications found</p>
               <p className="text-sm text-gray-500">
-                {searchQuery
-                  ? "Try a different search term"
+                {searchQuery ||
+                appliedFilters.status.length > 0 ||
+                appliedFilters.locationType.length > 0 ||
+                appliedFilters.dateRange !== "all"
+                  ? "Try adjusting your search or filters"
                   : "Check back later for new applications"}
               </p>
             </div>
           )}
 
-          {allApplications.map((app, index) => (
+          {filteredApplications.map((app, index) => (
             <motion.div
               key={app.id}
               initial={{ opacity: 0, y: 20 }}
@@ -353,10 +658,12 @@ export default function CommunityPage() {
                       className="hover:text-blue-400 transition-colors flex items-center"
                     >
                       {userProfiles[app.userId]?.imageUrl ? (
-                        <img
+                        <Image
                           src={userProfiles[app.userId].imageUrl}
                           alt={getDisplayName(app.userId)}
                           className="h-5 w-5 rounded-full mr-2 object-cover"
+                          width={20}
+                          height={20}
                         />
                       ) : (
                         <div className="h-5 w-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 mr-2">

@@ -272,8 +272,8 @@ export default function PrivacySettingsPage() {
                     When enabled, your applications will be visible in the
                     community timeline. Your name will be shown, along with
                     application details like company name, position, and status.
-                    Turn this off if you don't want your applications to appear
-                    in the community feed.
+                    Turn this off if you don&apos;t want your applications to
+                    appear in the community feed.
                   </p>
                 </div>
               </div>
