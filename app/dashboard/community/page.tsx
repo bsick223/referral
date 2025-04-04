@@ -199,7 +199,7 @@ export default function CommunityPage() {
 
       fetchUserProfiles();
     }
-  }, [allApplications, userProfiles]);
+  }, [allApplications]);
 
   // Format the status color class
   const getStatusColorClass = (color: string) => {
