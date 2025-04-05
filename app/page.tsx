@@ -143,6 +143,13 @@ export default function Home() {
             >
               Privacy Policy
             </Link>
+            <span className="text-gray-500 mx-2 text-xs opacity-40">/</span>
+            <Link
+              href="/attributions"
+              className="text-gray-500 hover:text-gray-300 text-xs opacity-40 transition-opacity hover:opacity-80"
+            >
+              Attributions
+            </Link>
           </div>
         </div>
       </div>
