@@ -26,7 +26,6 @@ export default function Attributions() {
             <p className="mb-4">
               <a
                 href="https://logo.dev"
-                alt="Logo API"
                 className="text-blue-400 hover:text-blue-300 transition-colors"
               >
                 Logos provided by Logo.dev

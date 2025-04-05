@@ -44,7 +44,6 @@ export default function RootLayout({
           <footer className="p-4 text-center text-gray-500 text-xs">
             <a
               href="https://logo.dev"
-              alt="Logo API"
               className="hover:text-gray-400"
             >
               Logos provided by Logo.dev
