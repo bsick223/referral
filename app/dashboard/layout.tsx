@@ -14,6 +14,7 @@ import {
   X,
   Briefcase,
   Globe,
+  BookOpen,
 } from "lucide-react";
 import { UserButton, useClerk } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
@@ -86,6 +87,7 @@ export default function DashboardLayout({
       icon: Trophy,
     },
     { name: "Community", href: "/dashboard/community", icon: Globe },
+    { name: "Resources", href: "/dashboard/resources", icon: BookOpen },
   ];
 
   // Helper function to check if a path is active
