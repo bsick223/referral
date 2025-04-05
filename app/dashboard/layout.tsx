@@ -78,14 +78,14 @@ export default function DashboardLayout({
     },
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Applications", href: "/dashboard/applications", icon: Briefcase },
-    { name: "Community", href: "/dashboard/community", icon: Globe },
     { name: "Referrals", href: "/dashboard/referrals", icon: UsersRound },
+    { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
     {
       name: "Leaderboard",
       href: "/dashboard/leaderboard",
       icon: Trophy,
     },
-    { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
+    { name: "Community", href: "/dashboard/community", icon: Globe },
   ];
 
   // Helper function to check if a path is active
