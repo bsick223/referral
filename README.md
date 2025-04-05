@@ -1,49 +1,101 @@
-# AI Content Agent
+# Apptracked.com - Job Application & Referral Tracking System
 
-This is an AI-powered content analysis platform that helps content creators get insights from their YouTube videos. The platform uses advanced AI to analyze video content, generate transcriptions, create thumbnails, and provide content recommendations.
+![ReferTrack Banner](public/refertrack-banner.png)
 
-Repository: [https://github.com/sonnysangha/5-day-challenge-ai-agent-saas-challenge-nextjs-15-schematic-clerk.git](https://github.com/sonnysangha/5-day-challenge-ai-agent-saas-challenge-nextjs-15-schematic-clerk.git)
+## 🚀 Overview
 
-## Features
+Apptracked is a modern web application designed to help job seekers track their job applications and referrals. The application gamifies the job search process by awarding points and achievements, making the often tedious process more engaging and rewarding.
 
-- **AI Video Analysis** - Deep insights into your video content with advanced AI analysis
-- **Smart Transcription** - Accurate transcriptions of your videos for subtitles or repurposing content
-- **Thumbnail Generation** - AI-generated eye-catching thumbnails to boost click-through rates
-- **Title Generation** - SEO-optimized title suggestions that resonate with your audience
-- **Shot Script** - Detailed instructions to recreate viral videos with shooting techniques and editing tips
-- **AI Agent Conversations** - Engage in discussions about content strategy with your AI agent companion
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black)](https://vercel.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3.3-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.x-black)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.0.0-blue)](https://reactjs.org/)
+[![Convex](https://img.shields.io/badge/Convex-Database-blue)](https://www.convex.dev/)
+[![Clerk](https://img.shields.io/badge/Clerk-Authentication-blueviolet)](https://clerk.dev/)
 
-## Tech Stack
+## ✨ Features
 
-- **Frontend**: Next.js 15, React 19, TailwindCSS
-- **AI Integration**: AI SDK, Anthropic, OpenAI
-- **Authentication**: Clerk
-- **Database**: Convex
-- **Styling**: Tailwind CSS, Radix UI components
-- **YouTube Integration**: youtubei.js for video data extraction
+- **Job Application Tracking**: Organize your job applications with custom status columns
+- **Referral Management**: Track contacts who can refer you to companies
+- **Dashboard Analytics**: Get insights into your job application progress
+- **Achievement System**: Earn achievements as you progress in your job search
+- **Leaderboards**: Compare your progress with other job seekers in the community
+- **Profile Management**: Create and customize your professional profile
+- **Community Features**: Connect with other job seekers for support and networking
 
-## Project Structure
+## 🛠️ Tech Stack
 
-- `/app` - Next.js app directory with pages and layouts
-- `/components` - Reusable UI components
-- `/convex` - Database models and schema
-- `/actions` - Server actions for form handling and business logic
-- `/lib` - Utility functions and helper methods
-- `/features` - Feature flag configurations
-- `/public` - Static assets
+- **Frontend**: Next.js 15, React 19, TailwindCSS, Radix UI
+- **Backend**: Next.js API Routes, Convex Database
+- **Authentication**: Clerk Authentication
+- **State Management**: React Hooks
+- **Animations**: Three.js
+- **Styling**: Tailwind CSS, CSS Modules
+- **Analytics**: Vercel Analytics, Schematic
 
-## Data Model
+## 📂 Project Structure
 
-The application stores:
+```
+/
+├── app/                  # Next.js 15 application directory
+│   ├── dashboard/        # Dashboard and main app functionality
+│   ├── api/              # API routes
+│   └── ...               # Other app routes
+├── components/           # Reusable UI components
+├── convex/               # Convex database schema and API
+├── hooks/                # Custom React hooks
+├── lib/                  # Utility functions and API clients
+├── public/               # Static assets
+└── types/                # TypeScript type definitions
+```
 
-- YouTube video IDs linked to users
-- Video transcripts with timestamps
-- Generated images/thumbnails
-- Custom generated titles
+## 🚀 Getting Started
 
-## Getting Started
+### Prerequisites
 
-First, run the development server:
+- Node.js 18+ and npm/yarn/pnpm
+- A Clerk account for authentication
+- A Convex account for the database
+
+### Installation
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/yourusername/refertrack.git
+cd refertrack
+```
+
+2. Install dependencies
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+3. Set up environment variables
+
+Create a `.env.local` file in the root directory with the following variables:
+
+```
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+CLERK_SECRET_KEY=your_clerk_secret_key
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
+
+# Convex Database
+NEXT_PUBLIC_CONVEX_URL=your_convex_deployment_url
+CONVEX_DEPLOYMENT=your_convex_deployment_id
+CONVEX_ADMIN_KEY=your_convex_admin_key
+```
+
+4. Start the development server
 
 ```bash
 npm run dev
@@ -51,30 +103,80 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🔧 Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Convex Database
 
-## Environment Setup
+This project uses Convex as its database provider. To initialize Convex:
 
-The project requires several environment variables to be set up. Check `.env.example` for required configurations.
+```bash
+npx convex init
+```
 
-## Learn More
+To push schema changes:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx convex push
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Authentication with Clerk
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project uses Clerk for authentication. Set up your Clerk application at [clerk.dev](https://clerk.dev) and add the environment variables to your `.env.local` file.
 
-## Deploy on Vercel
+## 🚢 Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The easiest way to deploy this application is through Vercel:
 
+1. Push your code to a Git repository
+2. Import the project into Vercel
+3. Set the environment variables in Vercel
+4. Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/yourusername/refertrack)
+
+## 🧪 Testing
+
+Run tests with:
+
+```bash
+npm test
+# or
+yarn test
+# or
+pnpm test
+```
+
+## 📝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Team
+
+- Brendan Sick - [GitHub](https://github.com/bsick223) | [LinkedIn](https://www.linkedin.com/in/brendan-sick/)
+
+## 🙏 Acknowledgements
+
+- [Next.js](https://nextjs.org/)
+- [React](https://reactjs.org/)
+- [Convex](https://www.convex.dev/)
+- [Clerk](https://clerk.dev/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [Vercel](https://vercel.com/)
+
+---
+
+Built with ❤️ by Brendan Sick
