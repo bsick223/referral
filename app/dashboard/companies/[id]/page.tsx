@@ -684,7 +684,11 @@ export default function CompanyDetailPage({
                         alt={`${company.name} logo`}
                         width={80}
                         height={80}
-                        className="max-w-full max-h-full object-contain p-2"
+                        className={`max-w-full max-h-full object-contain p-2 ${
+                          company.website.toLowerCase().includes("apple.com")
+                            ? "invert"
+                            : ""
+                        }`}
                         onError={(e) => {
                           // Show fallback icon if logo can't be loaded
                           const target = e.target as HTMLImageElement;
