@@ -303,7 +303,7 @@ export default function ReferralsPage() {
                               .replace(/^https?:\/\//, "")
                               .replace(/\/$/, "")
                               .split("/")[0]
-                          }?token=${LOGO_DEV_PUBLISHABLE_API_KEY}`}
+                          }?token=${LOGO_DEV_PUBLISHABLE_API_KEY}&format=png&retina=true`}
                           alt={`${company.name} logo`}
                           width={40}
                           height={40}
