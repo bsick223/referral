@@ -8,6 +8,9 @@ import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import Image from "next/image";
 
+const LOGO_DEV_PUBLISHABLE_API_KEY =
+  process.env.NEXT_PUBLIC_LOGO_DEV_PUBLISHABLE_API_KEY;
+
 export default function ReferralsPage() {
   const { user } = useUser();
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -295,12 +298,12 @@ export default function ReferralsPage() {
                     <div className="w-12 h-12 mb-3 bg-gray-800/50 rounded-md flex items-center justify-center overflow-hidden">
                       {company.website && company.website.length > 0 ? (
                         <Image
-                          src={`https://logo.clearbit.com/${
+                          src={`https://img.logo.dev/${
                             company.website
                               .replace(/^https?:\/\//, "")
                               .replace(/\/$/, "")
                               .split("/")[0]
-                          }`}
+                          }?token=${LOGO_DEV_PUBLISHABLE_API_KEY}`}
                           alt={`${company.name} logo`}
                           width={40}
                           height={40}

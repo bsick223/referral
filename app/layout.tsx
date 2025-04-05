@@ -21,7 +21,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "App Tracked - Organize Your Job Search",
-  description: "Track and manage your job applications & referrals in one place",
+  description:
+    "Track and manage your job applications & referrals in one place",
 };
 
 export default function RootLayout({
@@ -32,14 +33,23 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-[#090d1b]`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-[#090d1b] flex flex-col`}
       >
         <Analytics />
         <SpeedInsights />
         <ClientWrapper>
           <ScrollToTop />
           <HeaderWrapper />
-          <main>{children}</main>
+          <main className="flex-grow">{children}</main>
+          <footer className="p-4 text-center text-gray-500 text-xs">
+            <a
+              href="https://logo.dev"
+              alt="Logo API"
+              className="hover:text-gray-400"
+            >
+              Logos provided by Logo.dev
+            </a>
+          </footer>
           <Toaster position="bottom-center" />
         </ClientWrapper>
       </body>

@@ -25,6 +25,9 @@ import { Id } from "@/convex/_generated/dataModel";
 import { use } from "react";
 import Image from "next/image";
 
+const LOGO_DEV_PUBLISHABLE_API_KEY =
+  process.env.NEXT_PUBLIC_LOGO_DEV_PUBLISHABLE_API_KEY;
+
 // Define tag color options for dark theme - same as in messages page
 const TAG_COLORS = [
   { bg: "bg-blue-900/50", text: "text-blue-300", name: "Blue" },
@@ -672,12 +675,12 @@ export default function CompanyDetailPage({
                   <div className="w-20 h-20 mr-4 bg-gray-800/50 rounded-md flex items-center justify-center overflow-hidden">
                     {company.website && company.website.length > 0 ? (
                       <Image
-                        src={`https://logo.clearbit.com/${
+                        src={`https://img.logo.dev/${
                           company.website
                             .replace(/^https?:\/\//, "")
                             .replace(/\/$/, "")
                             .split("/")[0]
-                        }`}
+                        }?token=${LOGO_DEV_PUBLISHABLE_API_KEY}`}
                         alt={`${company.name} logo`}
                         width={80}
                         height={80}
