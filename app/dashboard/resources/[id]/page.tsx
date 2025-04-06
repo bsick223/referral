@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useMemo } from "react";
+import { useParams } from "next/navigation";
 import { RefreshCw, ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 // Define a type for the resources
 interface Resource {
@@ -17,61 +16,63 @@ interface Resource {
 
 export default function ResourceDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [resource, setResource] = useState<Resource | null>(null);
 
-  // Resource data - static for now
-  const resourcesData: Resource[] = [
-    {
-      id: "1",
-      title: "Roadmap to your first offer",
-      imagePath: "/photos/Offer.png",
-      content:
-        "This comprehensive guide will walk you through all the basic features and functionality. Perfect for new users who are just getting started with our platform.",
-      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Replace with actual YouTube video ID
-    },
-    {
-      id: "2",
-      title: "Mindset",
-      imagePath: "/photos/Mindset.png",
-      content:
-        "Watch step-by-step video tutorials that demonstrate how to use advanced features and get the most out of our platform.",
-      videoUrl: "https://www.youtube.com/embed/jNQXAC9IVRw", // Replace with actual YouTube video ID
-    },
-    {
-      id: "3",
-      title: "Where to find jobs?",
-      imagePath: "/photos/JobBoard.png",
-      content:
-        "Browse our extensive library of templates to find the perfect starting point for your project.",
-      videoUrl: "https://www.youtube.com/embed/mUpPj6gvYCw", // Replace with actual YouTube video ID
-    },
-    {
-      id: "4",
-      title: "What should my Resume look like?",
-      imagePath: "/photos/Resume.png",
-      content:
-        "Learn from industry experts about the best practices for maximizing efficiency and effectiveness when using our platform.",
-      videoUrl: "https://www.youtube.com/embed/kJQP7kiw5Fk", // Replace with actual YouTube video ID
-    },
-    {
-      id: "5",
-      title: "How to get referrals?",
-      imagePath: "/photos/Networking.png",
-      content:
-        "Detailed technical documentation for developers looking to integrate with our API and extend functionality.",
-      videoUrl: "https://www.youtube.com/embed/9bZkp7q19f0", // Replace with actual YouTube video ID
-    },
-    {
-      id: "6",
-      title: "How to apply?",
-      imagePath: "/photos/HowtoApply.png",
-      content:
-        "Connect with other users, ask questions, share your experiences, and collaborate on solutions in our community forum.",
-      videoUrl: "https://www.youtube.com/embed/XqZsoesa55w", // Replace with actual YouTube video ID
-    },
-  ];
+  // Resource data - wrapped in useMemo to prevent recreation on every render
+  const resourcesData = useMemo(
+    () => [
+      {
+        id: "1",
+        title: "Roadmap to your first offer",
+        imagePath: "/photos/Offer.png",
+        content:
+          "This comprehensive guide will walk you through all the basic features and functionality. Perfect for new users who are just getting started with our platform.",
+        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Replace with actual YouTube video ID
+      },
+      {
+        id: "2",
+        title: "Mindset",
+        imagePath: "/photos/Mindset.png",
+        content:
+          "Watch step-by-step video tutorials that demonstrate how to use advanced features and get the most out of our platform.",
+        videoUrl: "https://www.youtube.com/embed/jNQXAC9IVRw", // Replace with actual YouTube video ID
+      },
+      {
+        id: "3",
+        title: "Where to find jobs?",
+        imagePath: "/photos/JobBoard.png",
+        content:
+          "Browse our extensive library of templates to find the perfect starting point for your project.",
+        videoUrl: "https://www.youtube.com/embed/mUpPj6gvYCw", // Replace with actual YouTube video ID
+      },
+      {
+        id: "4",
+        title: "What should my Resume look like?",
+        imagePath: "/photos/Resume.png",
+        content:
+          "Learn from industry experts about the best practices for maximizing efficiency and effectiveness when using our platform.",
+        videoUrl: "https://www.youtube.com/embed/kJQP7kiw5Fk", // Replace with actual YouTube video ID
+      },
+      {
+        id: "5",
+        title: "How to get referrals?",
+        imagePath: "/photos/Networking.png",
+        content:
+          "Detailed technical documentation for developers looking to integrate with our API and extend functionality.",
+        videoUrl: "https://www.youtube.com/embed/9bZkp7q19f0", // Replace with actual YouTube video ID
+      },
+      {
+        id: "6",
+        title: "How to apply?",
+        imagePath: "/photos/HowtoApply.png",
+        content:
+          "Connect with other users, ask questions, share your experiences, and collaborate on solutions in our community forum.",
+        videoUrl: "https://www.youtube.com/embed/XqZsoesa55w", // Replace with actual YouTube video ID
+      },
+    ],
+    []
+  );
 
   // Simulate loading and fetch resource
   useEffect(() => {
@@ -82,7 +83,7 @@ export default function ResourceDetailPage() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [params.id]);
+  }, [params.id, resourcesData]);
 
   // Add custom animation for the glow
   useEffect(() => {
