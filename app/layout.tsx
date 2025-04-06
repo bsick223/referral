@@ -41,14 +41,7 @@ export default function RootLayout({
           <ScrollToTop />
           <HeaderWrapper />
           <main className="flex-grow">{children}</main>
-          <footer className="p-4 text-center text-gray-500 text-xs">
-            <a
-              href="https://logo.dev"
-              className="hover:text-gray-400"
-            >
-              Logos provided by Logo.dev
-            </a>
-          </footer>
+          
           <Toaster position="bottom-center" />
         </ClientWrapper>
       </body>

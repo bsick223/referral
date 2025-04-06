@@ -102,19 +102,19 @@ export default function ResourcesPage() {
           <Link
             key={resource.id}
             href={`/dashboard/resources/${resource.id}`}
-            className="block bg-[#121a36]/50 backdrop-blur-sm shadow rounded-lg overflow-hidden hover:shadow-md transition-all duration-300 cursor-pointer border border-[#20253d]/50 group relative h-[180px]"
+            className="block bg-[#121a36]/50 backdrop-blur-sm shadow rounded-lg overflow-hidden hover:shadow-md transition-all duration-300 cursor-pointer border border-[#20253d]/50 group relative h-[260px]"
           >
             {/* Gradient border hover effect */}
             <span className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 bg-gradient-to-r from-orange-500/20 via-purple-500/20 to-blue-500/20 transition-opacity duration-300"></span>
 
             <div className="p-6 relative z-10 flex flex-col items-center justify-center h-full">
               {/* Resource Image */}
-              <div className="w-16 h-16 mb-4 bg-gray-800/50 rounded-md flex items-center justify-center overflow-hidden">
+              <div className="w-40 h-40 mb-5 bg-gray-800/50 rounded-md flex items-center justify-center overflow-hidden">
                 <Image
                   src={resource.imagePath}
                   alt={`${resource.title} icon`}
-                  width={128}
-                  height={128}
+                  width={256}
+                  height={256}
                   className="w-full h-full object-contain p-1"
                 />
               </div>

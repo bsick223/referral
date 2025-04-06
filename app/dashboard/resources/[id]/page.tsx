@@ -154,15 +154,6 @@ export default function ResourceDetailPage() {
 
       {/* Resource header */}
       <div className="flex items-center mb-6">
-        <div className="w-12 h-12 bg-gray-800/50 rounded-md flex items-center justify-center overflow-hidden mr-4">
-          <Image
-            src={resource.imagePath}
-            alt={`${resource.title} icon`}
-            width={48}
-            height={48}
-            className="w-full h-full object-contain p-1"
-          />
-        </div>
         <div className="relative">
           <h2 className="text-2xl font-light tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300 relative z-10">
             {resource.title}
