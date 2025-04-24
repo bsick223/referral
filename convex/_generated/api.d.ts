@@ -20,6 +20,8 @@ import type * as applications from "../applications.js";
 import type * as companies from "../companies.js";
 import type * as contact from "../contact.js";
 import type * as images from "../images.js";
+import type * as leetcodeProblems from "../leetcodeProblems.js";
+import type * as leetcodeStatuses from "../leetcodeStatuses.js";
 import type * as messages from "../messages.js";
 import type * as migrations from "../migrations.js";
 import type * as referrals from "../referrals.js";
@@ -48,6 +50,8 @@ declare const fullApi: ApiFromModules<{
   companies: typeof companies;
   contact: typeof contact;
   images: typeof images;
+  leetcodeProblems: typeof leetcodeProblems;
+  leetcodeStatuses: typeof leetcodeStatuses;
   messages: typeof messages;
   migrations: typeof migrations;
   referrals: typeof referrals;

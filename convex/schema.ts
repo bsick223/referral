@@ -192,4 +192,31 @@ export default defineSchema({
     .index("by_user_id", ["userId"])
     .index("by_user_and_category", ["userId", "category"])
     .index("by_user_and_tier", ["userId", "tier"]),
+
+  // Add schema for leetcode tracker
+  leetcodeStatuses: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    color: v.string(),
+    order: v.number(),
+    isDefault: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user_id", ["userId"]),
+
+  leetcodeProblems: defineTable({
+    userId: v.string(),
+    title: v.string(),
+    link: v.optional(v.string()),
+    difficulty: v.optional(v.string()),
+    statusId: v.id("leetcodeStatuses"),
+    notes: v.optional(v.string()),
+    orderIndex: v.optional(v.number()),
+    dayOfWeek: v.number(), // 0 = Sunday, 1 = Monday, etc.
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_status_id", ["statusId"])
+    .index("by_day_of_week", ["dayOfWeek"]),
 });
