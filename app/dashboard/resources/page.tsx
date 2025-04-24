@@ -46,6 +46,7 @@ export default function ResourcesPage() {
 
   // Resource data with type safety
   const resources: Resource[] = [
+    { id: "7", title: "Leetcode Tracker", imagePath: "/photos/Leetcode.png" },
     {
       id: "1",
       title: "Roadmap to your first offer",
