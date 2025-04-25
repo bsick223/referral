@@ -213,6 +213,7 @@ export default function LeetcodeTrackerPage() {
     spaceComplexity: "",
     timeComplexity: "",
     category: "",
+    difficulty: "",
   });
   const addProblemModalRef = useRef<HTMLDivElement>(null);
 
@@ -741,6 +742,7 @@ export default function LeetcodeTrackerPage() {
       spaceComplexity: "",
       timeComplexity: "",
       category: "",
+      difficulty: "",
     });
     setIsAddingProblem(true);
   };
@@ -773,6 +775,7 @@ export default function LeetcodeTrackerPage() {
         spaceComplexity: newProblem.spaceComplexity.trim() || undefined,
         timeComplexity: newProblem.timeComplexity.trim() || undefined,
         category: newProblem.category || undefined,
+        difficulty: newProblem.difficulty || undefined,
       });
 
       setIsAddingProblem(false);
@@ -1508,6 +1511,7 @@ export default function LeetcodeTrackerPage() {
                 spaceComplexity: "",
                 timeComplexity: "",
                 category: "",
+                difficulty: "",
               });
               setIsAddingProblem(true);
             }}
@@ -2232,6 +2236,23 @@ export default function LeetcodeTrackerPage() {
                   placeholder="e.g., Two Sum"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-gray-400 mb-1 text-sm">
+                  Difficulty
+                </label>
+                <select
+                  name="difficulty"
+                  value={newProblem.difficulty}
+                  onChange={handleNewProblemInputChange}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                >
+                  <option value="">Select difficulty</option>
+                  <option value="Easy">Easy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Hard">Hard</option>
+                </select>
               </div>
 
               <div>
