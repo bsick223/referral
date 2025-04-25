@@ -1298,11 +1298,29 @@ export default function LeetcodeTrackerPage() {
           )}
 
           <button
+            onClick={() => {
+              setNewProblem({
+                title: "",
+                link: "",
+                notes: "",
+                score: 1,
+                spaceComplexity: "",
+                timeComplexity: "",
+              });
+              setIsAddingProblem(true);
+            }}
+            className="text-gray-400 hover:text-white p-1 rounded-md hover:bg-gray-800 border border-gray-700"
+          >
+            <Plus className="h-5 w-5" />
+            <span className="sr-only">Add Problem</span>
+          </button>
+
+          <button
             data-add-status-button
             onClick={(e) => showColorPicker(e, null)}
             className="text-gray-400 hover:text-white p-1 rounded-md hover:bg-gray-800 border border-gray-700"
           >
-            <Plus className="h-5 w-5" />
+            <PaintBucket className="h-5 w-5" />
             <span className="sr-only">Add Column</span>
           </button>
         </div>
@@ -1397,12 +1415,6 @@ export default function LeetcodeTrackerPage() {
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <button
-                    onClick={() => handleAddProblemClick(status._id)}
-                    className="text-white/80 hover:text-white p-1 rounded-md hover:bg-white/10"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
                   <div className="relative group" data-menu-trigger>
                     <button className="text-white/80 hover:text-white p-1 rounded-md hover:bg-white/10">
                       <MoreVertical className="h-4 w-4" />
