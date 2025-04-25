@@ -18,6 +18,8 @@ import {
   Move,
   Columns,
   GripVertical,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
@@ -146,6 +148,9 @@ export default function LeetcodeTrackerPage() {
       problems: LeetcodeProblem[];
     }[]
   >([]);
+  const [collapsedCategories, setCollapsedCategories] = useState<{
+    [key: string]: boolean;
+  }>({});
   const [isAddingStatus, setIsAddingStatus] = useState(false);
   const [newStatusName, setNewStatusName] = useState("");
   const [newStatusColor, setNewStatusColor] = useState("bg-blue-500");
@@ -1436,6 +1441,14 @@ export default function LeetcodeTrackerPage() {
     );
   }
 
+  // Function to toggle category collapse
+  const toggleCategoryCollapse = (category: string) => {
+    setCollapsedCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
+
   return (
     <div
       className="min-h-screen bg-[#090d1b] flex flex-col overflow-hidden"
@@ -1741,51 +1754,64 @@ export default function LeetcodeTrackerPage() {
           {/* Render grouped problems */}
           {groupedMasteredProblems.map((group) => (
             <div key={group.category} className="mb-6">
-              <h3 className="text-indigo-300 text-md font-medium mt-4 mb-2 border-b border-indigo-900/30 pb-1">
+              <h3
+                className="text-indigo-300 text-md font-medium mt-4 mb-2 border-b border-indigo-900/30 pb-1 flex items-center cursor-pointer"
+                onClick={() => toggleCategoryCollapse(group.category)}
+              >
+                <span className="mr-2">
+                  {collapsedCategories[group.category] ? (
+                    <ChevronRight className="h-4 w-4 text-indigo-400" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-indigo-400" />
+                  )}
+                </span>
                 {group.category}{" "}
-                <span className="text-sm text-indigo-400/60">
+                <span className="text-sm text-indigo-400/60 ml-1">
                   ({group.problems.length})
                 </span>
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {group.problems.map((problem) => (
-                  <div
-                    key={problem._id}
-                    className="bg-[#121a36]/50 border border-emerald-800/30 p-3 rounded-md cursor-pointer hover:bg-[#1a2542]/50"
-                    onClick={() => openProblemModal(problem)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <h4 className="text-sm font-medium text-white">
-                        {problem.title}
-                      </h4>
-                      {problem.difficulty && (
-                        <span
-                          className={`text-xs px-1.5 py-0.5 rounded-full ${
-                            problem.difficulty === "Easy"
-                              ? "bg-green-500/20 text-green-300"
-                              : problem.difficulty === "Medium"
-                              ? "bg-yellow-500/20 text-yellow-300"
-                              : "bg-red-500/20 text-red-300"
-                          }`}
+
+              {!collapsedCategories[group.category] && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {group.problems.map((problem) => (
+                    <div
+                      key={problem._id}
+                      className="bg-[#121a36]/50 border border-emerald-800/30 p-3 rounded-md cursor-pointer hover:bg-[#1a2542]/50"
+                      onClick={() => openProblemModal(problem)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <h4 className="text-sm font-medium text-white">
+                          {problem.title}
+                        </h4>
+                        {problem.difficulty && (
+                          <span
+                            className={`text-xs px-1.5 py-0.5 rounded-full ${
+                              problem.difficulty === "Easy"
+                                ? "bg-green-500/20 text-green-300"
+                                : problem.difficulty === "Medium"
+                                ? "bg-yellow-500/20 text-yellow-300"
+                                : "bg-red-500/20 text-red-300"
+                            }`}
+                          >
+                            {problem.difficulty}
+                          </span>
+                        )}
+                      </div>
+                      {problem.link && (
+                        <a
+                          href={problem.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs text-blue-400 hover:text-blue-300 mt-2 inline-block"
                         >
-                          {problem.difficulty}
-                        </span>
+                          View Problem
+                        </a>
                       )}
                     </div>
-                    {problem.link && (
-                      <a
-                        href={problem.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-xs text-blue-400 hover:text-blue-300 mt-2 inline-block"
-                      >
-                        View Problem
-                      </a>
-                    )}
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
