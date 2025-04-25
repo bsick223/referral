@@ -58,6 +58,9 @@ type LeetcodeProblem = {
   difficulty?: string;
   statusId: Id<"leetcodeStatuses">;
   notes?: string;
+  score: number;
+  spaceComplexity?: string;
+  timeComplexity?: string;
   userId: string;
   dayOfWeek: number;
   orderIndex?: number;
@@ -161,6 +164,18 @@ export default function LeetcodeTrackerPage() {
 
   // Add a state for showing mobile instructions
   const [showDragInstructions, setShowDragInstructions] = useState(false);
+
+  // Add new problem state
+  const [isAddingProblem, setIsAddingProblem] = useState(false);
+  const [newProblem, setNewProblem] = useState({
+    title: "",
+    link: "",
+    notes: "",
+    score: 1,
+    spaceComplexity: "",
+    timeComplexity: "",
+  });
+  const addProblemModalRef = useRef<HTMLDivElement>(null);
 
   // Get status data from Convex
   const statusesData = useQuery(api.leetcodeStatuses.listByUser, {
@@ -620,20 +635,17 @@ export default function LeetcodeTrackerPage() {
   };
 
   const handleUpdateStatus = async (statusId: Id<"leetcodeStatuses">) => {
-    if (!editingStatusName.trim()) return;
-
     try {
       await updateStatus({
         id: statusId,
-        name: editingStatusName.trim(),
         color: editingStatusColor,
       });
 
       setEditingStatusId(null);
-      showToast("success", "Column updated");
+      showToast("success", "Column color updated");
     } catch (error) {
-      console.error("Error updating status:", error);
-      showToast("error", "Failed to update column");
+      console.error("Error updating status color:", error);
+      showToast("error", "Failed to update column color");
     }
   };
 
@@ -655,29 +667,77 @@ export default function LeetcodeTrackerPage() {
     }
   };
 
+  // Get day of week from a score
+  const getTargetDayOfWeek = (score: number): number => {
+    // Get current day (0-6, where 0 is Sunday)
+    const today = new Date().getDay();
+
+    // Calculate target day by adding the score
+    const targetDay = (today + score) % 7;
+
+    return targetDay;
+  };
+
   // Problem CRUD operations
-  const handleAddProblem = async (
-    statusId: Id<"leetcodeStatuses">,
-    dayOfWeek: number
-  ) => {
-    if (!user) return;
+  const handleAddProblemClick = (statusId: Id<"leetcodeStatuses">) => {
+    setNewProblem({
+      title: "",
+      link: "",
+      notes: "",
+      score: 1,
+      spaceComplexity: "",
+      timeComplexity: "",
+    });
+    setIsAddingProblem(true);
+  };
+
+  const handleAddProblem = async () => {
+    if (!user || !newProblem.title.trim()) {
+      showToast("error", "Problem title is required");
+      return;
+    }
 
     try {
-      const problemTitle = prompt("Enter problem title:");
-      if (!problemTitle || !problemTitle.trim()) return;
+      const targetDayOfWeek = getTargetDayOfWeek(newProblem.score);
+
+      // Find the status for the target day
+      const targetStatus = statuses.find((s) => s.order === targetDayOfWeek);
+
+      if (!targetStatus) {
+        showToast("error", "Could not find the target day column");
+        return;
+      }
 
       await createProblem({
         userId: user.id,
-        title: problemTitle.trim(),
-        statusId,
-        dayOfWeek,
+        title: newProblem.title.trim(),
+        statusId: targetStatus._id,
+        dayOfWeek: targetDayOfWeek,
+        link: newProblem.link.trim() || undefined,
+        notes: newProblem.notes.trim() || undefined,
+        score: newProblem.score,
+        spaceComplexity: newProblem.spaceComplexity.trim() || undefined,
+        timeComplexity: newProblem.timeComplexity.trim() || undefined,
       });
 
+      setIsAddingProblem(false);
       showToast("success", "Problem added");
     } catch (error) {
       console.error("Error adding problem:", error);
       showToast("error", "Failed to add problem");
     }
+  };
+
+  const handleNewProblemInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setNewProblem((prev) => ({
+      ...prev,
+      [name]: name === "score" ? parseInt(value, 10) : value,
+    }));
   };
 
   const handleDeleteProblem = async (
@@ -744,13 +804,22 @@ export default function LeetcodeTrackerPage() {
       ) {
         closeMenus();
       }
+
+      // Handle add problem modal outside click
+      if (
+        isAddingProblem &&
+        addProblemModalRef.current &&
+        !addProblemModalRef.current.contains(event.target as Node)
+      ) {
+        setIsAddingProblem(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isAddingStatus]);
+  }, [isAddingStatus, isAddingProblem]);
 
   // Color picker for column colors
   const showColorPicker = (
@@ -1229,18 +1298,6 @@ export default function LeetcodeTrackerPage() {
           )}
 
           <button
-            onClick={toggleReorderingMode}
-            className={`p-1 rounded-md border ${
-              isReorderingColumns
-                ? "bg-indigo-600 text-white border-indigo-500"
-                : "text-gray-400 hover:text-white hover:bg-gray-800 border-gray-700"
-            }`}
-          >
-            <Move className="h-5 w-5" />
-            <span className="sr-only">Reorder Columns</span>
-          </button>
-
-          <button
             data-add-status-button
             onClick={(e) => showColorPicker(e, null)}
             className="text-gray-400 hover:text-white p-1 rounded-md hover:bg-gray-800 border border-gray-700"
@@ -1317,25 +1374,15 @@ export default function LeetcodeTrackerPage() {
                     ? "w-full h-full"
                     : "hidden"
                   : "w-72"
-              } ${
-                isReorderingColumns ? "transition-transform cursor-move" : ""
               }`}
               data-status-id={status._id}
               data-day-of-week={status.order}
-              draggable={isReorderingColumns}
-              onDragStart={(e) => handleStatusDragStart(e, status._id)}
-              onDragEnd={handleStatusDragEnd}
-              onDragOver={handleStatusDragOver}
-              onDrop={handleStatusDrop}
             >
               {/* Column header */}
               <div
                 className={`p-2 rounded-t-md flex items-center justify-between ${status.color} bg-opacity-70`}
               >
                 <div className="flex items-center">
-                  {isReorderingColumns && (
-                    <GripVertical className="h-4 w-4 text-white opacity-70 mr-1" />
-                  )}
                   <h3 className="font-medium text-white truncate max-w-[140px]">
                     {status.name}
                   </h3>
@@ -1351,7 +1398,7 @@ export default function LeetcodeTrackerPage() {
                 </div>
                 <div className="flex items-center">
                   <button
-                    onClick={() => handleAddProblem(status._id, status.order)}
+                    onClick={() => handleAddProblemClick(status._id)}
                     className="text-white/80 hover:text-white p-1 rounded-md hover:bg-white/10"
                   >
                     <Plus className="h-4 w-4" />
@@ -1366,10 +1413,21 @@ export default function LeetcodeTrackerPage() {
                       data-menu
                     >
                       <button
-                        onClick={() => startEditingStatus(status)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Only allow color editing
+                          const status = statuses.find(
+                            (s) => s._id === status._id
+                          );
+                          if (status) {
+                            setEditingStatusId(status._id);
+                            setEditingStatusName(status.name);
+                            setEditingStatusColor(status.color);
+                          }
+                        }}
                         className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-800 hover:text-white"
                       >
-                        Edit
+                        Change Color
                       </button>
                       {!status.isDefault && (
                         <button
@@ -1424,8 +1482,8 @@ export default function LeetcodeTrackerPage() {
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      {problem.difficulty && (
-                        <div className="mt-1">
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {problem.difficulty && (
                           <span
                             className={`text-xs px-1.5 py-0.5 rounded-full ${
                               problem.difficulty === "Easy"
@@ -1435,10 +1493,16 @@ export default function LeetcodeTrackerPage() {
                                 : "bg-red-500/20 text-red-300"
                             }`}
                           >
-                            {problem.difficulty}
+                            {problem.difficulty.charAt(0)}
                           </span>
-                        </div>
-                      )}
+                        )}
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300"
+                          title="Problem score"
+                        >
+                          {problem.score}
+                        </span>
+                      </div>
                       {problem.notes && (
                         <p className="mt-1 text-xs text-gray-400 line-clamp-1">
                           {problem.notes}
@@ -1484,22 +1548,28 @@ export default function LeetcodeTrackerPage() {
             data-color-picker
           >
             <h3 className="text-white text-lg mb-4">
-              {editingStatusId ? "Edit Day" : "Add New Day"}
+              {editingStatusId ? "Edit Day Color" : "Add New Day"}
             </h3>
-            <div className="mb-4">
-              <label className="block text-gray-400 mb-1 text-sm">Name</label>
-              <input
-                type="text"
-                value={editingStatusId ? editingStatusName : newStatusName}
-                onChange={(e) =>
-                  editingStatusId
-                    ? setEditingStatusName(e.target.value)
-                    : setNewStatusName(e.target.value)
-                }
-                className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="Enter day name"
-              />
-            </div>
+            {!editingStatusId && (
+              <div className="mb-4">
+                <label className="block text-gray-400 mb-1 text-sm">Name</label>
+                <input
+                  type="text"
+                  value={newStatusName}
+                  onChange={(e) => setNewStatusName(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  placeholder="Enter day name"
+                />
+              </div>
+            )}
+            {editingStatusId && (
+              <div className="mb-4">
+                <p className="text-gray-400 mb-1 text-sm">Name</p>
+                <p className="text-white text-md font-medium">
+                  {editingStatusName}
+                </p>
+              </div>
+            )}
             <div className="mb-6">
               <label className="block text-gray-400 mb-1 text-sm">Color</label>
               <div className="grid grid-cols-5 gap-2">
@@ -1537,7 +1607,7 @@ export default function LeetcodeTrackerPage() {
                 }
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500"
               >
-                {editingStatusId ? "Update" : "Add"}
+                {editingStatusId ? "Update Color" : "Add"}
               </button>
             </div>
           </div>
@@ -1600,6 +1670,23 @@ export default function LeetcodeTrackerPage() {
                 </div>
                 <div>
                   <label className="block text-gray-400 mb-1 text-sm">
+                    Score (1-5)
+                  </label>
+                  <select
+                    name="score"
+                    value={editedProblem.score}
+                    onChange={handleProblemInputChange}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value={1}>1 - Review tomorrow</option>
+                    <option value={2}>2 - Review in 2 days</option>
+                    <option value={3}>3 - Review in 3 days</option>
+                    <option value={4}>4 - Review in 4 days</option>
+                    <option value={5}>5 - Review in 5 days</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-gray-400 mb-1 text-sm">
                     Problem Link
                   </label>
                   <input
@@ -1610,6 +1697,34 @@ export default function LeetcodeTrackerPage() {
                     className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     placeholder="https://leetcode.com/problems/..."
                   />
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="block text-gray-400 mb-1 text-sm">
+                      Time Complexity
+                    </label>
+                    <input
+                      type="text"
+                      name="timeComplexity"
+                      value={editedProblem.timeComplexity || ""}
+                      onChange={handleProblemInputChange}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      placeholder="e.g., O(n)"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-gray-400 mb-1 text-sm">
+                      Space Complexity
+                    </label>
+                    <input
+                      type="text"
+                      name="spaceComplexity"
+                      value={editedProblem.spaceComplexity || ""}
+                      onChange={handleProblemInputChange}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      placeholder="e.g., O(n)"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-gray-400 mb-1 text-sm">
@@ -1645,8 +1760,8 @@ export default function LeetcodeTrackerPage() {
                   <h4 className="text-white text-xl mb-2">
                     {selectedProblem.title}
                   </h4>
-                  {selectedProblem.difficulty && (
-                    <div className="mb-3">
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {selectedProblem.difficulty && (
                       <span
                         className={`text-sm px-2 py-1 rounded-full ${
                           selectedProblem.difficulty === "Easy"
@@ -1658,8 +1773,36 @@ export default function LeetcodeTrackerPage() {
                       >
                         {selectedProblem.difficulty}
                       </span>
+                    )}
+                    <span className="text-sm px-2 py-1 rounded-full bg-indigo-500/20 text-indigo-300">
+                      Score: {selectedProblem.score}
+                    </span>
+                  </div>
+
+                  {(selectedProblem.timeComplexity ||
+                    selectedProblem.spaceComplexity) && (
+                    <div className="bg-gray-800/50 rounded-md p-2 mb-3">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        {selectedProblem.timeComplexity && (
+                          <div className="text-sm">
+                            <span className="text-gray-400">Time:</span>
+                            <span className="text-white ml-1">
+                              {selectedProblem.timeComplexity}
+                            </span>
+                          </div>
+                        )}
+                        {selectedProblem.spaceComplexity && (
+                          <div className="text-sm">
+                            <span className="text-gray-400">Space:</span>
+                            <span className="text-white ml-1">
+                              {selectedProblem.spaceComplexity}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
+
                   {selectedProblem.link && (
                     <a
                       href={selectedProblem.link}
@@ -1693,6 +1836,154 @@ export default function LeetcodeTrackerPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Add Problem Modal */}
+      {isAddingProblem && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-20"
+          onClick={() => setIsAddingProblem(false)}
+        >
+          <div
+            ref={addProblemModalRef}
+            className="bg-gray-900 p-4 rounded-lg w-full max-w-md mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white text-lg">Add Leetcode Problem</h3>
+              <button
+                onClick={() => setIsAddingProblem(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-400 mb-1 text-sm">
+                  Problem Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={newProblem.title}
+                  onChange={handleNewProblemInputChange}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  placeholder="e.g., Two Sum"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-400 mb-1 text-sm">
+                  Score <span className="text-red-500">*</span>
+                  <span className="text-xs ml-1 text-gray-500">
+                    (1-5, determines review schedule)
+                  </span>
+                </label>
+                <select
+                  name="score"
+                  value={newProblem.score}
+                  onChange={handleNewProblemInputChange}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  required
+                >
+                  <option value={1}>1 - Review tomorrow</option>
+                  <option value={2}>2 - Review in 2 days</option>
+                  <option value={3}>3 - Review in 3 days</option>
+                  <option value={4}>4 - Review in 4 days</option>
+                  <option value={5}>5 - Review in 5 days</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {`This problem will be scheduled for ${
+                    [
+                      "Sunday",
+                      "Monday",
+                      "Tuesday",
+                      "Wednesday",
+                      "Thursday",
+                      "Friday",
+                      "Saturday",
+                    ][getTargetDayOfWeek(newProblem.score)]
+                  }`}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-gray-400 mb-1 text-sm">
+                  Problem Link
+                </label>
+                <input
+                  type="url"
+                  name="link"
+                  value={newProblem.link}
+                  onChange={handleNewProblemInputChange}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  placeholder="https://leetcode.com/problems/..."
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-gray-400 mb-1 text-sm">
+                    Time Complexity
+                  </label>
+                  <input
+                    type="text"
+                    name="timeComplexity"
+                    value={newProblem.timeComplexity}
+                    onChange={handleNewProblemInputChange}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="e.g., O(n)"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-gray-400 mb-1 text-sm">
+                    Space Complexity
+                  </label>
+                  <input
+                    type="text"
+                    name="spaceComplexity"
+                    value={newProblem.spaceComplexity}
+                    onChange={handleNewProblemInputChange}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="e.g., O(n)"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-400 mb-1 text-sm">
+                  Notes
+                </label>
+                <textarea
+                  name="notes"
+                  value={newProblem.notes}
+                  onChange={handleNewProblemInputChange}
+                  rows={3}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  placeholder="Add your notes, approach, or tips here..."
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-2">
+                <button
+                  onClick={() => setIsAddingProblem(false)}
+                  className="px-4 py-2 bg-gray-800 text-gray-300 rounded-md hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddProblem}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500"
+                >
+                  Add Problem
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -211,6 +211,9 @@ export default defineSchema({
     difficulty: v.optional(v.string()),
     statusId: v.id("leetcodeStatuses"),
     notes: v.optional(v.string()),
+    score: v.number(), // 1-5 rating that determines review scheduling
+    spaceComplexity: v.optional(v.string()),
+    timeComplexity: v.optional(v.string()),
     orderIndex: v.optional(v.number()),
     dayOfWeek: v.number(), // 0 = Sunday, 1 = Monday, etc.
     createdAt: v.number(),

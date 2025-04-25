@@ -44,6 +44,9 @@ export const create = mutation({
     link: v.optional(v.string()),
     difficulty: v.optional(v.string()),
     notes: v.optional(v.string()),
+    score: v.number(), // 1-5 rating that determines review scheduling
+    spaceComplexity: v.optional(v.string()),
+    timeComplexity: v.optional(v.string()),
     dayOfWeek: v.number(),
   },
   handler: async (ctx, args) => {
@@ -92,6 +95,9 @@ export const update = mutation({
     link: v.optional(v.string()),
     difficulty: v.optional(v.string()),
     notes: v.optional(v.string()),
+    score: v.optional(v.number()),
+    spaceComplexity: v.optional(v.string()),
+    timeComplexity: v.optional(v.string()),
     dayOfWeek: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
