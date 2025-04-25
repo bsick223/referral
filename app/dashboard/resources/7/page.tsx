@@ -830,11 +830,11 @@ export default function LeetcodeTrackerPage() {
 
     // If we're editing an existing status
     if (statusId) {
-      const status = statuses.find((s) => s._id === statusId);
-      if (status) {
-        setEditingStatusId(statusId);
-        setEditingStatusName(status.name);
-        setEditingStatusColor(status.color);
+      const foundStatus = statuses.find((s) => s._id === statusId);
+      if (foundStatus) {
+        setEditingStatusId(foundStatus._id);
+        setEditingStatusName(foundStatus.name);
+        setEditingStatusColor(foundStatus.color);
       }
       return;
     }
@@ -889,20 +889,73 @@ export default function LeetcodeTrackerPage() {
     if (!editedProblem) return;
 
     const { name, value } = e.target;
-    setEditedProblem({ ...editedProblem, [name]: value });
+    setEditedProblem({
+      ...editedProblem,
+      [name]: name === "score" ? parseInt(value, 10) : value,
+    });
   };
 
   const saveProblem = async () => {
     if (!editedProblem) return;
 
     try {
-      const { _id, userId, createdAt, updatedAt, orderIndex, ...fields } =
-        editedProblem;
+      const { _id } = editedProblem;
 
-      await updateProblem({
+      // Get the original problem to calculate the day shift
+      const originalProblem = problems.find((p) => p._id === _id);
+      if (!originalProblem) {
+        showToast("error", "Problem not found");
+        return;
+      }
+
+      // Prepare the update object with only the fields we want to update
+      const updateData: {
+        id: Id<"leetcodeProblems">;
+        title?: string;
+        link?: string;
+        difficulty?: string;
+        notes?: string;
+        score?: number;
+        spaceComplexity?: string;
+        timeComplexity?: string;
+        statusId?: Id<"leetcodeStatuses">;
+        dayOfWeek?: number;
+      } = {
         id: _id,
-        ...fields,
-      });
+        title: editedProblem.title,
+        link: editedProblem.link,
+        difficulty: editedProblem.difficulty,
+        notes: editedProblem.notes,
+        score:
+          typeof editedProblem.score === "string"
+            ? parseInt(editedProblem.score, 10)
+            : editedProblem.score,
+        spaceComplexity: editedProblem.spaceComplexity,
+        timeComplexity: editedProblem.timeComplexity,
+      };
+
+      // Calculate the day shift based on score change
+      if (originalProblem.score !== updateData.score) {
+        // Calculate the difference in days
+        const scoreDiff = updateData.score! - originalProblem.score;
+
+        // Apply the difference to the current day
+        let dayOfWeek = (originalProblem.dayOfWeek + scoreDiff) % 7;
+        if (dayOfWeek < 0) dayOfWeek += 7; // Handle negative values
+
+        // Find the target status for the new day
+        const targetStatus = statuses.find((s) => s.order === dayOfWeek);
+        if (!targetStatus) {
+          showToast("error", "Could not find the target day column");
+          return;
+        }
+
+        // Update the status ID and day of week in our update data
+        updateData.statusId = targetStatus._id;
+        updateData.dayOfWeek = dayOfWeek;
+      }
+
+      await updateProblem(updateData);
 
       setIsEditingProblem(false);
       showToast("success", "Problem updated");
@@ -1314,15 +1367,6 @@ export default function LeetcodeTrackerPage() {
             <Plus className="h-5 w-5" />
             <span className="sr-only">Add Problem</span>
           </button>
-
-          <button
-            data-add-status-button
-            onClick={(e) => showColorPicker(e, null)}
-            className="text-gray-400 hover:text-white p-1 rounded-md hover:bg-gray-800 border border-gray-700"
-          >
-            <PaintBucket className="h-5 w-5" />
-            <span className="sr-only">Add Column</span>
-          </button>
         </div>
       </div>
 
@@ -1428,13 +1472,14 @@ export default function LeetcodeTrackerPage() {
                         onClick={(e) => {
                           e.preventDefault();
                           // Only allow color editing
-                          const status = statuses.find(
-                            (s) => s._id === status._id
+                          const statusId = status._id;
+                          const foundStatus = statuses.find(
+                            (s) => s._id === statusId
                           );
-                          if (status) {
-                            setEditingStatusId(status._id);
-                            setEditingStatusName(status.name);
-                            setEditingStatusColor(status.color);
+                          if (foundStatus) {
+                            setEditingStatusId(foundStatus._id);
+                            setEditingStatusName(foundStatus.name);
+                            setEditingStatusColor(foundStatus.color);
                           }
                         }}
                         className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-800 hover:text-white"
