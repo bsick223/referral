@@ -1581,6 +1581,9 @@ export default function LeetcodeTrackerPage() {
     }));
   };
 
+  // Get the current day of the week (0-6, where 0 is Sunday)
+  const today = new Date().getDay();
+
   return (
     <div
       className="min-h-screen bg-[#090d1b] flex flex-col overflow-hidden"
@@ -1726,11 +1729,23 @@ export default function LeetcodeTrackerPage() {
             >
               {/* Column header */}
               <div
-                className={`p-2 rounded-t-md flex items-center justify-between ${status.color} bg-opacity-70`}
+                className={`p-2 rounded-t-md flex items-center justify-between ${
+                  status.color
+                } bg-opacity-70 ${
+                  status.order === today
+                    ? "ring-2 ring-white/60 shadow-lg relative overflow-hidden"
+                    : ""
+                }`}
               >
+                {status.order === today && (
+                  <div className="absolute inset-0 bg-white/10 animate-pulse opacity-50 pointer-events-none"></div>
+                )}
                 <div className="flex items-center">
                   <h3 className="font-medium text-white truncate max-w-[140px]">
                     {status.name}
+                    {status.order === today && (
+                      <span className="ml-1 text-xs opacity-80">(Today)</span>
+                    )}
                   </h3>
                   <div className="ml-2 bg-white/20 text-white text-xs px-1.5 rounded-full">
                     {
@@ -1785,10 +1800,17 @@ export default function LeetcodeTrackerPage() {
 
               {/* Problems container */}
               <div
-                className="bg-[#121a36]/50 backdrop-blur-sm h-[calc(100vh-13rem)] overflow-y-auto p-2 rounded-b-md border border-t-0 border-[#20253d]/50 flex flex-col gap-2"
+                className={`bg-[#121a36]/50 backdrop-blur-sm h-[calc(100vh-13rem)] overflow-y-auto p-2 rounded-b-md border ${
+                  status.order === today
+                    ? "border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.07)] relative"
+                    : "border-t-0 border-[#20253d]/50"
+                } flex flex-col gap-2`}
                 onDragOver={handleDragOver}
                 onDrop={handleProblemDrop}
               >
+                {status.order === today && (
+                  <div className="absolute inset-0 bg-[#ffffff03] pointer-events-none rounded-b-md"></div>
+                )}
                 {problems
                   .filter(
                     (p) =>
