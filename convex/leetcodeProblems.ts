@@ -99,6 +99,7 @@ export const update = mutation({
     spaceComplexity: v.optional(v.string()),
     timeComplexity: v.optional(v.string()),
     dayOfWeek: v.optional(v.number()),
+    mastered: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { id, ...fields } = args;

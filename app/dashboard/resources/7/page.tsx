@@ -66,6 +66,7 @@ type LeetcodeProblem = {
   orderIndex?: number;
   createdAt: number;
   updatedAt: number;
+  mastered?: boolean;
 };
 
 type ToastMessage = {
@@ -113,6 +114,9 @@ export default function LeetcodeTrackerPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statuses, setStatuses] = useState<LeetcodeStatus[]>([]);
   const [problems, setProblems] = useState<LeetcodeProblem[]>([]);
+  const [masteredProblems, setMasteredProblems] = useState<LeetcodeProblem[]>(
+    []
+  );
   const [isAddingStatus, setIsAddingStatus] = useState(false);
   const [newStatusName, setNewStatusName] = useState("");
   const [newStatusColor, setNewStatusColor] = useState("bg-blue-500");
@@ -217,7 +221,21 @@ export default function LeetcodeTrackerPage() {
 
   useEffect(() => {
     if (problemsData) {
-      setProblems(problemsData);
+      // Split problems into active and mastered
+      const active: LeetcodeProblem[] = [];
+      const mastered: LeetcodeProblem[] = [];
+
+      problemsData.forEach((problem) => {
+        const problemWithOptionalMastered = problem as LeetcodeProblem;
+        if (problemWithOptionalMastered.mastered) {
+          mastered.push(problemWithOptionalMastered);
+        } else {
+          active.push(problemWithOptionalMastered);
+        }
+      });
+
+      setProblems(active);
+      setMasteredProblems(mastered);
     }
   }, [problemsData]);
 
@@ -1292,6 +1310,40 @@ export default function LeetcodeTrackerPage() {
     }, 800);
   };
 
+  // Add a function to mark a problem as mastered
+  const handleMarkAsMastered = async (problemId: Id<"leetcodeProblems">) => {
+    try {
+      await updateProblem({
+        id: problemId,
+        mastered: true,
+      });
+
+      // Close the modal and show success message
+      setSelectedProblem(null);
+      showToast("success", "Problem marked as mastered!");
+    } catch (error) {
+      console.error("Error marking problem as mastered:", error);
+      showToast("error", "Failed to mark problem as mastered");
+    }
+  };
+
+  // Add a function to unmark a problem as mastered
+  const handleUnmasterProblem = async (problemId: Id<"leetcodeProblems">) => {
+    try {
+      await updateProblem({
+        id: problemId,
+        mastered: false,
+      });
+
+      // Close the modal and show success message
+      setSelectedProblem(null);
+      showToast("success", "Problem moved back to active board");
+    } catch (error) {
+      console.error("Error unmarking problem as mastered:", error);
+      showToast("error", "Failed to move problem back to board");
+    }
+  };
+
   // Loading state
   if (!user || !statuses || !problems) {
     return (
@@ -1589,6 +1641,60 @@ export default function LeetcodeTrackerPage() {
         </div>
       </div>
 
+      {/* Mastered Problems Section */}
+      {masteredProblems.length > 0 && (
+        <div className="border-t border-gray-800 mt-4 mx-4">
+          <div className="flex items-center justify-between pt-4 pb-2">
+            <h2 className="text-lg font-medium text-white">
+              Mastered Problems
+            </h2>
+            <span className="bg-emerald-500/20 text-emerald-300 text-sm px-2 py-1 rounded-full">
+              {masteredProblems.length}{" "}
+              {masteredProblems.length === 1 ? "problem" : "problems"}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
+            {masteredProblems.map((problem) => (
+              <div
+                key={problem._id}
+                className="bg-[#121a36]/50 border border-emerald-800/30 p-3 rounded-md cursor-pointer hover:bg-[#1a2542]/50"
+                onClick={() => openProblemModal(problem)}
+              >
+                <div className="flex justify-between items-start">
+                  <h4 className="text-sm font-medium text-white">
+                    {problem.title}
+                  </h4>
+                  {problem.difficulty && (
+                    <span
+                      className={`text-xs px-1.5 py-0.5 rounded-full ${
+                        problem.difficulty === "Easy"
+                          ? "bg-green-500/20 text-green-300"
+                          : problem.difficulty === "Medium"
+                          ? "bg-yellow-500/20 text-yellow-300"
+                          : "bg-red-500/20 text-red-300"
+                      }`}
+                    >
+                      {problem.difficulty}
+                    </span>
+                  )}
+                </div>
+                {problem.link && (
+                  <a
+                    href={problem.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xs text-blue-400 hover:text-blue-300 mt-2 inline-block"
+                  >
+                    View Problem
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Color picker / status editor */}
       {(isAddingStatus || editingStatusId) && (
         <div
@@ -1814,6 +1920,23 @@ export default function LeetcodeTrackerPage() {
             ) : (
               <div className="space-y-4">
                 <div>
+                  {/* Add "Mastered" tag for mastered problems */}
+                  {selectedProblem.mastered && (
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="bg-emerald-500/20 text-emerald-300 text-xs px-2 py-1 rounded-full">
+                        Mastered
+                      </span>
+                      <button
+                        onClick={() =>
+                          handleUnmasterProblem(selectedProblem._id)
+                        }
+                        className="text-xs text-gray-400 hover:text-white px-2 py-1 hover:bg-gray-800 rounded"
+                      >
+                        Move back to board
+                      </button>
+                    </div>
+                  )}
+
                   <h4 className="text-white text-xl mb-2">
                     {selectedProblem.title}
                   </h4>
@@ -1835,6 +1958,32 @@ export default function LeetcodeTrackerPage() {
                       Score: {selectedProblem.score}
                     </span>
                   </div>
+
+                  {/* Add mastered checkbox if score is 5 */}
+                  {selectedProblem.score === 5 && !selectedProblem.mastered && (
+                    <div className="bg-emerald-900/20 border border-emerald-800/30 rounded-md p-3 mt-2 mb-4">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="mastered-checkbox"
+                          className="mr-2 h-4 w-4 rounded border-gray-600 text-indigo-600 focus:ring-indigo-500"
+                          onChange={() =>
+                            handleMarkAsMastered(selectedProblem._id)
+                          }
+                        />
+                        <label
+                          htmlFor="mastered-checkbox"
+                          className="text-emerald-300 text-sm"
+                        >
+                          Mark as mastered (achieved score of 5)
+                        </label>
+                      </div>
+                      <p className="text-gray-400 text-xs mt-1">
+                        This will move the problem to your mastered list below
+                        the board.
+                      </p>
+                    </div>
+                  )}
 
                   {(selectedProblem.timeComplexity ||
                     selectedProblem.spaceComplexity) && (

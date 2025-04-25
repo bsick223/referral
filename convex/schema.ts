@@ -216,6 +216,7 @@ export default defineSchema({
     timeComplexity: v.optional(v.string()),
     orderIndex: v.optional(v.number()),
     dayOfWeek: v.number(), // 0 = Sunday, 1 = Monday, etc.
+    mastered: v.optional(v.boolean()), // Whether the problem has been mastered
     createdAt: v.number(),
     updatedAt: v.number(),
   })
