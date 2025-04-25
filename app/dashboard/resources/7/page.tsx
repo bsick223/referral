@@ -13,7 +13,6 @@ import {
   AlertCircle,
   Columns,
   ChevronDown,
-  Move,
 } from "lucide-react";
 import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
@@ -167,20 +166,13 @@ export default function LeetcodeTrackerPage() {
     useState<Id<"leetcodeStatuses"> | null>(null);
   const [editingStatusName, setEditingStatusName] = useState("");
   const [editingStatusColor, setEditingStatusColor] = useState("");
-  const [isReorderingColumns, setIsReorderingColumns] = useState(false);
-  const [draggedStatusId, setDraggedStatusId] =
-    useState<Id<"leetcodeStatuses"> | null>(null);
-  const [dropZone, setDropZone] = useState<{
-    statusId: Id<"leetcodeStatuses">;
-    position: "before" | "after";
-  } | null>(null);
-  const [toast, setToast] = useState<ToastMessage | null>(null);
   const [selectedProblem, setSelectedProblem] =
     useState<LeetcodeProblem | null>(null);
   const [isEditingProblem, setIsEditingProblem] = useState(false);
   const [editedProblem, setEditedProblem] = useState<LeetcodeProblem | null>(
     null
   );
+  const [toast, setToast] = useState<ToastMessage | null>(null);
 
   // New mobile-specific state
   const [activeColumnIndex, setActiveColumnIndex] = useState(0);
@@ -244,7 +236,6 @@ export default function LeetcodeTrackerPage() {
   const createStatus = useMutation(api.leetcodeStatuses.create);
   const updateStatus = useMutation(api.leetcodeStatuses.update);
   const removeStatus = useMutation(api.leetcodeStatuses.remove);
-  const reorderStatus = useMutation(api.leetcodeStatuses.reorder);
   const updateProblemStatus = useMutation(api.leetcodeProblems.updateStatus);
   const updateProblem = useMutation(api.leetcodeProblems.update);
   const removeProblem = useMutation(api.leetcodeProblems.remove);
@@ -344,8 +335,6 @@ export default function LeetcodeTrackerPage() {
     e: React.DragEvent,
     problemId: Id<"leetcodeProblems">
   ) => {
-    if (isReorderingColumns) return;
-
     setIsDraggingProblem(true);
     setDraggedProblemId(problemId);
 
@@ -393,7 +382,7 @@ export default function LeetcodeTrackerPage() {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
 
-    if (!isDraggingProblem || isReorderingColumns) return;
+    if (!isDraggingProblem) return;
 
     // Find the problem element we're dragging over
     let problemElement = e.target as HTMLElement;
@@ -456,7 +445,7 @@ export default function LeetcodeTrackerPage() {
         el.classList.remove("problem-drop-before", "problem-drop-after");
       });
 
-    if (isReorderingColumns) return;
+    if (!isDraggingProblem) return;
 
     // Get the data from the drag event
     const data = e.dataTransfer.getData("text/plain");
@@ -548,133 +537,6 @@ export default function LeetcodeTrackerPage() {
     } catch (error) {
       console.error("Error handling drop:", error);
       showToast("error", "Failed to move problem");
-    }
-  };
-
-  // Status drag and drop functions
-  const handleStatusDragStart = (
-    e: React.DragEvent,
-    statusId: Id<"leetcodeStatuses">
-  ) => {
-    if (!isReorderingColumns) return;
-
-    setDraggedStatusId(statusId);
-
-    // Add data to the drag event
-    e.dataTransfer.setData(
-      "text/plain",
-      JSON.stringify({ type: "status", id: statusId })
-    );
-
-    // Set the drag image
-    const draggedElement = e.currentTarget as HTMLElement;
-    if (draggedElement) {
-      const rect = draggedElement.getBoundingClientRect();
-      e.dataTransfer.setDragImage(
-        draggedElement,
-        rect.width / 2,
-        rect.height / 2
-      );
-    }
-  };
-
-  const handleStatusDragEnd = () => {
-    clearAllDropZoneStyles();
-    setDraggedStatusId(null);
-    setDropZone(null);
-  };
-
-  const handleStatusDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-
-    if (!isReorderingColumns || !draggedStatusId) return;
-
-    // Find the column being dragged over
-    let columnElement = e.target as HTMLElement;
-    while (
-      columnElement &&
-      !columnElement.hasAttribute("data-status-id") &&
-      columnElement !== document.body
-    ) {
-      columnElement = columnElement.parentElement as HTMLElement;
-    }
-
-    if (columnElement && columnElement.hasAttribute("data-status-id")) {
-      const targetId = columnElement.getAttribute(
-        "data-status-id"
-      ) as Id<"leetcodeStatuses">;
-
-      if (targetId !== draggedStatusId) {
-        const rect = columnElement.getBoundingClientRect();
-        const midX = rect.left + rect.width / 2;
-        const position = e.clientX < midX ? "before" : "after";
-
-        setDropZone({ statusId: targetId, position });
-
-        // Remove any existing dropzone styles
-        clearAllDropZoneStyles();
-
-        // Add the appropriate dropzone style
-        columnElement.classList.add(`dropzone-${position}`);
-      }
-    }
-  };
-
-  const clearAllDropZoneStyles = () => {
-    document
-      .querySelectorAll(".dropzone-before, .dropzone-after")
-      .forEach((el) => {
-        el.classList.remove("dropzone-before", "dropzone-after");
-      });
-  };
-
-  const handleStatusDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    clearAllDropZoneStyles();
-
-    if (!isReorderingColumns || !draggedStatusId || !dropZone) return;
-
-    // Get the data from the drag event
-    const data = e.dataTransfer.getData("text/plain");
-    if (!data) return;
-
-    try {
-      const { type, id } = JSON.parse(data);
-
-      if (type !== "status" || !id) return;
-
-      // Find the indices of the dragged and target statuses
-      const draggedStatus = statuses.find((s) => s._id === id);
-      const targetStatus = statuses.find((s) => s._id === dropZone.statusId);
-
-      if (!draggedStatus || !targetStatus) return;
-
-      const draggedOrder = draggedStatus.order;
-      const targetOrder = targetStatus.order;
-
-      // Calculate the new order
-      let newOrder = targetOrder;
-      if (dropZone.position === "after") {
-        newOrder = targetOrder + 1;
-      }
-
-      // If we're moving to the right, adjust target order
-      if (draggedOrder < targetOrder) {
-        newOrder =
-          dropZone.position === "before" ? targetOrder - 1 : targetOrder;
-      }
-
-      // Update the status order
-      await reorderStatus({
-        userId: user?.id || "",
-        statusId: id,
-        newOrder,
-      });
-
-      showToast("success", "Columns reordered");
-    } catch (error) {
-      console.error("Error handling drop:", error);
-      showToast("error", "Failed to reorder columns");
     }
   };
 
@@ -1149,8 +1011,6 @@ export default function LeetcodeTrackerPage() {
     e: React.TouchEvent,
     problemId: Id<"leetcodeProblems">
   ) => {
-    if (isReorderingColumns) return;
-
     // Check if it's a long press (start timer)
     const target = e.currentTarget as HTMLElement;
 
@@ -1604,23 +1464,6 @@ export default function LeetcodeTrackerPage() {
             <Plus className="h-5 w-5" />
             <span className="sr-only">Add Problem</span>
           </button>
-
-          <button
-            onClick={() => setIsReorderingColumns(!isReorderingColumns)}
-            className={`text-gray-400 hover:text-white p-1 rounded-md hover:bg-gray-800 border ${
-              isReorderingColumns ? "border-indigo-500" : "border-gray-700"
-            }`}
-            title={
-              isReorderingColumns
-                ? "Stop reordering columns"
-                : "Reorder columns"
-            }
-          >
-            <Move className="h-5 w-5" />
-            <span className="sr-only">
-              {isReorderingColumns ? "Done Reordering" : "Reorder Columns"}
-            </span>
-          </button>
         </div>
       </div>
 
@@ -1693,11 +1536,6 @@ export default function LeetcodeTrackerPage() {
               }`}
               data-status-id={status._id}
               data-day-of-week={status.order}
-              draggable={isReorderingColumns}
-              onDragStart={(e) => handleStatusDragStart(e, status._id)}
-              onDragEnd={handleStatusDragEnd}
-              onDragOver={handleStatusDragOver}
-              onDrop={handleStatusDrop}
             >
               {/* Column header */}
               <div
@@ -1798,7 +1636,7 @@ export default function LeetcodeTrackerPage() {
                           : "hover:border-indigo-500/40"
                       }`}
                       onClick={() => openProblemModal(problem)}
-                      draggable={!isReorderingColumns}
+                      draggable={true}
                       onDragStart={(e) => handleDragStart(e, problem._id)}
                       onDragEnd={handleDragEnd}
                       onTouchStart={(e) => handleTouchStart(e, problem._id)}
