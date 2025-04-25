@@ -65,6 +65,19 @@ const ALGORITHM_CATEGORIES = [
   "Bit Manipulation",
 ];
 
+// Common Big O notations
+const BIG_O_NOTATIONS = [
+  "O(1)",
+  "O(log n)",
+  "O(n)",
+  "O(n log n)",
+  "O(n²)",
+  "O(n³)",
+  "O(2^n)",
+  "O(n!)",
+  "Other",
+];
+
 // Type definitions
 type LeetcodeStatus = {
   _id: Id<"leetcodeStatuses">;
@@ -85,6 +98,8 @@ type LeetcodeProblem = {
   score: number;
   spaceComplexity?: string;
   timeComplexity?: string;
+  customSpaceComplexity?: string;
+  customTimeComplexity?: string;
   userId: string;
   dayOfWeek: number;
   orderIndex?: number;
@@ -97,6 +112,7 @@ type LeetcodeProblem = {
 type ToastMessage = {
   type: "success" | "error" | "info";
   message: string;
+  onClose: () => void; // Make onClose required
 };
 
 // Format time elapsed since a given date
@@ -212,6 +228,8 @@ export default function LeetcodeTrackerPage() {
     score: 1,
     spaceComplexity: "",
     timeComplexity: "",
+    customSpaceComplexity: "",
+    customTimeComplexity: "",
     category: "",
     difficulty: "",
   });
@@ -741,6 +759,8 @@ export default function LeetcodeTrackerPage() {
       score: 1,
       spaceComplexity: "",
       timeComplexity: "",
+      customSpaceComplexity: "",
+      customTimeComplexity: "",
       category: "",
       difficulty: "",
     });
@@ -764,6 +784,17 @@ export default function LeetcodeTrackerPage() {
         return;
       }
 
+      // Determine final complexity values
+      const finalTimeComplexity =
+        newProblem.timeComplexity === "Other"
+          ? newProblem.customTimeComplexity
+          : newProblem.timeComplexity;
+
+      const finalSpaceComplexity =
+        newProblem.spaceComplexity === "Other"
+          ? newProblem.customSpaceComplexity
+          : newProblem.spaceComplexity;
+
       await createProblem({
         userId: user.id,
         title: newProblem.title.trim(),
@@ -772,8 +803,8 @@ export default function LeetcodeTrackerPage() {
         link: newProblem.link.trim() || undefined,
         notes: newProblem.notes.trim() || undefined,
         score: newProblem.score,
-        spaceComplexity: newProblem.spaceComplexity.trim() || undefined,
-        timeComplexity: newProblem.timeComplexity.trim() || undefined,
+        spaceComplexity: finalSpaceComplexity.trim() || undefined,
+        timeComplexity: finalTimeComplexity.trim() || undefined,
         category: newProblem.category || undefined,
         difficulty: newProblem.difficulty || undefined,
       });
@@ -792,10 +823,36 @@ export default function LeetcodeTrackerPage() {
     >
   ) => {
     const { name, value } = e.target;
-    setNewProblem((prev) => ({
-      ...prev,
-      [name]: name === "score" ? parseInt(value, 10) : value,
-    }));
+
+    // Handle special case for complexity fields with "Other" option
+    if (name === "timeComplexity" && value === "Other") {
+      setNewProblem((prev) => ({
+        ...prev,
+        [name]: value,
+        customTimeComplexity: "",
+      }));
+    } else if (name === "spaceComplexity" && value === "Other") {
+      setNewProblem((prev) => ({
+        ...prev,
+        [name]: value,
+        customSpaceComplexity: "",
+      }));
+    } else if (name === "customTimeComplexity") {
+      setNewProblem((prev) => ({
+        ...prev,
+        customTimeComplexity: value,
+      }));
+    } else if (name === "customSpaceComplexity") {
+      setNewProblem((prev) => ({
+        ...prev,
+        customSpaceComplexity: value,
+      }));
+    } else {
+      setNewProblem((prev) => ({
+        ...prev,
+        [name]: name === "score" ? parseInt(value, 10) : value,
+      }));
+    }
   };
 
   const handleDeleteProblem = async (
@@ -819,7 +876,11 @@ export default function LeetcodeTrackerPage() {
 
   // Toast message
   const showToast = (type: "success" | "error" | "info", message: string) => {
-    setToast({ type, message });
+    setToast({
+      type,
+      message,
+      onClose: () => setToast(null), // Add onClose handler
+    });
     setTimeout(() => setToast(null), 3000);
   };
 
@@ -925,7 +986,15 @@ export default function LeetcodeTrackerPage() {
   // Problem modal functions
   const openProblemModal = (problem: LeetcodeProblem) => {
     setSelectedProblem(problem);
-    setEditedProblem({ ...problem });
+
+    // Add custom complexity fields if they don't exist
+    const problemWithCustomFields = {
+      ...problem,
+      customTimeComplexity: problem.customTimeComplexity || "",
+      customSpaceComplexity: problem.customSpaceComplexity || "",
+    };
+
+    setEditedProblem(problemWithCustomFields);
     setIsEditingProblem(false);
   };
 
@@ -937,6 +1006,29 @@ export default function LeetcodeTrackerPage() {
 
   const toggleEditProblem = () => {
     setIsEditingProblem(!isEditingProblem);
+
+    // Ensure the editedProblem has the custom fields if timeComplexity is "Other"
+    if (selectedProblem && !isEditingProblem) {
+      const updatedProblem = { ...selectedProblem };
+
+      // Add customTimeComplexity if needed
+      if (
+        selectedProblem.timeComplexity === "Other" &&
+        !updatedProblem.customTimeComplexity
+      ) {
+        updatedProblem.customTimeComplexity = "";
+      }
+
+      // Add customSpaceComplexity if needed
+      if (
+        selectedProblem.spaceComplexity === "Other" &&
+        !updatedProblem.customSpaceComplexity
+      ) {
+        updatedProblem.customSpaceComplexity = "";
+      }
+
+      setEditedProblem(updatedProblem);
+    }
   };
 
   const handleProblemInputChange = (
@@ -947,10 +1039,36 @@ export default function LeetcodeTrackerPage() {
     if (!editedProblem) return;
 
     const { name, value } = e.target;
-    setEditedProblem({
-      ...editedProblem,
-      [name]: name === "score" ? parseInt(value, 10) : value,
-    });
+
+    // Handle special case for complexity fields with "Other" option
+    if (name === "timeComplexity" && value === "Other") {
+      setEditedProblem({
+        ...editedProblem,
+        timeComplexity: value,
+        customTimeComplexity: "",
+      });
+    } else if (name === "spaceComplexity" && value === "Other") {
+      setEditedProblem({
+        ...editedProblem,
+        spaceComplexity: value,
+        customSpaceComplexity: "",
+      });
+    } else if (name === "customTimeComplexity") {
+      setEditedProblem({
+        ...editedProblem,
+        customTimeComplexity: value,
+      });
+    } else if (name === "customSpaceComplexity") {
+      setEditedProblem({
+        ...editedProblem,
+        customSpaceComplexity: value,
+      });
+    } else {
+      setEditedProblem({
+        ...editedProblem,
+        [name]: name === "score" ? parseInt(value, 10) : value,
+      });
+    }
   };
 
   const saveProblem = async () => {
@@ -965,6 +1083,17 @@ export default function LeetcodeTrackerPage() {
         showToast("error", "Problem not found");
         return;
       }
+
+      // Determine final complexity values
+      const finalTimeComplexity =
+        editedProblem.timeComplexity === "Other"
+          ? editedProblem.customTimeComplexity
+          : editedProblem.timeComplexity;
+
+      const finalSpaceComplexity =
+        editedProblem.spaceComplexity === "Other"
+          ? editedProblem.customSpaceComplexity
+          : editedProblem.spaceComplexity;
 
       // Prepare the update object with only the fields we want to update
       const updateData: {
@@ -989,8 +1118,8 @@ export default function LeetcodeTrackerPage() {
           typeof editedProblem.score === "string"
             ? parseInt(editedProblem.score, 10)
             : editedProblem.score,
-        spaceComplexity: editedProblem.spaceComplexity,
-        timeComplexity: editedProblem.timeComplexity,
+        spaceComplexity: finalSpaceComplexity,
+        timeComplexity: finalTimeComplexity,
         category: editedProblem.category,
       };
 
@@ -1510,6 +1639,8 @@ export default function LeetcodeTrackerPage() {
                 score: 1,
                 spaceComplexity: "",
                 timeComplexity: "",
+                customSpaceComplexity: "",
+                customTimeComplexity: "",
                 category: "",
                 difficulty: "",
               });
@@ -1992,27 +2123,57 @@ export default function LeetcodeTrackerPage() {
                     <label className="block text-gray-400 mb-1 text-sm">
                       Time Complexity
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="timeComplexity"
                       value={editedProblem.timeComplexity || ""}
                       onChange={handleProblemInputChange}
                       className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      placeholder="e.g., O(n)"
-                    />
+                    >
+                      <option value="">Select complexity</option>
+                      {BIG_O_NOTATIONS.map((notation) => (
+                        <option key={notation} value={notation}>
+                          {notation}
+                        </option>
+                      ))}
+                    </select>
+                    {editedProblem.timeComplexity === "Other" && (
+                      <input
+                        type="text"
+                        name="customTimeComplexity"
+                        value={editedProblem.customTimeComplexity || ""}
+                        onChange={handleProblemInputChange}
+                        className="w-full mt-2 bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        placeholder="e.g., O(m*n)"
+                      />
+                    )}
                   </div>
                   <div className="flex-1">
                     <label className="block text-gray-400 mb-1 text-sm">
                       Space Complexity
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="spaceComplexity"
                       value={editedProblem.spaceComplexity || ""}
                       onChange={handleProblemInputChange}
                       className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      placeholder="e.g., O(n)"
-                    />
+                    >
+                      <option value="">Select complexity</option>
+                      {BIG_O_NOTATIONS.map((notation) => (
+                        <option key={notation} value={notation}>
+                          {notation}
+                        </option>
+                      ))}
+                    </select>
+                    {editedProblem.spaceComplexity === "Other" && (
+                      <input
+                        type="text"
+                        name="customSpaceComplexity"
+                        value={editedProblem.customSpaceComplexity || ""}
+                        onChange={handleProblemInputChange}
+                        className="w-full mt-2 bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        placeholder="e.g., O(m*n)"
+                      />
+                    )}
                   </div>
                 </div>
                 <div>
@@ -2309,27 +2470,57 @@ export default function LeetcodeTrackerPage() {
                   <label className="block text-gray-400 mb-1 text-sm">
                     Time Complexity
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="timeComplexity"
                     value={newProblem.timeComplexity}
                     onChange={handleNewProblemInputChange}
                     className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    placeholder="e.g., O(n)"
-                  />
+                  >
+                    <option value="">Select complexity</option>
+                    {BIG_O_NOTATIONS.map((notation) => (
+                      <option key={notation} value={notation}>
+                        {notation}
+                      </option>
+                    ))}
+                  </select>
+                  {newProblem.timeComplexity === "Other" && (
+                    <input
+                      type="text"
+                      name="customTimeComplexity"
+                      value={newProblem.customTimeComplexity}
+                      onChange={handleNewProblemInputChange}
+                      className="w-full mt-2 bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      placeholder="e.g., O(m*n)"
+                    />
+                  )}
                 </div>
                 <div className="flex-1">
                   <label className="block text-gray-400 mb-1 text-sm">
                     Space Complexity
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="spaceComplexity"
                     value={newProblem.spaceComplexity}
                     onChange={handleNewProblemInputChange}
                     className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    placeholder="e.g., O(n)"
-                  />
+                  >
+                    <option value="">Select complexity</option>
+                    {BIG_O_NOTATIONS.map((notation) => (
+                      <option key={notation} value={notation}>
+                        {notation}
+                      </option>
+                    ))}
+                  </select>
+                  {newProblem.spaceComplexity === "Other" && (
+                    <input
+                      type="text"
+                      name="customSpaceComplexity"
+                      value={newProblem.customSpaceComplexity}
+                      onChange={handleNewProblemInputChange}
+                      className="w-full mt-2 bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      placeholder="e.g., O(m*n)"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -2386,7 +2577,13 @@ export default function LeetcodeTrackerPage() {
       )}
 
       {/* Toast notifications */}
-      {toast && <Toast type={toast.type} message={toast.message} />}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={toast.onClose}
+        />
+      )}
 
       {/* Add global styles for touch dragging */}
       <style jsx global>{`
