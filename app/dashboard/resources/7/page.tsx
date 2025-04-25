@@ -2062,7 +2062,7 @@ export default function LeetcodeTrackerPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-gray-400 mb-1 text-sm">
-                    Title
+                    Title <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -2070,6 +2070,7 @@ export default function LeetcodeTrackerPage() {
                     value={editedProblem.title}
                     onChange={handleProblemInputChange}
                     className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    required
                   />
                 </div>
                 <div>
