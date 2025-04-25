@@ -975,7 +975,10 @@ export default function LeetcodeTrackerPage() {
 
       await updateProblem(updateData);
 
+      // Completely close the modal
       setIsEditingProblem(false);
+      setSelectedProblem(null);
+      setEditedProblem(null);
       showToast("success", "Problem updated");
     } catch (error) {
       console.error("Error updating problem:", error);
