@@ -7,19 +7,13 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
-  Search,
   Trash2,
   MoreVertical,
   X,
-  Check,
   AlertCircle,
-  PaintBucket,
-  GripHorizontal,
-  Move,
   Columns,
-  GripVertical,
   ChevronDown,
-  ChevronUp,
+  Move,
 } from "lucide-react";
 import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
@@ -152,7 +146,6 @@ const formatTimeElapsed = (date: string | number): string => {
 
 export default function LeetcodeTrackerPage() {
   const { user } = useUser();
-  const [searchQuery, setSearchQuery] = useState("");
   const [statuses, setStatuses] = useState<LeetcodeStatus[]>([]);
   const [problems, setProblems] = useState<LeetcodeProblem[]>([]);
   const [masteredProblems, setMasteredProblems] = useState<LeetcodeProblem[]>(
@@ -196,7 +189,6 @@ export default function LeetcodeTrackerPage() {
 
   // Refs for click outside detection
   const colorPickerRef = useRef<HTMLDivElement>(null);
-  const statusMenuRef = useRef<HTMLDivElement>(null);
   const newStatusFormRef = useRef<HTMLDivElement>(null);
   const problemModalRef = useRef<HTMLDivElement>(null);
 
@@ -586,7 +578,7 @@ export default function LeetcodeTrackerPage() {
     }
   };
 
-  const handleStatusDragEnd = (e: React.DragEvent) => {
+  const handleStatusDragEnd = () => {
     clearAllDropZoneStyles();
     setDraggedStatusId(null);
     setDropZone(null);
@@ -751,22 +743,6 @@ export default function LeetcodeTrackerPage() {
   };
 
   // Problem CRUD operations
-  const handleAddProblemClick = (statusId: Id<"leetcodeStatuses">) => {
-    setNewProblem({
-      title: "",
-      link: "",
-      notes: "",
-      score: 1,
-      spaceComplexity: "",
-      timeComplexity: "",
-      customSpaceComplexity: "",
-      customTimeComplexity: "",
-      category: "",
-      difficulty: "",
-    });
-    setIsAddingProblem(true);
-  };
-
   const handleAddProblem = async () => {
     if (!user || !newProblem.title.trim()) {
       showToast("error", "Problem title is required");
@@ -941,26 +917,7 @@ export default function LeetcodeTrackerPage() {
   }, [isAddingStatus, isAddingProblem]);
 
   // Color picker for column colors
-  const showColorPicker = (
-    e: React.MouseEvent,
-    statusId: Id<"leetcodeStatuses"> | null
-  ) => {
-    e.stopPropagation();
-
-    // If we're editing an existing status
-    if (statusId) {
-      const foundStatus = statuses.find((s) => s._id === statusId);
-      if (foundStatus) {
-        setEditingStatusId(foundStatus._id);
-        setEditingStatusName(foundStatus.name);
-        setEditingStatusColor(foundStatus.color);
-      }
-      return;
-    }
-
-    // If we're adding a new status
-    setIsAddingStatus(true);
-  };
+  // This function is not used, removing it
 
   // Select a color from the color picker
   const selectColor = (color: string) => {
@@ -969,18 +926,6 @@ export default function LeetcodeTrackerPage() {
     } else {
       setNewStatusColor(color);
     }
-  };
-
-  // Status editing functions
-  const startEditingStatus = (status: LeetcodeStatus) => {
-    setEditingStatusId(status._id);
-    setEditingStatusName(status.name);
-    setEditingStatusColor(status.color);
-  };
-
-  // Toggle reordering mode for columns
-  const toggleReorderingMode = () => {
-    setIsReorderingColumns(!isReorderingColumns);
   };
 
   // Problem modal functions
@@ -1195,6 +1140,11 @@ export default function LeetcodeTrackerPage() {
   };
 
   // Mobile touch handling for drag and drop
+  // Add a type for the timer
+  type TouchTimer = {
+    _longPressTimer: NodeJS.Timeout | null;
+  };
+
   const handleTouchStart = (
     e: React.TouchEvent,
     problemId: Id<"leetcodeProblems">
@@ -1236,7 +1186,7 @@ export default function LeetcodeTrackerPage() {
     }, 300); // 300ms long press to start drag
 
     // Store the timer so we can clear it if touch ends before long press
-    (e.currentTarget as any)._longPressTimer = timer;
+    (e.currentTarget as HTMLElement & TouchTimer)._longPressTimer = timer;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -1319,10 +1269,10 @@ export default function LeetcodeTrackerPage() {
 
   const handleTouchEnd = async (e: React.TouchEvent) => {
     // Clear long press timer if touch ends before drag starts
-    const timer = (e.currentTarget as any)._longPressTimer;
+    const timer = (e.currentTarget as HTMLElement & TouchTimer)._longPressTimer;
     if (timer) {
       clearTimeout(timer);
-      (e.currentTarget as any)._longPressTimer = null;
+      (e.currentTarget as HTMLElement & TouchTimer)._longPressTimer = null;
     }
 
     if (!touchDragging || !draggedProblemId) {
@@ -1654,6 +1604,23 @@ export default function LeetcodeTrackerPage() {
             <Plus className="h-5 w-5" />
             <span className="sr-only">Add Problem</span>
           </button>
+
+          <button
+            onClick={() => setIsReorderingColumns(!isReorderingColumns)}
+            className={`text-gray-400 hover:text-white p-1 rounded-md hover:bg-gray-800 border ${
+              isReorderingColumns ? "border-indigo-500" : "border-gray-700"
+            }`}
+            title={
+              isReorderingColumns
+                ? "Stop reordering columns"
+                : "Reorder columns"
+            }
+          >
+            <Move className="h-5 w-5" />
+            <span className="sr-only">
+              {isReorderingColumns ? "Done Reordering" : "Reorder Columns"}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -1726,6 +1693,11 @@ export default function LeetcodeTrackerPage() {
               }`}
               data-status-id={status._id}
               data-day-of-week={status.order}
+              draggable={isReorderingColumns}
+              onDragStart={(e) => handleStatusDragStart(e, status._id)}
+              onDragEnd={handleStatusDragEnd}
+              onDragOver={handleStatusDragOver}
+              onDrop={handleStatusDrop}
             >
               {/* Column header */}
               <div
