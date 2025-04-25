@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
+import Image from "next/image";
 import {
   RefreshCw,
   Plus,
@@ -1408,9 +1409,18 @@ export default function LeetcodeTrackerPage() {
           >
             <ChevronLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-xl font-light text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300">
-            Leetcode Tracker
-          </h1>
+          <div className="flex items-center">
+            <Image
+              src="/photos/LeetCode_Logo_1.png"
+              alt="LeetCode Logo"
+              width={30}
+              height={30}
+              className="mr-2"
+            />
+            <h1 className="text-xl font-light text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-gray-300">
+              Leetcode Tracker
+            </h1>
+          </div>
         </div>
 
         <div className="flex items-center space-x-2">
