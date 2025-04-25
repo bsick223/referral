@@ -48,6 +48,7 @@ export const create = mutation({
     spaceComplexity: v.optional(v.string()),
     timeComplexity: v.optional(v.string()),
     dayOfWeek: v.number(),
+    category: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Get all problems in this status
@@ -100,6 +101,7 @@ export const update = mutation({
     timeComplexity: v.optional(v.string()),
     dayOfWeek: v.optional(v.number()),
     mastered: v.optional(v.boolean()),
+    category: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { id, ...fields } = args;

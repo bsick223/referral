@@ -41,6 +41,28 @@ const STATUS_COLORS = [
   { id: "bg-emerald-500", label: "Emerald" },
 ];
 
+// Algorithm categories
+const ALGORITHM_CATEGORIES = [
+  "Arrays & Hashing",
+  "Two Pointers",
+  "Sliding Window",
+  "Stack",
+  "Binary Search",
+  "Linked List",
+  "Trees",
+  "Heap / Priority Queue",
+  "Backtracking",
+  "Tries",
+  "Graphs",
+  "Advanced Graphs",
+  "1-D Dynamic Programming",
+  "2-D Dynamic Programming",
+  "Greedy",
+  "Intervals",
+  "Math & Geometry",
+  "Bit Manipulation",
+];
+
 // Type definitions
 type LeetcodeStatus = {
   _id: Id<"leetcodeStatuses">;
@@ -67,6 +89,7 @@ type LeetcodeProblem = {
   createdAt: number;
   updatedAt: number;
   mastered?: boolean;
+  category?: string;
 };
 
 type ToastMessage = {
@@ -117,6 +140,12 @@ export default function LeetcodeTrackerPage() {
   const [masteredProblems, setMasteredProblems] = useState<LeetcodeProblem[]>(
     []
   );
+  const [groupedMasteredProblems, setGroupedMasteredProblems] = useState<
+    {
+      category: string;
+      problems: LeetcodeProblem[];
+    }[]
+  >([]);
   const [isAddingStatus, setIsAddingStatus] = useState(false);
   const [newStatusName, setNewStatusName] = useState("");
   const [newStatusColor, setNewStatusColor] = useState("bg-blue-500");
@@ -178,6 +207,7 @@ export default function LeetcodeTrackerPage() {
     score: 1,
     spaceComplexity: "",
     timeComplexity: "",
+    category: "",
   });
   const addProblemModalRef = useRef<HTMLDivElement>(null);
 
@@ -705,6 +735,7 @@ export default function LeetcodeTrackerPage() {
       score: 1,
       spaceComplexity: "",
       timeComplexity: "",
+      category: "",
     });
     setIsAddingProblem(true);
   };
@@ -736,6 +767,7 @@ export default function LeetcodeTrackerPage() {
         score: newProblem.score,
         spaceComplexity: newProblem.spaceComplexity.trim() || undefined,
         timeComplexity: newProblem.timeComplexity.trim() || undefined,
+        category: newProblem.category || undefined,
       });
 
       setIsAddingProblem(false);
@@ -938,6 +970,7 @@ export default function LeetcodeTrackerPage() {
         timeComplexity?: string;
         statusId?: Id<"leetcodeStatuses">;
         dayOfWeek?: number;
+        category?: string;
       } = {
         id: _id,
         title: editedProblem.title,
@@ -950,6 +983,7 @@ export default function LeetcodeTrackerPage() {
             : editedProblem.score,
         spaceComplexity: editedProblem.spaceComplexity,
         timeComplexity: editedProblem.timeComplexity,
+        category: editedProblem.category,
       };
 
       // Calculate the day shift based on score change
@@ -1347,6 +1381,52 @@ export default function LeetcodeTrackerPage() {
     }
   };
 
+  // Use effect to group mastered problems by category
+  useEffect(() => {
+    if (masteredProblems.length === 0) {
+      setGroupedMasteredProblems([]);
+      return;
+    }
+
+    // Group problems by category
+    const problemsByCategory: { [key: string]: LeetcodeProblem[] } = {};
+
+    // Add "Uncategorized" group
+    problemsByCategory["Uncategorized"] = [];
+
+    // Group problems
+    masteredProblems.forEach((problem) => {
+      if (problem.category) {
+        if (!problemsByCategory[problem.category]) {
+          problemsByCategory[problem.category] = [];
+        }
+        problemsByCategory[problem.category].push(problem);
+      } else {
+        problemsByCategory["Uncategorized"].push(problem);
+      }
+    });
+
+    // If no uncategorized problems, remove that group
+    if (problemsByCategory["Uncategorized"].length === 0) {
+      delete problemsByCategory["Uncategorized"];
+    }
+
+    // Sort categories alphabetically, but keep "Uncategorized" at the end
+    const sortedCategories = Object.keys(problemsByCategory).sort((a, b) => {
+      if (a === "Uncategorized") return 1;
+      if (b === "Uncategorized") return -1;
+      return a.localeCompare(b);
+    });
+
+    // Create the grouped array
+    const groupedProblems = sortedCategories.map((category) => ({
+      category,
+      problems: problemsByCategory[category],
+    }));
+
+    setGroupedMasteredProblems(groupedProblems);
+  }, [masteredProblems]);
+
   // Loading state
   if (!user || !statuses || !problems) {
     return (
@@ -1414,6 +1494,7 @@ export default function LeetcodeTrackerPage() {
                 score: 1,
                 spaceComplexity: "",
                 timeComplexity: "",
+                category: "",
               });
               setIsAddingProblem(true);
             }}
@@ -1656,45 +1737,57 @@ export default function LeetcodeTrackerPage() {
               {masteredProblems.length === 1 ? "problem" : "problems"}
             </span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
-            {masteredProblems.map((problem) => (
-              <div
-                key={problem._id}
-                className="bg-[#121a36]/50 border border-emerald-800/30 p-3 rounded-md cursor-pointer hover:bg-[#1a2542]/50"
-                onClick={() => openProblemModal(problem)}
-              >
-                <div className="flex justify-between items-start">
-                  <h4 className="text-sm font-medium text-white">
-                    {problem.title}
-                  </h4>
-                  {problem.difficulty && (
-                    <span
-                      className={`text-xs px-1.5 py-0.5 rounded-full ${
-                        problem.difficulty === "Easy"
-                          ? "bg-green-500/20 text-green-300"
-                          : problem.difficulty === "Medium"
-                          ? "bg-yellow-500/20 text-yellow-300"
-                          : "bg-red-500/20 text-red-300"
-                      }`}
-                    >
-                      {problem.difficulty}
-                    </span>
-                  )}
-                </div>
-                {problem.link && (
-                  <a
-                    href={problem.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-xs text-blue-400 hover:text-blue-300 mt-2 inline-block"
+
+          {/* Render grouped problems */}
+          {groupedMasteredProblems.map((group) => (
+            <div key={group.category} className="mb-6">
+              <h3 className="text-indigo-300 text-md font-medium mt-4 mb-2 border-b border-indigo-900/30 pb-1">
+                {group.category}{" "}
+                <span className="text-sm text-indigo-400/60">
+                  ({group.problems.length})
+                </span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {group.problems.map((problem) => (
+                  <div
+                    key={problem._id}
+                    className="bg-[#121a36]/50 border border-emerald-800/30 p-3 rounded-md cursor-pointer hover:bg-[#1a2542]/50"
+                    onClick={() => openProblemModal(problem)}
                   >
-                    View Problem
-                  </a>
-                )}
+                    <div className="flex justify-between items-start">
+                      <h4 className="text-sm font-medium text-white">
+                        {problem.title}
+                      </h4>
+                      {problem.difficulty && (
+                        <span
+                          className={`text-xs px-1.5 py-0.5 rounded-full ${
+                            problem.difficulty === "Easy"
+                              ? "bg-green-500/20 text-green-300"
+                              : problem.difficulty === "Medium"
+                              ? "bg-yellow-500/20 text-yellow-300"
+                              : "bg-red-500/20 text-red-300"
+                          }`}
+                        >
+                          {problem.difficulty}
+                        </span>
+                      )}
+                    </div>
+                    {problem.link && (
+                      <a
+                        href={problem.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs text-blue-400 hover:text-blue-300 mt-2 inline-block"
+                      >
+                        View Problem
+                      </a>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -1905,6 +1998,25 @@ export default function LeetcodeTrackerPage() {
                     placeholder="Add your notes here..."
                   />
                 </div>
+                {/* Add this to the Edit Problem form */}
+                <div>
+                  <label className="block text-gray-400 mb-1 text-sm">
+                    Category
+                  </label>
+                  <select
+                    name="category"
+                    value={editedProblem.category || ""}
+                    onChange={handleProblemInputChange}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="">Select category</option>
+                    {ALGORITHM_CATEGORIES.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="flex justify-end space-x-2 pt-2">
                   <button
                     onClick={() => setIsEditingProblem(false)}
@@ -1960,6 +2072,13 @@ export default function LeetcodeTrackerPage() {
                     <span className="text-sm px-2 py-1 rounded-full bg-indigo-500/20 text-indigo-300">
                       Score: {selectedProblem.score}
                     </span>
+
+                    {/* Display category if available */}
+                    {selectedProblem.category && (
+                      <span className="text-sm px-2 py-1 rounded-full bg-purple-500/20 text-purple-300">
+                        {selectedProblem.category}
+                      </span>
+                    )}
                   </div>
 
                   {/* Add mastered checkbox if score is 5 */}
@@ -2176,6 +2295,25 @@ export default function LeetcodeTrackerPage() {
                   className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   placeholder="Add your notes, approach, or tips here..."
                 />
+              </div>
+
+              <div>
+                <label className="block text-gray-400 mb-1 text-sm">
+                  Category
+                </label>
+                <select
+                  name="category"
+                  value={newProblem.category}
+                  onChange={handleNewProblemInputChange}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                >
+                  <option value="">Select category</option>
+                  {ALGORITHM_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex justify-end space-x-2 pt-2">

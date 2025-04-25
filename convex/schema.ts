@@ -217,6 +217,7 @@ export default defineSchema({
     orderIndex: v.optional(v.number()),
     dayOfWeek: v.number(), // 0 = Sunday, 1 = Monday, etc.
     mastered: v.optional(v.boolean()), // Whether the problem has been mastered
+    category: v.optional(v.string()), // Algorithm category (e.g., "Arrays & Hashing", "Two Pointers", etc.)
     createdAt: v.number(),
     updatedAt: v.number(),
   })
