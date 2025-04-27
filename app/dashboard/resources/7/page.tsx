@@ -933,15 +933,11 @@ export default function LeetcodeTrackerPage() {
 
       // Calculate the day shift based on score change
       if (originalProblem.score !== updateData.score) {
-        // Calculate the difference in days
-        const scoreDiff = updateData.score! - originalProblem.score;
-
-        // Apply the difference to the current day
-        let dayOfWeek = (originalProblem.dayOfWeek + scoreDiff) % 7;
-        if (dayOfWeek < 0) dayOfWeek += 7; // Handle negative values
+        // Use the same function that's used for creating new problems
+        const targetDayOfWeek = getTargetDayOfWeek(updateData.score!);
 
         // Find the target status for the new day
-        const targetStatus = statuses.find((s) => s.order === dayOfWeek);
+        const targetStatus = statuses.find((s) => s.order === targetDayOfWeek);
         if (!targetStatus) {
           showToast("error", "Could not find the target day column");
           return;
@@ -949,7 +945,7 @@ export default function LeetcodeTrackerPage() {
 
         // Update the status ID and day of week in our update data
         updateData.statusId = targetStatus._id;
-        updateData.dayOfWeek = dayOfWeek;
+        updateData.dayOfWeek = targetDayOfWeek;
       }
 
       await updateProblem(updateData);
